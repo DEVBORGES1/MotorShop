@@ -1,0 +1,975 @@
+# MotorShop — Roadmap de Implementação
+
+> Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
+> **Status atual: FASE 0 concluída. FASE 1 aguardando autorização.**
+
+---
+
+## Como ler este roadmap
+
+Cada fase declara **objetivo**, **funcionalidades**, **arquivos envolvidos**,
+**dependências**, **critérios de conclusão** e **testes necessários**.
+
+Regras que valem para todas as fases:
+
+1. **Uma fase não começa antes de a anterior atender seus critérios de
+   conclusão.** Critério não atendido é dívida, não progresso.
+2. **Nada fora do escopo da fase.** Requisito novo vira fase nova, com sua
+   aprovação — não entra por dentro.
+3. **Nenhuma dependência é instalada sem justificativa** registrada
+   (§2.2 do ARCHITECTURE).
+4. **Segurança é transversal.** A FASE 10 audita e endurece; ela não é a
+   primeira vez que o tema aparece.
+5. **Commits pequenos e verificáveis**, um assunto por commit.
+
+### Marcos
+
+| Marco | Fases | O que passa a existir |
+|---|---|---|
+| **M1 — API operável** | 1–3 | Loja cadastra e gerencia estoque pelo painel |
+| **M2 — Site vendável** | 4–7 | Visitante busca, vê a moto e entra em contato |
+| **M3 — Pronto para produção** | 8–12 | Imagens, SEO, segurança, testes, deploy |
+| **M4 — Entregável comercial** | 13 | Auditado, documentado, apto a revenda |
+
+---
+
+# FASE 0 — Arquitetura ✅ concluída
+
+### Objetivo
+Definir arquitetura, modelos, contratos e riscos **antes** de escrever código,
+eliminando retrabalho estrutural.
+
+### Funcionalidades
+Nenhuma (fase de análise e projeto).
+
+### Arquivos envolvidos
+| Arquivo | Situação |
+|---|---|
+| `docs/ARCHITECTURE.md` | ✅ criado |
+| `docs/ROADMAP.md` | ✅ criado |
+| `README.md` | ✅ criado |
+| `.env.example` | ✅ criado (sem credenciais reais) |
+| `.gitignore` | ✅ criado |
+
+### Dependências
+Nenhuma instalada.
+
+### Critérios de conclusão
+- [x] Estado atual do repositório analisado e reportado (vazio, sem commits)
+- [x] Ambiente e toolchain inventariados
+- [x] Problemas e lacunas identificados (P-01 a P-08)
+- [x] Arquitetura em camadas definida, com contrato de responsabilidades
+- [x] Estrutura de pastas definida e justificada
+- [x] Modelos definidos (Moto, Brand, Lead, User, StoreSettings, RefreshToken)
+- [x] Endpoints definidos, com ajustes ao briefing justificados
+- [x] Fluxo de autenticação definido
+- [x] Fluxo frontend → API → MongoDB detalhado passo a passo
+- [x] Mongoose vs Prisma avaliado e decidido (D-01)
+- [x] Armazenamento de imagens avaliado e decidido (D-02)
+- [x] Estratégia de deploy definida
+- [x] Riscos mapeados com mitigação (R-01 a R-16)
+- [x] Decisões pendentes listadas com recomendação (A–I)
+- [x] Limitação de SEO do React SPA explicada, com solução que preserva a stack
+
+### Testes necessários
+Não aplicável. A validação desta fase é a sua revisão e aprovação.
+
+### 🚦 Bloqueio
+**A FASE 1 não inicia sem sua autorização explícita.**
+
+---
+
+# FASE 1 — Fundação do projeto
+
+### Objetivo
+Ter frontend e backend subindo, conversando entre si e falhando de forma clara
+quando mal configurados. Nenhuma regra de negócio.
+
+### Funcionalidades
+- Monorepo com npm workspaces (`backend`, `frontend`, `shared`)
+- Express com os middlewares globais na ordem de §8.1
+- Validação de `process.env` com Zod no boot — **o servidor recusa iniciar com
+  configuração inválida** (mitiga R-05)
+- `GET /api/health` sem detalhe interno
+- Envelope de resposta (`ok`/`fail`) e `errorHandler` centralizado
+- `ApiError` e `asyncHandler`
+- Log estruturado com pino e redaction
+- Vite + React + React Router com as 8 rotas públicas (páginas vazias)
+- Tailwind com os tokens de tema como CSS custom properties (§14.2)
+- Cliente Axios com interceptor que desembrulha o envelope
+- ESLint + Prettier nos três workspaces
+
+### Arquivos envolvidos
+```
+package.json                       workspaces + scripts (dev, build, lint, test)
+.gitignore · .env.example
+backend/package.json
+backend/src/config/{env,logger}.js
+backend/src/utils/{ApiError,apiResponse,asyncHandler}.js
+backend/src/middlewares/{requestId,notFound,errorHandler}.js
+backend/src/routes/index.js
+backend/src/app.js · backend/src/server.js
+frontend/package.json · vite.config.js · tailwind.config.js · postcss.config.js
+frontend/index.html
+frontend/src/{main.jsx,styles/index.css}
+frontend/src/app/{App,router,providers}.jsx
+frontend/src/pages/public/*.jsx     (8 placeholders)
+frontend/src/lib/api/{client,interceptors}.js
+frontend/src/config/theme.js
+shared/package.json · shared/src/{enums,index}.js
+eslint.config.js
+```
+
+### Dependências
+**Backend:** `express`, `zod`, `helmet`, `cors`, `compression`,
+`cookie-parser`, `pino`, `pino-http`
+**Frontend:** `react`, `react-dom`, `react-router-dom`, `axios`,
+`@tanstack/react-query`; dev: `vite`, `@vitejs/plugin-react`, `tailwindcss`,
+`postcss`, `autoprefixer`
+**Raiz (dev):** `eslint`, `prettier`, `vitest`
+
+> Mongoose **não** entra aqui — a fase não toca o banco.
+
+### Critérios de conclusão
+- [ ] `npm run dev` na raiz sobe backend e frontend juntos
+- [ ] `GET /api/health` responde `200` no envelope padrão
+- [ ] Remover uma variável obrigatória do `.env` → servidor **não** sobe e diz
+      qual falta
+- [ ] Rota inexistente → `404` no envelope de erro
+- [ ] Erro proposital → `500` genérico, **sem stack** na resposta, com `requestId`
+- [ ] As 8 rotas públicas navegam sem recarregar a página
+- [ ] Trocar `--color-primary` muda a cor de toda a aplicação
+- [ ] `npm run lint` limpo nos três workspaces
+- [ ] `shared/enums.js` importável por frontend **e** backend
+- [ ] Nenhum segredo versionado; `.env.example` sem valor real
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Integração | `/api/health` → 200; rota inexistente → 404; erro → 500 sem stack |
+| Unitário | `env.js` rejeita configuração inválida; `ok()`/`fail()` produzem o envelope |
+| Manual | navegação entre rotas; troca de token de tema |
+
+---
+
+# FASE 2 — Banco + API
+
+### Objetivo
+Persistência real e CRUD completo de motos e marcas na API, com validação e
+paginação. Sem autenticação ainda (rotas admin temporariamente abertas **apenas
+em desenvolvimento**, fechadas na FASE 3).
+
+### Funcionalidades
+- Conexão Mongoose com pool, retry e `listen` só após conectar
+- Models: `Moto`, `Brand` (com índices de §9.4)
+- Geração de slug com resolução de colisão
+- Repositórios com projeção pública (allowlist) e filtro de status no servidor
+- CRUD de motos: listar, buscar por slug, criar, atualizar, alterar status,
+  soft delete (D-06)
+- CRUD de marcas, com bloqueio de exclusão de marca em uso (409)
+- `GET /api/motos` com todos os filtros, ordenação whitelisted e paginação
+- `GET /api/filtros` (agregação `$facet`) — §6.6
+- Schemas Zod `.strict()` para escrita, com coerção na query
+- Script de índices (`npm run db:indexes`)
+- Seed da loja fictícia: marcas + ~20 motos variadas
+
+### Arquivos envolvidos
+```
+backend/src/config/database.js
+backend/src/modules/motos/*          (model, repository, service, controller, routes, schema)
+backend/src/modules/brands/*
+backend/src/middlewares/validate.js
+backend/src/utils/{slug,pagination}.js
+backend/src/scripts/{seed,createIndexes}.js
+shared/src/schemas/{moto,brand}.schema.js
+shared/src/enums.js                  (MOTO_STATUS, FUEL, TRANSMISSION)
+```
+
+### Dependências
+`mongoose`, `slugify`; dev: `supertest`, `mongodb-memory-server`
+
+### Critérios de conclusão
+- [ ] Cluster Atlas criado, com usuário restrito a um database
+- [ ] Todos os índices de §9.4 existem e são verificáveis por `getIndexes()`
+- [ ] `npm run seed` popula marcas e ~20 motos
+- [ ] CRUD completo funciona via cliente HTTP
+- [ ] Cada filtro do catálogo funciona isoladamente **e** combinado
+- [ ] Ordenação por preço, ano e km correta em ambas as direções
+- [ ] Paginação correta, `limit` teto de 48 imposto pelo servidor
+- [ ] Slug gerado no formato esperado; colisão resolvida com sufixo
+- [ ] Payload com campo desconhecido → `422` (sem *mass assignment*)
+- [ ] `?sort=<valor inválido>` → `422`, não erro 500
+- [ ] Resposta pública **não** contém `licensePlate` nem moto `INACTIVE`
+- [ ] `explain()` das consultas do catálogo usa `IXSCAN`, **não** `COLLSCAN`
+- [ ] `GET /api/filtros` devolve faixas coerentes com o seed
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Integração | CRUD de moto e marca; cada filtro; ordenações; paginação; 409 de marca em uso |
+| **Segurança** | resposta pública nunca contém `licensePlate` (teste que falha se contiver — mitiga R-14); `INACTIVE` invisível no público; `$` e `.` rejeitados em chave de filtro |
+| Unitário | slug e colisão; construção do filtro no repositório; validação Zod de cada schema |
+| Performance | `explain()` confirmando uso de índice |
+
+---
+
+# FASE 3 — Autenticação + Admin
+
+### Objetivo
+Fechar tudo que é administrativo e entregar o painel funcional de estoque.
+
+### Funcionalidades
+**Backend**
+- Model `User` (`passwordHash` com `select: false`) e `RefreshToken` (TTL)
+- Hash argon2id
+- `POST /api/auth/login` com mensagem de erro idêntica nos três casos de falha
+  e comparação em tempo constante (§7.2)
+- `POST /api/auth/refresh` com rotação e **detecção de reuso** (revoga todas as
+  sessões do usuário)
+- `POST /api/auth/logout`, `GET /api/auth/me`
+- `authenticate` (revalida usuário ativo) e `authorize(...roles)`
+- Rate limit específico de login e refresh
+- Todas as rotas `/api/admin/*` protegidas
+- CRUD de usuários (`SUPER_ADMIN`), com proteção do último super admin
+- `GET/PATCH /api/admin/store` (leitura ADMIN, escrita SUPER_ADMIN)
+- Script `create:superadmin`
+
+**Frontend**
+- `/admin/login`
+- Contexto de auth com access token **em memória**
+- Interceptor: refresh único em `401`, requisições concorrentes compartilham a
+  promessa
+- `RequireAuth` / `RequireRole`
+- `AdminLayout` com navegação
+- `/admin/dashboard` (contadores), `/admin/motos` (lista, busca, filtro por
+  status, alteração rápida de status), `/admin/motos/nova`,
+  `/admin/motos/:id/editar` (sem imagens — FASE 8), `/admin/marcas`,
+  `/admin/usuarios`, `/admin/configuracoes`
+- Admin em **chunk lazy separado** do site público (P-08)
+
+### Arquivos envolvidos
+```
+backend/src/modules/auth/*           (+ refreshToken.model.js)
+backend/src/modules/users/*
+backend/src/modules/store/*
+backend/src/middlewares/{authenticate,authorize,rateLimiters}.js
+backend/src/scripts/createSuperAdmin.js
+frontend/src/features/auth/*         (useAuth, RequireAuth, RequireRole)
+frontend/src/lib/api/interceptors.js (refresh)
+frontend/src/components/layout/AdminLayout.jsx
+frontend/src/pages/admin/*.jsx
+frontend/src/app/router.jsx          (lazy do bloco admin)
+shared/src/enums.js                  (USER_ROLE)
+```
+
+### Dependências
+`jsonwebtoken`, `argon2`, `express-rate-limit`; frontend: `react-hook-form`,
+`@hookform/resolvers`
+
+### Critérios de conclusão
+- [ ] `create:superadmin` cria o primeiro usuário; **nenhum** endpoint HTTP cria
+      o primeiro admin; nenhuma credencial padrão embutida
+- [ ] Login correto devolve access token + cookie `httpOnly Secure SameSite=Strict`
+- [ ] E-mail inexistente e senha errada produzem **a mesma** resposta
+- [ ] `/api/admin/*` sem token → `401`; com token de `ADMIN` em rota de
+      `SUPER_ADMIN` → `403`
+- [ ] Access token expirado → refresh transparente, usuário não percebe
+- [ ] Reapresentar refresh revogado → todas as sessões do usuário caem
+- [ ] Desativar um admin invalida seu acesso **imediatamente**
+- [ ] 6ª tentativa de login em 15 min → `429`
+- [ ] Último `SUPER_ADMIN` ativo não pode ser removido nem rebaixado
+- [ ] `passwordHash` nunca aparece em nenhuma resposta
+- [ ] Painel permite operar estoque e marcas de ponta a ponta
+- [ ] `/admin` **não** está no bundle inicial do site público (verificado no build)
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Integração | login ok/falho; expiração; refresh com rotação; reuso de refresh; logout; matriz de papéis por rota |
+| **Segurança** | 401/403 em todas as rotas admin; rate limit; ausência de `passwordHash`; sem *mass assignment* de `role`; proteção do último super admin |
+| Unitário | hash/verify argon2; emissão e verificação de JWT; `authorize` |
+| Componente | `RequireAuth` redireciona; formulário de login exibe erro |
+| Manual | fluxo completo no painel |
+
+---
+
+# FASE 4 — Catálogo público
+
+### Objetivo
+Home e `/estoque` completos, responsivos e com identidade visual própria.
+
+### Funcionalidades
+**Home** (na ordem especificada): Header com logo, menu e botão WhatsApp · Hero
+· Busca de motos · Motos em destaque · Últimas cadastradas · Ofertas ·
+Benefícios da loja · Venda sua moto (chamada) · Financiamento (chamada) ·
+Sobre a loja · CTA final · Footer com endereço, horários e redes
+
+**`/estoque`**
+- Filtros: marca, modelo/busca textual, preço mín/máx, ano, km, cilindrada,
+  combustível, câmbio
+- Ordenação: preço, ano, km, mais recentes
+- **Filtros na URL** (`useSearchParams`) → compartilhável e navegável
+- Paginação de servidor
+- Estados de carregando (skeleton), vazio e erro
+- Contador de resultados e chips de filtro ativo com remoção individual
+- Mobile: filtros em painel deslizante
+
+**Transversal**
+- Componentes `ui/` (Button, Input, Select, Range, Badge, Card, Skeleton,
+  Pagination, EmptyState)
+- `MotoCard` com foto, marca, modelo, versão, ano, km, cilindrada e preço
+- `PublicLayout`, `Header` responsivo, `Footer`, botão flutuante de WhatsApp
+- `/sobre` e `/contato` com dados vindos de `GET /api/store`
+- Mobile-first, validado em 360/768/1024/1440 px
+
+### Arquivos envolvidos
+```
+frontend/src/components/ui/*
+frontend/src/components/layout/{PublicLayout,Header,Footer,WhatsAppFloatingButton}.jsx
+frontend/src/features/motos/{api,hooks}.js
+frontend/src/features/motos/components/{MotoCard,MotoFilters,MotoGrid,SortSelect}.jsx
+frontend/src/features/brands/{api,hooks}.js
+frontend/src/features/store/{api,hooks}.js        contexto de configuração
+frontend/src/pages/public/{Home,Estoque,Sobre,Contato}.jsx
+frontend/src/lib/{format,whatsapp,image}.js
+frontend/src/config/storeFallback.js
+```
+
+### Dependências
+Nenhuma nova. (`@headlessui/react` **somente** se houver necessidade real de
+acessibilidade no painel de filtros — a decidir aqui, não antes.)
+
+### Critérios de conclusão
+- [ ] Todas as 13 seções da home presentes e na ordem especificada
+- [ ] Nenhum dado da loja hardcoded — tudo de `GET /api/store` (R-15)
+- [ ] Todo filtro funciona, isolado e combinado, **via API**
+- [ ] Filtros refletidos na URL; recarregar preserva o estado; voltar/avançar
+      funciona
+- [ ] Nenhuma requisição devolve o estoque inteiro (verificado na aba de rede)
+- [ ] Paginação de servidor; nenhuma filtragem feita no cliente
+- [ ] Skeleton durante o carregamento; estado vazio com ação de limpar filtros
+- [ ] Layout íntegro em 360/768/1024/1440 px, sem scroll horizontal
+- [ ] Botão WhatsApp abre conversa com mensagem pré-preenchida
+- [ ] Identidade visual própria — nenhuma semelhança com o site de referência
+- [ ] Navegação por teclado funcional; contraste AA nos textos
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Componente | `MotoCard` (inclusive sem imagem); `MotoFilters` emite os parâmetros certos; `Pagination` |
+| Integração | página de catálogo com API mockada: filtro → requisição correta → grade renderizada |
+| Unitário | `format.js` (BRL, km); `whatsapp.js` (montagem do link) |
+| Manual | responsividade nos 4 breakpoints; navegação por teclado |
+
+---
+
+# FASE 5 — Página da moto
+
+### Objetivo
+Página de detalhe completa em `/motos/:slug` — a página que efetivamente vende.
+
+### Funcionalidades
+- Busca por slug; `404` dedicado para slug inexistente
+- Galeria: imagem principal grande, miniaturas navegáveis, modal em tela cheia
+  com teclado (setas, `Esc`) e gesto de arrastar no mobile
+- Especificações: marca, modelo, versão, ano, km, preço, cilindrada,
+  combustível, câmbio, cor
+- Descrição e lista de opcionais
+- Selo de status (Disponível / Reservada / Vendida) conforme decisão **A**
+- CTA de WhatsApp com mensagem contextual (modelo, ano e link da moto)
+- Botão "Tenho interesse" (abre formulário — enviado na FASE 6)
+- Simulador de financiamento embutido (FASE 7)
+- Bloco de motos similares
+- Breadcrumb Home › Estoque › Moto
+- Layout mobile: galeria no topo, preço e CTA fixos no rodapé (barra fixa)
+
+### Arquivos envolvidos
+```
+frontend/src/pages/public/MotoDetalhe.jsx
+frontend/src/features/motos/components/{MotoGallery,MotoSpecs,MotoFeatures,SimilarMotos,StatusBadge}.jsx
+frontend/src/components/layout/Breadcrumbs.jsx
+frontend/src/components/ui/{Modal,Tabs}.jsx
+backend/src/modules/motos/*          endpoint /similares
+```
+
+### Dependências
+Nenhuma nova.
+
+### Critérios de conclusão
+- [ ] `/motos/honda-cb-500f-2024` carrega a moto correta
+- [ ] Slug inexistente → página 404 própria (não tela branca)
+- [ ] Moto `INACTIVE` não é acessível publicamente nem por URL direta
+- [ ] Galeria: miniaturas trocam a principal; modal abre, navega por teclado e
+      fecha com `Esc`
+- [ ] Todos os campos especificados exibidos; ausentes são omitidos sem
+      "undefined"
+- [ ] CTA de WhatsApp inclui modelo, ano e URL da moto na mensagem
+- [ ] Similares excluem a própria moto e respeitam o filtro de status público
+- [ ] Sem salto de layout no carregamento das imagens (CLS ≈ 0)
+- [ ] Barra fixa de preço e CTA funcional no mobile
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Componente | `MotoGallery` (teclado, miniaturas, 1 imagem, 0 imagem); `MotoSpecs` com campos ausentes |
+| Integração | rota com slug válido e inválido; `/similares` |
+| **Segurança** | slug de moto `INACTIVE` → 404 |
+| Manual | galeria no mobile; leitura por leitor de tela |
+
+---
+
+# FASE 6 — Leads + WhatsApp
+
+### Objetivo
+Converter visita em contato e dar à loja uma tela onde o lead não se perde.
+
+### Funcionalidades
+**Backend**
+- Model `Lead` com discriminador (§5.3) e `consent` versionado
+- `POST /api/leads` público, com união discriminada em Zod, honeypot e rate
+  limit de 5/hora por IP
+- Captura de origem (`page`, `referrer`, `utm`)
+- `GET /api/admin/leads` com filtro por tipo, status e período, paginado
+- `PATCH /api/admin/leads/:id` (status e anotações)
+- `DELETE /api/admin/leads/:id` (`SUPER_ADMIN`, LGPD)
+
+**Frontend**
+- "Tenho interesse" na página da moto (vincula `motoId`)
+- `/venda-sua-moto`: marca, modelo, ano, km, preço pretendido, estado, contato
+- `/contato`: formulário + endereço + horários + mapa
+- Checkbox de consentimento com link para a política
+- Estados de enviando / sucesso / erro; proteção contra envio duplo
+- `/admin/leads`: lista, filtros, detalhe, mudança de status, anotações,
+  atalho de WhatsApp para o telefone do lead
+
+### Arquivos envolvidos
+```
+backend/src/modules/leads/*
+backend/src/middlewares/rateLimiters.js      limitador de lead
+shared/src/schemas/lead.schema.js            união discriminada
+shared/src/enums.js                          LEAD_TYPE, LEAD_STATUS
+frontend/src/features/leads/components/{InterestForm,SellMotoForm,ContactForm,ConsentCheckbox}.jsx
+frontend/src/features/leads/{api,hooks}.js
+frontend/src/pages/public/{VendaSuaMoto,Contato}.jsx
+frontend/src/pages/admin/Leads.jsx
+```
+
+### Dependências
+Nenhuma nova (Zod e react-hook-form já presentes).
+
+### Critérios de conclusão
+- [ ] Os 4 tipos de lead são criados e persistidos corretamente
+- [ ] Lead de interesse referencia a moto certa
+- [ ] Tipo inválido ou `data` incompatível com o tipo → `422`
+- [ ] 6º envio na mesma hora → `429`
+- [ ] Honeypot preenchido → descartado silenciosamente
+- [ ] `consent` gravado com data e versão do texto
+- [ ] `GET /api/admin/leads` exige autenticação (`401` sem token)
+- [ ] Exclusão de lead só por `SUPER_ADMIN`
+- [ ] Log de criação de lead **não** contém telefone nem e-mail (R-08)
+- [ ] Atalho de WhatsApp do painel abre a conversa com o lead
+- [ ] Clique duplo no envio não cria dois leads
+- [ ] Origem (`page`/`referrer`/`utm`) registrada
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Integração | criação de cada tipo; validação por tipo; rate limit; honeypot; listagem com filtros; matriz de permissão da exclusão |
+| **Segurança** | `/api/admin/leads` sem token → 401; ADMIN não exclui; ausência de PII no log |
+| Componente | cada formulário: validação, envio, sucesso, erro, duplo clique |
+| Unitário | normalização de telefone; construção do `data` por tipo |
+
+---
+
+# FASE 7 — Financiamento
+
+### Objetivo
+Simulador claro e honesto, que gera lead qualificado sem prometer crédito.
+
+### Funcionalidades
+- Cálculo **puro no cliente** (função testável, sem endpoint — §6.4):
+  entradas `valor`, `entrada`, `parcelas`; saída `parcela`, `total`, `juros`
+- Tabela Price, com taxa e prazos configuráveis em `StoreSettings` (decisão F)
+- Página `/financiamento`: simulador + explicação do processo + documentos
+  necessários + FAQ
+- Simulador embutido na página da moto, já com o preço preenchido
+- **Aviso explícito**: "Simulação com valores aproximados. Não constitui
+  proposta de crédito; sujeita a análise da instituição financeira." (R-07)
+- Envio da simulação como lead `FINANCING` (opcional para o usuário)
+- Sem coleta de CPF, renda ou qualquer dado de análise de crédito
+- Faixas de entrada e parcelas validadas (entrada < valor; parcelas na lista
+  permitida)
+
+### Arquivos envolvidos
+```
+frontend/src/features/financing/{calculator.js,hooks.js}
+frontend/src/features/financing/components/{FinancingSimulator,InstallmentTable,DisclaimerNote}.jsx
+frontend/src/pages/public/Financiamento.jsx
+frontend/src/pages/public/MotoDetalhe.jsx        integração
+backend/src/modules/store/store.model.js         parâmetros de financiamento
+shared/src/schemas/financing.schema.js
+```
+
+### Dependências
+Nenhuma nova. **Sem** biblioteca financeira: tabela Price são poucas linhas e
+manter o cálculo próprio o torna auditável e testável.
+
+### Critérios de conclusão
+- [ ] Cálculo conferido contra valores de referência (erro < R$ 0,01)
+- [ ] Entrada ≥ valor da moto → erro claro, não `NaN` nem `Infinity`
+- [ ] Taxa zero tratada (divisão por zero na Price)
+- [ ] Taxa e prazos vêm de `StoreSettings`, **não** de constante no código
+- [ ] Aviso legal visível em toda superfície de simulação
+- [ ] Simulador na página da moto já vem com o preço preenchido
+- [ ] Envio gera lead `FINANCING` com os parâmetros simulados
+- [ ] Nenhum dado de análise de crédito é coletado
+- [ ] Funcional e legível no mobile
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| **Unitário (crítico)** | `calculator.js`: casos de referência, taxa zero, entrada = valor, entrada > valor, 1 parcela, parcela máxima, arredondamento |
+| Componente | simulador recalcula ao mudar entrada; exibe erro de validação; aviso presente |
+| Integração | envio gera lead `FINANCING` com `data` correto |
+
+---
+
+# FASE 8 — Upload e gestão de imagens
+
+### Objetivo
+Loja consegue subir, ordenar e escolher fotos pelo painel, com entrega
+otimizada.
+
+### Funcionalidades
+**Backend**
+- `storage.port.js` + `cloudinary.provider.js` + seletor por env (§10.3)
+- `POST /api/admin/uploads/assinatura` — assinatura escopada (pasta, formatos,
+  tamanho máximo), só para ADMIN autenticado
+- `POST /api/admin/motos/:id/imagens` — **revalida** os metadados e confere o
+  prefixo da pasta (não confia no cliente)
+- `PATCH .../imagens/ordem` — reordena e define a principal
+- `DELETE .../imagens/:imageId` — remove metadado + `destroy` no provedor, com
+  falha do provedor logada e não bloqueante
+- Limite de 20 imagens por moto
+
+**Frontend**
+- Upload direto do navegador para o provedor (§10.4), com progresso por arquivo
+- Arrastar-e-soltar, múltiplos arquivos, pré-visualização
+- Reordenar arrastando; marcar a principal; excluir com confirmação
+- Campo `alt` por imagem (acessibilidade e SEO)
+- `image.js`: `srcset`/`sizes` por contexto, `f_auto`, `q_auto`
+- `loading="lazy"` em tudo, exceto LCP com `fetchpriority="high"`
+- Placeholder para moto sem foto
+
+### Arquivos envolvidos
+```
+backend/src/infra/storage/{storage.port,cloudinary.provider,index}.js
+backend/src/modules/uploads/*
+backend/src/modules/motos/{moto.service,moto.controller,moto.routes,moto.schema}.js
+frontend/src/features/motos/components/{ImageUploader,ImageManager,ImageSortable}.jsx
+frontend/src/lib/image.js
+frontend/src/pages/admin/MotoForm.jsx
+```
+
+### Dependências
+Backend: `cloudinary`. Frontend: nenhuma (`dnd` nativo de HTML5; biblioteca de
+arrastar-e-soltar só se a necessidade se confirmar).
+
+### Critérios de conclusão
+- [ ] Upload de 10 fotos de ~4 MB conclui sem passar pela API
+- [ ] `body limit` da API segue em 100 kB (§8.1) — confirma o fluxo direto
+- [ ] Assinatura exige autenticação de ADMIN (`401` anônimo)
+- [ ] Assinatura escopada: formato/pasta/tamanho fora do permitido é recusado
+- [ ] Backend rejeita metadado com `public_id` fora da pasta esperada
+- [ ] Reordenar persiste; imagem principal reflete no card e no OG
+- [ ] Excluir imagem remove metadado **e** arquivo no provedor
+- [ ] Falha do provedor na exclusão não derruba a operação (e é logada)
+- [ ] 21ª imagem recusada
+- [ ] Imagens servidas em WebP/AVIF conforme o navegador
+- [ ] `width`/`height` presentes; sem salto de layout
+- [ ] Nenhum import de `cloudinary` fora de `cloudinary.provider.js`
+      (verificável por busca)
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Integração | assinatura (autorizado/anônimo); vínculo com metadado válido e inválido; ordem; exclusão; limite de 20 |
+| **Segurança** | assinatura sem auth → 401; `public_id` fora da pasta → 422; escopo da assinatura |
+| Unitário | `image.js` monta `srcset` correto; provedor cumpre o contrato da porta |
+| Manual | upload real de 10 fotos; reordenação; verificação do formato entregue |
+
+---
+
+# FASE 9 — SEO + performance
+
+### Objetivo
+Resolver **R-01** (preview de link) e atingir o orçamento de performance de
+§12.1. Fase de maior impacto comercial.
+
+### Funcionalidades
+**SEO**
+- `metaInjector.js` no servidor (§11.3): `title`, `description`, OG, Twitter
+  Card e canonical preenchidos **no HTML inicial**, por rota, com cache de 5 min
+- `Seo.jsx` no cliente para navegação SPA (mantém os metadados coerentes após
+  troca de rota)
+- JSON-LD: `Vehicle`+`Offer` (detalhe), `AutoDealer` (home),
+  `BreadcrumbList`
+- `sitemap.xml` dinâmico com `lastmod`
+- `robots.txt` por ambiente (`Disallow: /` em staging)
+- `noindex, follow` em catálogo filtrado; canonical em todas as páginas
+- `availability` derivada do `status`; comportamento de moto vendida conforme
+  decisão A
+- `<html lang="pt-BR">`
+
+**Performance**
+- Code splitting por rota; admin fora do bundle público (verificado)
+- Análise do bundle e remoção do que não se justifica
+- `Cache-Control` conforme §12.4
+- Fontes com `swap`, subset e `preconnect`
+- Revisão de re-render com o React DevTools Profiler (onde houver custo medido)
+- Prefetch da rota de detalhe ao passar o mouse no card
+
+### Arquivos envolvidos
+```
+backend/src/seo/{metaInjector,sitemap.controller}.js
+backend/src/app.js                     servir index.html + estáticos + rotas SEO
+frontend/src/lib/seo/{Seo.jsx,jsonld.js}
+frontend/public/robots.txt
+frontend/index.html                    placeholders de meta
+frontend/vite.config.js                chunks manuais
+frontend/src/app/router.jsx            lazy + prefetch
+```
+
+### Dependências
+Nenhuma para meta no servidor (substituição de string). No cliente, ou
+`react-helmet-async`, ou um hook próprio de ~30 linhas — a decidir aqui,
+preferindo o hook próprio se for suficiente.
+
+### Critérios de conclusão
+- [ ] `curl` de `/motos/<slug>` (**sem JS**) retorna HTML **com** `title`,
+      `description` e `og:image` corretos ← *resolve R-01*
+- [ ] Preview validado no depurador de links do Facebook e em um envio real de
+      WhatsApp
+- [ ] `sitemap.xml` lista as páginas estáticas e todas as motos indexáveis, com
+      `lastmod`
+- [ ] `robots.txt` bloqueia `/admin` e `/api` e aponta o sitemap
+- [ ] Staging com `Disallow: /`
+- [ ] JSON-LD sem erro no Rich Results Test do Google
+- [ ] Catálogo filtrado com `noindex`; canonical correto em todas as páginas
+- [ ] Lighthouse mobile ≥ 90 em Performance, e 100 em SEO e Best Practices
+- [ ] LCP < 2,5 s · CLS < 0,1 · INP < 200 ms (4G simulado)
+- [ ] JS inicial do site público < 180 kB gzip
+- [ ] `/admin` ausente do bundle inicial público
+- [ ] Meta correta após navegação SPA (não só no carregamento inicial)
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| **Integração (crítico)** | requisição sem JS a cada tipo de rota → meta esperada no HTML; `sitemap.xml` válido; `robots.txt` por ambiente |
+| Unitário | `metaInjector` casa rotas e escapa HTML nos valores injetados; `jsonld.js` gera estrutura válida |
+| Performance | Lighthouse CI com orçamento; análise do bundle |
+| Manual | depurador de links do Facebook; WhatsApp real; Rich Results Test |
+
+> **Atenção de segurança:** todo valor injetado no HTML (modelo, descrição)
+> precisa ser escapado — injetar texto do banco sem escape é XSS. Coberto por
+> teste unitário explícito.
+
+---
+
+# FASE 10 — Segurança
+
+### Objetivo
+Auditar e endurecer o que foi construído. Não é a introdução de segurança — é a
+verificação de que tudo previsto em §8 está de fato em pé.
+
+### Funcionalidades
+- Auditoria de cabeçalhos: CSP definitiva (sem `unsafe-inline` no script),
+  HSTS, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`
+- Revisão de CORS com a lista real de origens de produção
+- Revisão de todos os rate limits com números reais de tráfego
+- Varredura de campos sensíveis em **todas** as respostas públicas
+- Revisão de permissões rota por rota (matriz completa)
+- `npm audit` e atualização de dependências vulneráveis
+- Verificação de que nenhum segredo está versionado (varredura no histórico)
+- Confirmação de ausência de stack trace e detalhe interno em produção
+- Revisão da redaction dos logs
+- Rotação de todos os segredos antes do go-live
+- Checklist OWASP Top 10 aplicado ao projeto
+- Documento de conformidade LGPD: base legal, retenção (decisão E), fluxo de
+  eliminação e acesso
+- Conferência do fluxo de upload: escopo da assinatura e revalidação
+
+### Arquivos envolvidos
+```
+backend/src/app.js                     helmet/CSP definitivos
+backend/src/config/{env,logger}.js
+backend/src/middlewares/rateLimiters.js
+backend/src/modules/**/*.repository.js revisão das projeções
+docs/SECURITY.md                       checklist + política LGPD (novo)
+.env.example                           revisão final
+```
+
+### Dependências
+Nenhuma nova. Ferramentas de auditoria são de linha de comando.
+
+### Critérios de conclusão
+- [ ] CSP ativa e sem `unsafe-inline` em `script-src`; site funciona com ela
+- [ ] HSTS ativo em produção
+- [ ] CORS restrito às origens reais; `*` ausente
+- [ ] Nenhuma resposta pública contém `licensePlate`, `passwordHash`, `_id` cru
+      ou `__v` (teste automatizado)
+- [ ] Matriz de permissões verificada: toda rota admin recusa anônimo e papel
+      insuficiente
+- [ ] `npm audit` sem vulnerabilidade alta ou crítica
+- [ ] Nenhum segredo no histórico do git (varredura executada)
+- [ ] Produção: sem stack trace, sem nome de coleção, sem versão de dependência
+      nas respostas
+- [ ] Logs sem senha, token, cookie ou PII de lead
+- [ ] Segredos rotacionados antes do go-live
+- [ ] `docs/SECURITY.md` publicado
+- [ ] Checklist OWASP Top 10 revisado item a item
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| **Segurança automatizada** | varredura de campo sensível em toda resposta pública; matriz de autorização completa; rate limit de cada rota limitada |
+| Integração | CSP não quebra a aplicação; CORS recusa origem não listada |
+| Manual | tentativa de injeção NoSQL; XSS armazenado em descrição e em lead; IDOR por troca de id; enumeração de usuário no login |
+| Ferramentas | `npm audit`; análise de cabeçalhos; varredura de segredo no histórico |
+
+---
+
+# FASE 11 — Testes
+
+### Objetivo
+Rede de segurança que permita evoluir o produto e personalizá-lo por cliente
+sem medo de regressão. É o que diferencia um produto base de um projeto único.
+
+### Funcionalidades
+- Vitest configurado nos três workspaces
+- `mongodb-memory-server` para integração sem depender do Atlas
+- Fábricas de dados de teste (moto, marca, usuário, lead)
+- **Unitários:** cálculo de financiamento, slug, formatadores, construção de
+  filtro, validação Zod de cada schema, hash de senha, JWT, `metaInjector`
+- **Integração (API):** todo endpoint no caminho feliz e de falha, autorização por
+  papel, validação, paginação, rate limit
+- **Componentes:** `MotoCard`, `MotoFilters`, `MotoGallery`, formulários,
+  `RequireAuth`
+- **E2E** dos fluxos que sustentam o negócio:
+  1. Visitante filtra o catálogo → abre a moto → envia interesse
+  2. Admin faz login → cadastra moto com fotos → ela aparece no site
+  3. Admin altera status → moto sai do catálogo público
+  4. Visitante simula financiamento → envia lead
+  5. Visitante envia "venda sua moto" → lead aparece no painel
+- **Testes de regressão de segurança** (das FASES 2/3/6/8/10) no mesmo conjunto
+- CI executando tudo a cada push
+- Cobertura mínima de 70% global e **90%** em serviços e no cálculo de
+  financiamento
+
+### Arquivos envolvidos
+```
+backend/tests/{unit,integration}/**
+backend/tests/{setup.js,factories/*.js}
+frontend/src/**/*.test.jsx
+e2e/**                                 especificações E2E
+vitest.config.js                       por workspace
+.github/workflows/ci.yml
+```
+
+### Dependências
+`vitest`, `supertest`, `mongodb-memory-server`, `@testing-library/react`,
+`@testing-library/user-event`, `@vitest/coverage-v8`; E2E: `@playwright/test`
+(Chromium já disponível no ambiente, sem download extra)
+
+### Critérios de conclusão
+- [ ] `npm test` na raiz roda tudo e passa
+- [ ] Cobertura ≥ 70% global e ≥ 90% em serviços e no simulador
+- [ ] Todo endpoint tem teste de caminho feliz e de falha
+- [ ] Toda rota admin tem teste de autorização
+- [ ] Os 5 fluxos E2E passam
+- [ ] Testes de regressão de segurança no conjunto principal
+- [ ] CI verde, com bloqueio de merge em caso de falha
+- [ ] Suíte completa em menos de 5 min (senão ninguém a executa)
+- [ ] Nenhum teste depende do Atlas nem de rede externa
+
+### Testes necessários
+Esta fase **é** os testes. A verificação é a própria suíte verde, com a
+cobertura atingida e o tempo de execução dentro do limite.
+
+---
+
+# FASE 12 — Deploy
+
+### Objetivo
+Colocar em produção, com CI/CD, backup e monitoramento — pronto para
+demonstração comercial.
+
+### Funcionalidades
+- Provisionamento conforme §13.2 (decisão C)
+- Atlas de produção em **M10** (backup contínuo — R-04), usuário restrito
+- Cloudinary com pastas por ambiente
+- Cloudflare: DNS, TLS, cache de assets, WAF básico
+- Variáveis de ambiente no painel do provedor (nunca no repositório)
+- Build: frontend → `dist`, servido pelo backend com meta injection
+- CI/CD: push → lint → test → build → deploy
+- Índices por script explícito; `autoIndex` desligado
+- Health check em `/api/health` com troca de tráfego condicionada
+- Monitoramento de erro (Sentry ou equivalente) e uptime
+- Rotina de backup verificada com **restauração de teste**
+- Domínio e HTTPS configurados (decisão D)
+- Seed da loja fictícia em produção para demonstração
+- Rollback documentado e testado
+
+### Arquivos envolvidos
+```
+.github/workflows/{ci,deploy}.yml
+backend/package.json                   scripts de start e migração
+backend/src/app.js                     servir estáticos em produção
+docs/DEPLOYMENT.md                     runbook (novo)
+.env.example                           conjunto final de variáveis
+```
+
+### Dependências
+`@sentry/node` (ou equivalente) — justificativa: sem captura de erro em
+produção, falha de cliente só se descobre por reclamação.
+
+### Critérios de conclusão
+- [ ] Site público acessível por HTTPS no domínio definitivo
+- [ ] Painel admin acessível e funcional em produção
+- [ ] Push na branch principal → deploy automático após CI verde
+- [ ] Health check bloqueia deploy defeituoso
+- [ ] Atlas M10 com backup contínuo ativo
+- [ ] **Restauração de backup testada com sucesso** (backup não testado não é
+      backup)
+- [ ] Índices criados em produção e verificados
+- [ ] Nenhuma variável sensível no repositório
+- [ ] Monitoramento de erro recebendo eventos; alerta configurado
+- [ ] Rollback executado com sucesso em teste
+- [ ] Loja de demonstração populada e apresentável
+- [ ] Staging com `Disallow: /` confirmado
+- [ ] `docs/DEPLOYMENT.md` permite a outra pessoa operar o sistema
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Fumaça em produção | home, catálogo, detalhe, formulário, login admin, CRUD |
+| Integração | health check; `sitemap.xml` e `robots.txt` em produção; preview de OG no domínio real |
+| Operacional | restauração de backup; rollback; falha proposital de CI bloqueando deploy |
+| Performance | Lighthouse **no domínio de produção** (não só local) |
+
+---
+
+# FASE 13 — Auditoria final
+
+### Objetivo
+Confirmar que a plataforma é um **produto base revendável**, não um site único —
+e entregar documentação que permita personalizá-la para o próximo cliente.
+
+### Funcionalidades
+- Revisão de requisitos: cada item do briefing conferido como entregue,
+  adiado (com motivo) ou descartado (com justificativa)
+- **Teste de revenda:** configurar uma segunda loja fictícia (outro nome, logo,
+  cores, WhatsApp, endereço) **sem alterar código** — a prova de R-15
+- Varredura por valor de loja hardcoded no código
+- Revisão de qualidade: código morto, `TODO` pendente, inconsistência de padrão
+- Revisão da consistência do envelope em **todos** os endpoints
+- Revisão de acessibilidade (contraste, foco, rótulos, teclado, leitor de tela)
+- Revisão de responsividade em dispositivo real
+- Reexecução da auditoria de segurança da FASE 10
+- Documentação final:
+  - `README.md` — visão geral, instalação, scripts
+  - `docs/CUSTOMIZATION.md` — como personalizar para um novo cliente
+  - `docs/API.md` — referência de endpoints
+  - `docs/ARCHITECTURE.md` — atualizado com o que foi construído de fato
+  - `docs/DEPLOYMENT.md`, `docs/SECURITY.md`
+- Registro do débito técnico conhecido e do backlog pós-lançamento
+
+### Arquivos envolvidos
+```
+README.md
+docs/{ARCHITECTURE,ROADMAP,CUSTOMIZATION,API,DEPLOYMENT,SECURITY}.md
+docs/TECHNICAL-DEBT.md                 (novo)
+todo o código                          revisão
+```
+
+### Dependências
+Nenhuma.
+
+### Critérios de conclusão
+- [ ] Todo requisito do briefing classificado como entregue / adiado /
+      descartado, com justificativa
+- [ ] **Segunda loja fictícia configurada sem tocar em código** — critério
+      central do produto base
+- [ ] Varredura confirma zero dado de loja hardcoded
+- [ ] Envelope de resposta consistente em todos os endpoints
+- [ ] Acessibilidade: contraste AA, navegação por teclado completa, foco
+      visível, rótulos em todos os campos
+- [ ] Responsividade validada em dispositivo real (não só emulador)
+- [ ] Auditoria de segurança reexecutada, sem pendência
+- [ ] Testes verdes; cobertura mantida
+- [ ] Lighthouse mantido ≥ 90 em produção
+- [ ] `docs/CUSTOMIZATION.md` permite a um terceiro personalizar a plataforma
+- [ ] `docs/TECHNICAL-DEBT.md` com o que ficou para depois e o porquê
+- [ ] Nenhum `console.log` ou `TODO` esquecido em produção
+
+### Testes necessários
+| Tipo | O que |
+|---|---|
+| Regressão completa | suíte inteira (unit, integração, E2E) |
+| Aceitação | percorrer o briefing item a item contra o sistema em produção |
+| **Revenda** | criar a segunda loja só por configuração |
+| Acessibilidade | axe DevTools + navegação por teclado + leitor de tela |
+| Manual | dispositivos reais: Android e iOS, tablet, desktop |
+
+---
+
+## Resumo de dependências por fase
+
+| Fase | Novas dependências |
+|---|---|
+| 1 | express, zod, helmet, cors, compression, cookie-parser, pino, pino-http, react, react-dom, react-router-dom, axios, @tanstack/react-query, vite, @vitejs/plugin-react, tailwindcss, postcss, autoprefixer, eslint, prettier, vitest |
+| 2 | mongoose, slugify, supertest, mongodb-memory-server |
+| 3 | jsonwebtoken, argon2, express-rate-limit, react-hook-form, @hookform/resolvers |
+| 4 | — (`@headlessui/react` só se justificado) |
+| 5 | — |
+| 6 | — |
+| 7 | — |
+| 8 | cloudinary |
+| 9 | — (ou `react-helmet-async`, se o hook próprio não bastar) |
+| 10 | — |
+| 11 | @testing-library/react, @testing-library/user-event, @vitest/coverage-v8, @playwright/test |
+| 12 | @sentry/node (ou equivalente) |
+| 13 | — |
+
+Nenhuma dependência entra sem justificativa registrada.
+
+---
+
+## O que este roadmap deliberadamente **não** inclui
+
+Itens fora do briefing, registrados para não entrarem por dentro do escopo
+(R-16). Cada um pode virar uma fase futura, com sua aprovação:
+
+- Multi-tenancy real (a arquitetura está preparada — §14.3 — mas não é
+  implementada)
+- Área de cliente / conta para o comprador
+- Pagamento ou reserva on-line
+- Avaliação automática de moto na troca
+- Comparador de motos
+- Chat ao vivo ou chatbot
+- Integração com portais de anúncio (Webmotors, OLX, iCarros)
+- E-mail transacional e notificação de novo lead
+- Blog ou área de conteúdo
+- Aplicativo móvel
+- Relatórios e BI avançados no painel
+- Internacionalização
+
+---
+
+## Situação atual
+
+**FASE 0 concluída.** Nenhum código de aplicação escrito, nenhuma dependência
+instalada.
+
+**Próximo passo:** sua autorização para iniciar a **FASE 1**, idealmente junto
+com as respostas às decisões **A–I** de §15 do ARCHITECTURE.
