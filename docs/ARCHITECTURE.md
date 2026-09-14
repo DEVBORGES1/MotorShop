@@ -131,21 +131,25 @@ escreve código de aplicação. Os únicos artefatos da FASE 0 são
 
 ### 2.1 Stack definida (conforme obrigatoriedade)
 
+> **Versões atualizadas na FASE 1.** Os majores abaixo são os estáveis
+> correntes no momento da implementação, verificados no registry — e não os
+> assumidos ao escrever a FASE 0. Ver §15 D-09.
+
 | Camada | Tecnologia | Observação |
 |---|---|---|
-| UI | **React 18** | Conforme exigido |
+| UI | **React 19** | Conforme exigido |
 | Linguagem | **JavaScript (ESM)** | Conforme exigido |
-| Build | **Vite 5+** | Conforme exigido |
-| Rotas | **React Router 6** (`createBrowserRouter`) | Conforme exigido |
-| HTTP client | **Axios** | Conforme exigido |
-| Estilo | **Tailwind CSS 3** + tokens em CSS custom properties | Conforme exigido |
+| Build | **Vite 8** | Conforme exigido |
+| Rotas | **React Router 7** (`createBrowserRouter`) | Conforme exigido |
+| HTTP client | **Axios 1.x** | Conforme exigido |
+| Estilo | **Tailwind CSS 4** + tokens em CSS custom properties | v4 é CSS-first (`@theme`), sem `tailwind.config.js` |
 | Runtime backend | **Node.js 22 LTS** | Disponível no ambiente |
-| Framework | **Express 4** | Conforme exigido |
+| Framework | **Express 5** | Encaminha erros de `async` nativamente — ver §15 D-10 |
 | Contrato | **API REST** | Conforme exigido |
 | Auth | **JWT** | Conforme exigido |
-| Validação | **Zod** | Conforme exigido |
+| Validação | **Zod 4** | Conforme exigido |
 | Banco | **MongoDB Atlas** | Conforme exigido |
-| ODM | **Mongoose 8** | Escolhido — justificativa em §15 D-01 |
+| ODM | **Mongoose 9** | Escolhido — justificativa em §15 D-01 |
 
 ### 2.2 Dependências propostas, com justificativa
 
@@ -1043,7 +1047,7 @@ superfície clássica de IDOR é pequena; o risco real é **exposição de campo
 - Log de lead registra o `id`, **não** telefone e e-mail.
 - Leads contêm dado pessoal: acesso restrito a autenticados, exclusão restrita
   a `SUPER_ADMIN`, `consent` versionado registrado na criação, política de
-  retenção a definir (D-09), exportação/eliminação a pedido do titular
+  retenção a definir (decisão **E**), exportação/eliminação a pedido do titular
   suportadas pelo endpoint de exclusão.
 - Em produção, `stack` nunca vai para a resposta HTTP; vai para o log, atrelada
   ao `requestId`.
@@ -1340,7 +1344,7 @@ condição que orienta a decisão de deploy em §13.
   `BreadcrumbList` na navegação. Habilita resultado rico no Google.
 - **Status → `availability`** — `AVAILABLE` → `InStock`,
   `RESERVED` → `LimitedAvailability`, `SOLD` → `SoldOut` ou `410`,
-  conforme a decisão D-06.
+  conforme a decisão **A**.
 - **Imagens** — `alt` obrigatório (é campo do subdocumento, §5.1.1).
 - **Idioma** — `<html lang="pt-BR">`.
 
@@ -1619,6 +1623,44 @@ Trocar slug quebra link indexado e link já enviado por WhatsApp. Alterar
 modelo/ano não altera o slug. Se a troca vier a ser necessária, a solução
 correta é uma coleção de redirects 301 — fora do escopo atual.
 
+### D-09 — Versões: majores estáveis correntes ✅ decidido (FASE 1)
+A FASE 0 registrou React 18, Vite 5, Tailwind 3, Express 4, Mongoose 8 e Zod 3.
+Na implementação, a consulta ao registry mostrou React 19, Vite 8, Tailwind 4,
+Express 5, Mongoose 9 e Zod 4 como estáveis correntes. Projeto novo não deve
+nascer um major atrás: a atualização depois custa mais do que começar certo, e
+nenhuma das versões antigas oferecia vantagem para este caso. A tabela de §2.1
+reflete o que está instalado.
+
+### D-10 — Sem `asyncHandler` ✅ decidido (FASE 1)
+O Express 5 encaminha automaticamente a rejeição de um handler `async` para o
+middleware de erro — comportamento que no Express 4 exigia um wrapper. O
+utilitário `asyncHandler` previsto em §4.2 deixou de ter função e **não foi
+criado**. Menos um arquivo e menos ruído em toda rota assíncrona.
+
+### D-11 — Dois arquivos `.env`, não um ✅ decidido (FASE 1)
+A FASE 1 tentou servir backend e frontend com um único `.env` na raiz
+(via `envDir` do Vite). O resultado foi um **defeito de produção**: o Vite lê o
+`NODE_ENV=development` do backend e passa a gerar o bundle com o **React de
+desenvolvimento** — 577 kB em vez de 367 kB, além de mais lento em runtime.
+
+Passaram a existir dois arquivos: `.env` na raiz (backend, contém segredos) e
+`frontend/.env` (somente `VITE_*`, embutido no bundle e público). Além de
+corrigir o defeito, a separação torna a fronteira de segurança explícita:
+um arquivo nunca é lido pelo Vite, o outro é público por definição.
+
+### D-12 — Docker deliberadamente adiado ✅ decidido (FASE 1)
+**Não há Docker no projeto**, e a ausência é intencional.
+
+Docker resolve duas coisas: orquestrar serviços locais e igualar ambientes.
+Aqui, o único serviço externo é o MongoDB, que é **gerenciado na nuvem**
+(Atlas) — não há o que orquestrar localmente. E o runtime é Node puro, sem
+dependência de sistema operacional. Nesse cenário, Docker adiciona uma etapa de
+build e um ciclo de reinício a cada alteração, em troca de nada.
+
+Reavaliar na **FASE 12**, quando a plataforma de deploy estiver escolhida: se
+ela exigir imagem de container, um `Dockerfile` de produção entra lá — sem
+impor Docker ao desenvolvimento local.
+
 ### D-08 — JavaScript com Zod como contrato de runtime ✅ decidido
 A stack exige JavaScript. A mitigação de P-02 é: Zod como fonte única de
 validação (compartilhada via `shared/`), JSDoc nas assinaturas públicas de
@@ -1657,7 +1699,7 @@ se você não sinalizar divergência, sigo com elas.
 | **R-05** | **Segredo fraco ou vazado** (`JWT_SECRET`, Atlas, Cloudinary) | Média | Crítico | Validação Zod no boot recusa segredo curto/ausente; `.env` ignorado no git; segredo distinto por ambiente; nada sensível em `VITE_*` |
 | **R-06** | **Rate limit e cache em memória** deixam de funcionar com múltiplas instâncias | Média (ao escalar) | Médio | Documentado; Redis na topologia de escala (§13.3); MVP roda instância única |
 | **R-07** | **Simulação de financiamento interpretada como oferta de crédito** | Média | Médio (jurídico) | Aviso explícito de que é estimativa e não proposta; taxas configuráveis; sem análise de crédito; sem coleta de CPF na simulação |
-| **R-08** | **LGPD** — dado pessoal em leads sem base legal, retenção ou controle de acesso | Média | Médio-alto | `consent` versionado, acesso somente autenticado, exclusão por `SUPER_ADMIN`, retenção definida (D/E), redaction em log |
+| **R-08** | **LGPD** — dado pessoal em leads sem base legal, retenção ou controle de acesso | Média | Médio-alto | `consent` versionado, acesso somente autenticado, exclusão por `SUPER_ADMIN`, retenção definida (decisão **E**), redaction em log |
 | **R-09** | **Ausência de tipagem** gera divergência silenciosa frontend/backend | Média | Médio | Zod compartilhado em `shared/`, JSDoc, testes de contrato por endpoint |
 | **R-10** | **Enumeração/scraping do estoque** por concorrente | Média | Baixo-médio | Rate limit em rotas públicas, `limit` máximo de 48, sem `GET /motos/:id` público, Cloudflare à frente |
 | **R-11** | **Spam nos formulários públicos** de lead | Alta | Médio (polui a operação) | Rate limit de 5/hora por IP, honeypot, validação estrita; CAPTCHA só se o spam se confirmar (não adicionar atrito antes de haver problema) |
