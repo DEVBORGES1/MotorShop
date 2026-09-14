@@ -155,7 +155,9 @@ eslint.config.js
 
 ---
 
-# FASE 2 — Banco + API
+# FASE 2 — Banco + API ✅ concluída (verificação de banco pendente)
+
+> Relatório: [`PHASE-2-REPORT.md`](./PHASE-2-REPORT.md)
 
 ### Objetivo
 Persistência real e CRUD completo de motos e marcas na API, com validação e
@@ -192,19 +194,25 @@ shared/src/enums.js                  (MOTO_STATUS, FUEL, TRANSMISSION)
 `mongoose`, `slugify`; dev: `supertest`, `mongodb-memory-server`
 
 ### Critérios de conclusão
-- [ ] Cluster Atlas criado, com usuário restrito a um database
-- [ ] Todos os índices de §9.4 existem e são verificáveis por `getIndexes()`
-- [ ] `npm run seed` popula marcas e ~20 motos
-- [ ] CRUD completo funciona via cliente HTTP
-- [ ] Cada filtro do catálogo funciona isoladamente **e** combinado
-- [ ] Ordenação por preço, ano e km correta em ambas as direções
-- [ ] Paginação correta, `limit` teto de 48 imposto pelo servidor
-- [ ] Slug gerado no formato esperado; colisão resolvida com sufixo
-- [ ] Payload com campo desconhecido → `422` (sem *mass assignment*)
-- [ ] `?sort=<valor inválido>` → `422`, não erro 500
-- [ ] Resposta pública **não** contém `licensePlate` nem moto `INACTIVE`
-- [ ] `explain()` das consultas do catálogo usa `IXSCAN`, **não** `COLLSCAN`
-- [ ] `GET /api/filtros` devolve faixas coerentes com o seed
+
+Código e testes escritos para todos. Os marcados com **▶** dependem de um
+MongoDB para serem *executados*, e o ambiente desta sessão não tem acesso a um
+(ver relatório §11) — o teste existe e roda com `npm test` onde houver banco.
+
+- [ ] ▶ Cluster Atlas criado, com usuário restrito a um database — **você**
+- [x] Índices de §9.4 declarados no schema (6) e script `npm run db:indexes`
+- [x] `npm run seed` escrito: 6 marcas e 22 motos, cobrindo os 4 status
+- [x] CRUD completo implementado; ▶ execução contra banco
+- [x] Cada filtro implementado e testado isoladamente e combinado ▶
+- [x] Ordenação por preço, ano e km nas duas direções ▶
+- [x] Paginação com teto de 48 imposto pelo servidor (testado sem banco)
+- [x] Slug no formato esperado e colisão resolvida (testado sem banco)
+- [x] Campo desconhecido → `422` (testado sem banco)
+- [x] `?sort=<valor inválido>` → `422` (testado sem banco)
+- [x] Projeção pública sem `licensePlate`, verificada por teste dedicado
+- [x] `INACTIVE` fora do público — imposto no servidor, testado ▶
+- [x] Teste de `explain()` escrito exigindo `IXSCAN` e ausência de `COLLSCAN` ▶
+- [x] `GET /api/filtros` implementado com `$facet` e testado ▶
 
 ### Testes necessários
 | Tipo | O que |

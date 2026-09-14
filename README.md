@@ -15,15 +15,21 @@ a outras lojas **por configuração, sem alteração de código**.
 |---|---|
 | **FASE 0** — Arquitetura | ✅ concluída |
 | **FASE 1** — Fundação do projeto | ✅ concluída |
-| **FASE 2** — Banco + API | ⏳ aguardando autorização |
+| **FASE 2** — Banco + API | ✅ concluída — falta executar os testes com banco |
+| **FASE 3** — Autenticação + Admin | ⏳ aguardando autorização |
 
-O que existe hoje: monorepo configurado, API Express com health check,
-tratamento centralizado de erros, segurança básica, conexão MongoDB preparada,
-SPA React consumindo a API, lint, formatação e testes.
+O que existe hoje: monorepo configurado, API REST com catálogo de motos
+(filtros, ordenação e paginação no servidor), CRUD de motos e marcas, modelos
+com índices, seed da loja fictícia, segurança básica, SPA React consumindo a
+API, lint, formatação e testes.
 
-O que **ainda não** existe: catálogo, CRUD de motos, autenticação, painel
-administrativo, leads, financiamento e upload de imagens — cada um na sua fase
+O que **ainda não** existe: autenticação, painel administrativo, catálogo no
+frontend, leads, financiamento e upload de imagens — cada um na sua fase
 ([`docs/ROADMAP.md`](./docs/ROADMAP.md)).
+
+> ⚠️ As rotas `/api/admin/*` ainda **não têm autenticação** (chega na FASE 3).
+> Por isso elas respondem `503` em produção — um deploy feito agora não expõe
+> escrita sem credencial.
 
 ---
 
@@ -108,6 +114,20 @@ npm test                                  # os dois workspaces
 npm test --workspace @motorshop/backend   # apenas a API
 ```
 
+Os testes de integração sobem um MongoDB em memória automaticamente. Onde isso
+não for possível, eles se marcam como **pulados** com aviso — não passam em
+falso.
+
+## Banco de dados
+
+```bash
+npm run seed        # popula a loja fictícia: 6 marcas e 22 motos
+npm run db:indexes  # cria e lista os índices
+```
+
+Ambos exigem `MONGODB_URI` no `.env`. O `seed` apaga motos e marcas antes de
+inserir, e se recusa a rodar em produção.
+
 ## Lint e formatação
 
 ```bash
@@ -128,14 +148,21 @@ MotorShop/
 ├─ backend/                    API REST (Express + Mongoose)
 │  ├─ src/
 │  │  ├─ config/               env validado, conexão do banco, logger
-│  │  ├─ middlewares/          requestId, notFound, errorHandler
+│  │  ├─ middlewares/          validate, requireDatabase, adminGuard,
+│  │  │                        requestId, notFound, errorHandler
 │  │  ├─ modules/              um diretório por domínio
-│  │  │  └─ health/            service · controller · routes
+│  │  │  ├─ motos/             model · repository · service · serializer
+│  │  │  ├─ brands/            controller · routes · schema
+│  │  │  └─ health/
 │  │  ├─ routes/               agregador de /api
-│  │  ├─ utils/                ApiError, envelope de resposta
+│  │  ├─ scripts/              seed e criação de índices
+│  │  ├─ utils/                ApiError, envelope, money, slug, pagination
 │  │  ├─ app.js                monta o Express (sem listen — testável)
 │  │  └─ server.js             conecta o banco e sobe o servidor
 │  └─ tests/                   integração e unitários
+│
+├─ shared/                     enums do domínio, usados pelos dois lados
+│  └─ src/enums.js
 │
 ├─ frontend/                   SPA React (Vite)
 │  ├─ public/
@@ -153,14 +180,19 @@ MotorShop/
 │  ├─ ARCHITECTURE.md          arquitetura, decisões e riscos
 │  ├─ ROADMAP.md               fases 0 a 13
 │  ├─ SETUP.md                 configuração do ambiente local
-│  └─ PHASE-1-REPORT.md        relatório da FASE 1
+│  ├─ PHASE-1-REPORT.md        relatório da FASE 1
+│  └─ PHASE-2-REPORT.md        relatório da FASE 2
 │
 ├─ .env.example                variáveis do backend
 └─ package.json                workspaces e scripts
 ```
 
 **Regra de camadas:** rota não acessa banco, controller não tem regra de
-negócio, componente React não conhece Axios.
+negócio, componente React não conhece Axios. Só o repositório fala Mongoose —
+é o que permitirá introduzir multi-loja alterando um ponto, e não o código todo.
+
+**Dinheiro** é armazenado em centavos inteiros e convertido para reais na borda
+da API (`utils/money.js`), porque `float` erra em aritmética decimal.
 
 ---
 

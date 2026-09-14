@@ -52,6 +52,12 @@ export default [
     },
   },
 
+  // Scripts de linha de comando existem para imprimir na saída padrão.
+  {
+    files: ['backend/src/scripts/**/*.js'],
+    rules: { 'no-console': 'off' },
+  },
+
   // Testes — globais do Vitest
   {
     files: ['**/*.test.js', '**/tests/**/*.js'],

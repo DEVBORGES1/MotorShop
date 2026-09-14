@@ -58,3 +58,17 @@ describe('tratamento de erros', () => {
     expect(response.headers['access-control-allow-origin']).toBe('http://localhost:5173');
   });
 });
+
+describe('indisponibilidade do banco', () => {
+  it('responde 503 imediatamente quando o banco não está pronto, sem esperar o timeout', async () => {
+    const inicio = Date.now();
+    const response = await request(app).get('/api/motos');
+    const decorridoMs = Date.now() - inicio;
+
+    // Sem a guarda, o Mongoose enfileiraria o comando e só falharia após 10 s.
+    expect(response.status).toBe(503);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toMatch(/banco de dados/i);
+    expect(decorridoMs).toBeLessThan(1000);
+  });
+});

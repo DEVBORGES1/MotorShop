@@ -9,6 +9,7 @@
     "node": ">=22"
   },
   "workspaces": [
+    "shared",
     "backend",
     "frontend"
   ],
