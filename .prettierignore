@@ -1,0 +1,8 @@
+node_modules/
+dist/
+build/
+coverage/
+package-lock.json
+
+# Documentação é escrita à mão, com quebras de linha intencionais.
+*.md
