@@ -9,7 +9,7 @@ export function Field({ id, label, error, hint, children, required }) {
 
   return (
     <div className="space-y-1.5">
-      <label htmlFor={id} className="block text-sm font-medium text-ink-200">
+      <label htmlFor={id} className="label-caps block text-[11px] text-ink-400">
         {label}
         {required && <span className="ml-1 text-danger">*</span>}
       </label>
@@ -34,5 +34,18 @@ export function Field({ id, label, error, hint, children, required }) {
   );
 }
 
-export const inputClass =
-  'w-full rounded-lg border border-ink-800 bg-ink-900 px-3 py-2 text-sm text-ink-50 outline-none transition focus:border-brand-500 focus:ring-1 focus:ring-brand-500 disabled:opacity-50';
+const controlBase =
+  'w-full rounded-md border border-ink-700 bg-ink-900 px-3 py-2.5 text-sm text-ink-50 outline-none transition placeholder:text-ink-600 disabled:opacity-50';
+
+export const inputClass = controlBase;
+
+/**
+ * A seta nativa do `<select>` vem clara demais no tema escuro em alguns
+ * navegadores; `appearance-none` a remove e a seta volta como fundo SVG,
+ * desenhada com o tom de texto de apoio.
+ */
+export const selectClass = `${controlBase} appearance-none bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8' fill='none' stroke='%239AA39A' stroke-width='1.5'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E")] bg-[length:12px_8px] bg-[position:right_12px_center] bg-no-repeat pr-9`;
+
+/** Slider de faixa (preço, entrada, parcelas). */
+export const rangeClass =
+  'h-1 w-full cursor-pointer appearance-none rounded-sm bg-ink-700 accent-brand-500';

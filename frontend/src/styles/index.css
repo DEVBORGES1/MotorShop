@@ -3,27 +3,62 @@
 /**
  * Tokens de design da plataforma.
  *
- * São variáveis CSS reais: a partir da FASE 4 a loja sobrescreve estes valores
- * em `:root` com o que vier de `GET /api/store`, sem rebuild e sem tocar em
- * componente. Nenhum componente deve usar cor literal.
+ * São variáveis CSS reais: a loja sobrescreve estes valores em `:root` com o
+ * que vier de `GET /api/store`, sem rebuild e sem tocar em componente.
+ * Nenhum componente deve usar cor literal.
+ *
+ * Os valores abaixo são o tema padrão do produto, extraídos do protótipo de
+ * referência (`docs/design/README.md`): fundo quase preto, acento verde de
+ * alta luminosidade, cantos quase retos e tipografia condensada — a linguagem
+ * de oficina, não de e-commerce genérico.
+ *
+ * Contraste sobre o fundo (`--color-ink-900`), medido em WCAG:
+ * ink-50 17.8 · ink-200 11.7 · ink-400 7.6 · ink-500 4.9 · brand-500 10.3 ·
+ * warn 10.3 · danger 5.0. Todos passam AA para texto normal. `ink-600` fica
+ * em 3.3 e existe só para elemento desabilitado e traço decorativo — nunca
+ * para texto que precise ser lido.
  */
 @theme {
-  --color-brand-50: #fff7ed;
-  --color-brand-100: #ffedd5;
-  --color-brand-500: #f97316;
-  --color-brand-600: #ea580c;
-  --color-brand-700: #c2410c;
+  /* Acento da loja. `brand-500` é a cor que o lojista troca nas configurações;
+     as outras duas derivam dela e são recalculadas junto. */
+  --color-brand-400: #8cf06e;
+  --color-brand-500: #4cd62b;
+  --color-brand-600: #3bb81f;
 
-  --color-ink-50: #f8fafc;
-  --color-ink-200: #e2e8f0;
-  --color-ink-400: #94a3b8;
-  --color-ink-600: #475569;
-  --color-ink-800: #1e293b;
-  --color-ink-900: #0f172a;
+  /* Texto sobre o acento. Escuro de propósito: o verde é claro demais para
+     receber texto branco (contraste ficaria em 1.8). */
+  --color-on-brand: #07120a;
 
-  --color-ok: #16a34a;
-  --color-warn: #d97706;
-  --color-danger: #dc2626;
+  --color-ink-50: #f2f4f1;
+  --color-ink-100: #e6e9e4;
+  --color-ink-200: #c3c9c1;
+  --color-ink-400: #9aa39a;
+  --color-ink-500: #79817a;
+  --color-ink-600: #5c655c;
+  --color-ink-700: #262b26;
+  --color-ink-800: #1a1d1a;
+  --color-ink-900: #0a0b0a;
+
+  /* Superfícies elevadas sobre o fundo. */
+  --color-surface: #121412;
+  --color-surface-2: #191d19;
+
+  --color-ok: #38c172;
+  --color-warn: #e8b33c;
+  --color-danger: #e5484d;
+
+  /* Títulos, botões e rótulos em caixa alta usam a display; o corpo usa a
+     sans. As duas são configuráveis pela loja, daí serem tokens. */
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Barlow', ui-sans-serif, system-ui, sans-serif;
+
+  /* Cantos quase retos — o protótipo vai de 2px (chips) a 4px (cards).
+     Nada aqui passa de 8px de propósito. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 6px;
+  --radius-2xl: 8px;
 }
 
 html {
@@ -33,14 +68,38 @@ html {
 body {
   margin: 0;
   background-color: var(--color-ink-900);
+  color: var(--color-ink-200);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Títulos usam a display em toda a aplicação — declarar aqui evita repetir
+   `font-display` em cada `<h1>` e garante que uma tela nova já nasça certa. */
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-display);
   color: var(--color-ink-50);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    'Helvetica Neue',
-    Arial,
-    sans-serif;
+}
+
+/* Rótulo em caixa alta com espaçamento — repetido em toda a interface do
+   protótipo (rótulos de campo, abas, tags, itens de menu). */
+@utility label-caps {
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+::selection {
+  background: var(--color-brand-500);
+  color: var(--color-on-brand);
+}
+
+/* Foco visível e consistente em tudo que recebe teclado. O anel usa o acento
+   da loja, então acompanha o tema sem regra extra por componente. */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
 }

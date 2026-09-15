@@ -1,7 +1,7 @@
 const TONES = {
   error: 'border-danger/40 bg-danger/10 text-danger',
   success: 'border-ok/40 bg-ok/10 text-ok',
-  info: 'border-ink-800 bg-ink-800/40 text-ink-200',
+  info: 'border-ink-800 bg-surface text-ink-200',
 };
 
 export function Alert({ tone = 'info', children }) {
@@ -10,7 +10,7 @@ export function Alert({ tone = 'info', children }) {
   return (
     <div
       role={tone === 'error' ? 'alert' : 'status'}
-      className={`rounded-lg border px-4 py-3 text-sm ${TONES[tone]}`}
+      className={`rounded-md border px-4 py-3 text-sm ${TONES[tone]}`}
     >
       {children}
     </div>

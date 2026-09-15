@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { Alert } from '@/components/ui/Alert.jsx';
+import { buttonClass } from '@/components/ui/Button.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { marcasAdmin, motosAdmin } from '@/services/adminService.js';
 
@@ -48,16 +49,10 @@ export function Dashboard() {
             </div>
 
             <div className="flex flex-wrap gap-3">
-              <Link
-                to="/admin/motos/nova"
-                className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-900 transition hover:bg-brand-600"
-              >
+              <Link to="/admin/motos/nova" className={buttonClass()}>
                 Cadastrar moto
               </Link>
-              <Link
-                to="/admin/marcas"
-                className="rounded-lg border border-ink-800 px-4 py-2 text-sm text-ink-200 transition hover:bg-ink-800"
-              >
+              <Link to="/admin/marcas" className={buttonClass({ variant: 'secondary' })}>
                 {data.marcas} marca(s) cadastrada(s)
               </Link>
             </div>

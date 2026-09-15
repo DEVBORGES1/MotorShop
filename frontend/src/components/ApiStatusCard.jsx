@@ -1,3 +1,5 @@
+import { buttonClass } from '@/components/ui/Button.jsx';
+
 /**
  * Exibe o resultado do health check. Componente puramente de apresentação:
  * recebe estado pronto e não conhece a API.
@@ -14,11 +16,7 @@ export function ApiStatusCard({ data, error, isLoading, onRetry }) {
       {!isLoading && error && (
         <div className="mt-3">
           <p className="font-medium text-danger">{error.message}</p>
-          <button
-            type="button"
-            onClick={onRetry}
-            className="mt-4 rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-900 transition hover:bg-brand-600"
-          >
+          <button type="button" onClick={onRetry} className={buttonClass({ className: 'mt-4' })}>
             Tentar novamente
           </button>
         </div>

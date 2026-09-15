@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { Alert } from '@/components/ui/Alert.jsx';
-import { Button } from '@/components/ui/Button.jsx';
+import { Button, buttonClass } from '@/components/ui/Button.jsx';
 import { inputClass } from '@/components/ui/Field.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { motosAdmin } from '@/services/adminService.js';
@@ -50,10 +50,7 @@ export function MotosList() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Motos</h1>
-        <Link
-          to="/admin/motos/nova"
-          className="rounded-lg bg-brand-500 px-4 py-2 text-sm font-semibold text-ink-900 transition hover:bg-brand-600"
-        >
+        <Link to="/admin/motos/nova" className={buttonClass()}>
           Cadastrar moto
         </Link>
       </div>
