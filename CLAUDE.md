@@ -44,6 +44,7 @@ diretamente no código.
 | `docs/ARCHITECTURE.md` | Arquitetura, modelos, API, decisões e riscos |
 | `docs/ROADMAP.md` | Fases 0 a 13, com critérios de conclusão |
 | `docs/SETUP.md` | Configuração do ambiente local |
+| `docs/design/README.md` | Protótipo visual de referência e tokens de design |
 
 **O trabalho é executado por fases.** Não implemente funcionalidades de fases
 seguintes sem autorização explícita do dono do projeto.

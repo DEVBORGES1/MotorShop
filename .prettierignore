@@ -6,3 +6,6 @@ package-lock.json
 
 # Documentação é escrita à mão, com quebras de linha intencionais.
 *.md
+
+# Protótipos de design exportados do Claude Design — arquivo gerado, não editar.
+docs/design/*.html

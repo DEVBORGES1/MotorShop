@@ -187,6 +187,7 @@ MotorShop/
 │     └─ styles/               tokens de design (variáveis CSS)
 │
 ├─ docs/
+│  ├─ design/                  protótipo visual de referência
 │  ├─ ARCHITECTURE.md          arquitetura, decisões e riscos
 │  ├─ ROADMAP.md               fases 0 a 13
 │  ├─ SETUP.md                 configuração do ambiente local
