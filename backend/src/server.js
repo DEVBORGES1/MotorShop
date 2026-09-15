@@ -8,6 +8,14 @@ import { createApp } from './app.js';
  * encerra de forma ordenada.
  */
 async function start() {
+  if (!env.hasPersistentJwtSecret) {
+    logger.warn(
+      'JWT_SECRET não definida — um segredo temporário foi gerado. ' +
+        'As sessões administrativas serão perdidas a cada reinício. ' +
+        'Defina JWT_SECRET no .env para mantê-las.',
+    );
+  }
+
   await connectDatabase();
 
   const app = createApp();

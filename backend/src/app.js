@@ -1,4 +1,5 @@
 import compression from 'compression';
+import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
 import helmet from 'helmet';
@@ -44,6 +45,8 @@ export function createApp() {
   );
 
   app.use(express.json({ limit: env.BODY_LIMIT }));
+  // Necessário para ler o cookie httpOnly do refresh token.
+  app.use(cookieParser());
   app.use(compression());
 
   app.use(
@@ -54,8 +57,6 @@ export function createApp() {
       autoLogging: { ignore: (req) => req.url === '/api/health' },
     }),
   );
-
-  // Ponto de montagem do rate limiting (FASE 3): entra aqui, antes das rotas.
 
   app.use('/api', apiRoutes);
 

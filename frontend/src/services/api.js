@@ -45,13 +45,76 @@ const instance = axios.create({
   baseURL: apiBaseUrl,
   timeout: 10_000,
   headers: { 'Content-Type': 'application/json' },
+  // Necessário para o cookie httpOnly do refresh token trafegar.
+  withCredentials: true,
 });
+
+/**
+ * Access token em MEMÓRIA, nunca em localStorage.
+ *
+ * `localStorage` é legível por qualquer script: um XSS entregaria uma sessão
+ * administrativa completa. Em memória, a exposição morre com a aba.
+ */
+let accessToken = null;
+let onSessionLost = null;
+
+export const setAccessToken = (token) => {
+  accessToken = token;
+};
+export const getAccessToken = () => accessToken;
+export const setSessionLostHandler = (handler) => {
+  onSessionLost = handler;
+};
+
+instance.interceptors.request.use((config) => {
+  if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`;
+  return config;
+});
+
+/**
+ * Uma única renovação em voo por vez.
+ *
+ * Sem isto, N requisições que recebem 401 ao mesmo tempo disparariam N
+ * refreshes — e a rotação de tokens no servidor interpretaria os extras como
+ * reuso de token roubado, derrubando todas as sessões do usuário.
+ */
+let renovacaoEmVoo = null;
+
+async function renovarSessao() {
+  renovacaoEmVoo ??= instance
+    .post('/auth/refresh', null, { skipAuthRefresh: true })
+    .then((envelope) => {
+      setAccessToken(envelope.data.accessToken);
+      return envelope.data;
+    })
+    .finally(() => {
+      renovacaoEmVoo = null;
+    });
+
+  return renovacaoEmVoo;
+}
 
 // Entrega ao chamador o envelope da API ({ success, data, message, meta }) e
 // converte qualquer falha em ApiClientError.
 instance.interceptors.response.use(
   (response) => response.data,
-  (error) => Promise.reject(normalizeApiError(error)),
+  async (error) => {
+    const config = error.config ?? {};
+    const ehRotaDeAuth = String(config.url ?? '').startsWith('/auth/');
+
+    // 401 em requisição autenticada: tenta renovar UMA vez e repete.
+    if (error.response?.status === 401 && !config.skipAuthRefresh && !ehRotaDeAuth) {
+      try {
+        await renovarSessao();
+        return await instance({ ...config, skipAuthRefresh: true });
+      } catch {
+        setAccessToken(null);
+        onSessionLost?.();
+      }
+    }
+
+    return Promise.reject(normalizeApiError(error));
+  },
 );
 
 export const api = instance;

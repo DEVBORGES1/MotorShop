@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 import { z } from 'zod';
 
 /**
@@ -21,6 +23,11 @@ const envSchema = z
     // Opcionais em desenvolvimento, obrigatórios em produção (ver superRefine).
     MONGODB_URI: z.string().trim().min(1).optional(),
     JWT_SECRET: z.string().trim().min(1).optional(),
+
+    // Amarram o token a esta aplicação: um JWT emitido para outro sistema com
+    // o mesmo segredo não é aceito aqui.
+    JWT_ISSUER: z.string().trim().min(1).default('motorshop'),
+    JWT_AUDIENCE: z.string().trim().min(1).default('motorshop-admin'),
 
     LOG_LEVEL: z.enum(LOG_LEVELS).default('info'),
     BODY_LIMIT: z.string().trim().default('100kb'),
@@ -90,11 +97,21 @@ export function parseEnv(source) {
 
   const data = result.data;
 
+  const isProduction = data.NODE_ENV === 'production';
+
+  // Fora de produção, um segredo ausente é gerado na hora: `npm run dev`
+  // funciona sem configuração, ao preço de as sessões não sobreviverem a um
+  // reinício. Em produção a variável é obrigatória (validada acima), então
+  // este caminho nunca é atingido lá.
+  const jwtSecret = data.JWT_SECRET ?? randomBytes(48).toString('base64url');
+
   return {
     success: true,
     data: Object.freeze({
       ...data,
-      isProduction: data.NODE_ENV === 'production',
+      JWT_SECRET: jwtSecret,
+      hasPersistentJwtSecret: Boolean(data.JWT_SECRET),
+      isProduction,
       isTest: data.NODE_ENV === 'test',
       corsOrigins: Object.freeze(
         data.FRONTEND_URL.split(',')

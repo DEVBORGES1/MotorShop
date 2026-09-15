@@ -96,4 +96,17 @@ export const MOTO_LIMITS = Object.freeze({
   MAX_DESCRIPTION: 5000,
 });
 
+export const USER_ROLE = Object.freeze({
+  ADMIN: 'ADMIN',
+  SUPER_ADMIN: 'SUPER_ADMIN',
+});
+
+export const USER_ROLE_LABEL = Object.freeze({
+  ADMIN: 'Administrador',
+  SUPER_ADMIN: 'Super administrador',
+});
+
+/** Senha administrativa: comprimento mínimo exigido no cadastro e no login. */
+export const PASSWORD_MIN_LENGTH = 12;
+
 export const values = (enumObject) => Object.values(enumObject);

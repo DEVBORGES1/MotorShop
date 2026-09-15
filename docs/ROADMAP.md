@@ -224,7 +224,9 @@ MongoDB para serem *executados*, e o ambiente desta sessão não tem acesso a um
 
 ---
 
-# FASE 3 — Autenticação + Admin
+# FASE 3 — Autenticação + Admin ✅ concluída (verificação de banco pendente)
+
+> Relatório: [`PHASE-3-REPORT.md`](./PHASE-3-REPORT.md)
 
 ### Objetivo
 Fechar tudo que é administrativo e entregar o painel funcional de estoque.

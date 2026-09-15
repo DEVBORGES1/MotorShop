@@ -16,20 +16,20 @@ a outras lojas **por configuração, sem alteração de código**.
 | **FASE 0** — Arquitetura | ✅ concluída |
 | **FASE 1** — Fundação do projeto | ✅ concluída |
 | **FASE 2** — Banco + API | ✅ concluída — falta executar os testes com banco |
-| **FASE 3** — Autenticação + Admin | ⏳ aguardando autorização |
+| **FASE 3** — Autenticação + Admin | ✅ concluída — falta executar os testes com banco |
+| **FASE 4** — Catálogo público | ⏳ aguardando autorização |
 
 O que existe hoje: monorepo configurado, API REST com catálogo de motos
 (filtros, ordenação e paginação no servidor), CRUD de motos e marcas, modelos
 com índices, seed da loja fictícia, segurança básica, SPA React consumindo a
 API, lint, formatação e testes.
 
-O que **ainda não** existe: autenticação, painel administrativo, catálogo no
-frontend, leads, financiamento e upload de imagens — cada um na sua fase
-([`docs/ROADMAP.md`](./docs/ROADMAP.md)).
+Também: autenticação com JWT, painel administrativo completo (motos, marcas,
+usuários e configurações da loja) e gestão de sessões revogáveis.
 
-> ⚠️ As rotas `/api/admin/*` ainda **não têm autenticação** (chega na FASE 3).
-> Por isso elas respondem `503` em produção — um deploy feito agora não expõe
-> escrita sem credencial.
+O que **ainda não** existe: catálogo no site público, página da moto, leads,
+financiamento e upload de imagens — cada um na sua fase
+([`docs/ROADMAP.md`](./docs/ROADMAP.md)).
 
 ---
 
@@ -118,6 +118,16 @@ Os testes de integração sobem um MongoDB em memória automaticamente. Onde iss
 não for possível, eles se marcam como **pulados** com aviso — não passam em
 falso.
 
+## Primeiro acesso ao painel
+
+```bash
+npm run create:superadmin    # cria o primeiro administrador
+npm run dev                  # http://localhost:5173/admin/login
+```
+
+Não existe cadastro público: este script é o **único** caminho para criar o
+primeiro administrador, e não há credencial padrão embutida.
+
 ## Banco de dados
 
 ```bash
@@ -181,7 +191,8 @@ MotorShop/
 │  ├─ ROADMAP.md               fases 0 a 13
 │  ├─ SETUP.md                 configuração do ambiente local
 │  ├─ PHASE-1-REPORT.md        relatório da FASE 1
-│  └─ PHASE-2-REPORT.md        relatório da FASE 2
+│  ├─ PHASE-2-REPORT.md        relatório da FASE 2
+│  └─ PHASE-3-REPORT.md        relatório da FASE 3
 │
 ├─ .env.example                variáveis do backend
 └─ package.json                workspaces e scripts
@@ -201,7 +212,11 @@ da API (`utils/money.js`), porque `float` erra em aritmética decimal.
 Tratada desde a FASE 1, não ao final: Helmet, CORS por origem explícita
 (nunca `*`), limite de payload, validação de ambiente no boot, erros
 centralizados sem stack em produção e logs com *redaction* de campos sensíveis.
-Autenticação, rate limiting e auditoria entram nas FASES 3 e 10.
+
+A FASE 3 acrescentou: senhas com **argon2id**, access token curto guardado
+apenas em memória (nunca `localStorage`), refresh token opaco em cookie
+`httpOnly` com rotação e detecção de reuso, controle de acesso por papel e
+rate limiting. A auditoria completa é a FASE 10.
 Ver [`ARCHITECTURE.md` §8](./docs/ARCHITECTURE.md#8-segurança).
 
 ## Licença

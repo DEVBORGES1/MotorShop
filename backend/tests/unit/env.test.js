@@ -60,7 +60,20 @@ describe('parseEnv — variáveis declaradas porém vazias', () => {
 
     expect(result.success).toBe(true);
     expect(result.data.MONGODB_URI).toBeUndefined();
-    expect(result.data.JWT_SECRET).toBeUndefined();
+
+    // JWT_SECRET vazio equivale a ausente: fora de produção um segredo
+    // temporário é gerado para que `npm run dev` funcione sem configuração.
+    // `hasPersistentJwtSecret` é o que distingue os dois casos.
+    expect(result.data.hasPersistentJwtSecret).toBe(false);
+    expect(result.data.JWT_SECRET.length).toBeGreaterThanOrEqual(32);
+  });
+
+  it('preserva o segredo informado e o marca como persistente', () => {
+    const secret = 'um-segredo-de-producao-com-mais-de-32-caracteres';
+    const result = parseEnv({ JWT_SECRET: secret });
+
+    expect(result.data.JWT_SECRET).toBe(secret);
+    expect(result.data.hasPersistentJwtSecret).toBe(true);
   });
 
   it('ainda exige as obrigatórias em produção quando vêm vazias', () => {
