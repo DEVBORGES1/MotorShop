@@ -37,9 +37,9 @@ const storeSchema = new mongoose.Schema(
 
     // Tokens de tema: o frontend os aplica como variáveis CSS, sem rebuild.
     theme: {
-      primary: { type: String, default: '#f97316' },
-      secondary: { type: String, default: '#0f172a' },
-      accent: { type: String, default: '#16a34a' },
+      primary: { type: String, default: '#4CD62B' },
+      secondary: { type: String, default: '#0A0B0A' },
+      accent: { type: String, default: '#38C172' },
     },
 
     contact: {

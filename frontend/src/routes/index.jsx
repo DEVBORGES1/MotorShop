@@ -3,8 +3,17 @@ import { createBrowserRouter } from 'react-router-dom';
 
 import { RequireAuth } from '@/components/admin/RequireAuth.jsx';
 import { RootLayout } from '@/layouts/RootLayout.jsx';
-import { Home } from '@/pages/Home.jsx';
 import { NotFound } from '@/pages/NotFound.jsx';
+import { Home } from '@/pages/public/Home.jsx';
+
+/** Quem chega pela home não baixa o código do estoque antes de clicar nele. */
+const Estoque = lazy(() =>
+  import('@/pages/public/Estoque.jsx').then((m) => ({ default: m.Estoque })),
+);
+const Sobre = lazy(() => import('@/pages/public/Sobre.jsx').then((m) => ({ default: m.Sobre })));
+const Contato = lazy(() =>
+  import('@/pages/public/Contato.jsx').then((m) => ({ default: m.Contato })),
+);
 
 /**
  * O bloco administrativo é carregado sob demanda.
@@ -42,6 +51,9 @@ export const router = createBrowserRouter([
     element: <RootLayout />,
     children: [
       { index: true, element: <Home /> },
+      { path: 'estoque', element: comSuspense(<Estoque />) },
+      { path: 'sobre', element: comSuspense(<Sobre />) },
+      { path: 'contato', element: comSuspense(<Contato />) },
       { path: '*', element: <NotFound /> },
     ],
   },

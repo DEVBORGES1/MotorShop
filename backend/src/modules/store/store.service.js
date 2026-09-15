@@ -11,7 +11,7 @@ const DEFAULTS = Object.freeze({
   name: 'MotorShop',
   slogan: null,
   logo: null,
-  theme: { primary: '#f97316', secondary: '#0f172a', accent: '#16a34a' },
+  theme: { primary: '#4CD62B', secondary: '#0A0B0A', accent: '#38C172' },
   contact: { whatsapp: null, phone: null, email: null },
   address: {},
   social: {},

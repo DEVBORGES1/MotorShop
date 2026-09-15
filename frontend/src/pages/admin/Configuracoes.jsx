@@ -20,7 +20,7 @@ const VAZIO = {
   contact: { whatsapp: '', phone: '', email: '' },
   address: { street: '', number: '', district: '', city: '', state: '', zipCode: '' },
   social: { instagram: '', facebook: '' },
-  theme: { primary: '#f97316', secondary: '#0f172a', accent: '#16a34a' },
+  theme: { primary: '#4CD62B', secondary: '#0A0B0A', accent: '#38C172' },
 };
 
 /** Mescla o que veio da API sobre a estrutura vazia, sem perder seções ausentes. */
@@ -163,7 +163,8 @@ export function Configuracoes() {
         <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
           <legend className="px-2 text-sm font-semibold text-ink-400">Cores</legend>
           <p className="text-xs text-ink-400">
-            Aplicadas ao site público a partir da FASE 4, sem necessidade de nova compilação.
+            A cor primária é aplicada ao site público assim que salva, sem nova compilação. Os tons
+            de hover e o texto sobre ela são derivados automaticamente, com contraste garantido.
           </p>
           <div className="grid gap-4 sm:grid-cols-3">
             {campo('theme', 'primary', 'Primária', { type: 'color' })}

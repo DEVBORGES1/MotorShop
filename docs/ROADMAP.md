@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASE 0 concluída. FASE 1 aguardando autorização.**
+> **Status atual: FASES 0 a 4 concluídas. FASE 5 aguardando autorização.**
 
 ---
 
@@ -306,7 +306,7 @@ shared/src/enums.js                  (USER_ROLE)
 
 ---
 
-# FASE 4 — Catálogo público
+# FASE 4 — Catálogo público ✅ concluída (verificação de banco pendente)
 
 ### Objetivo
 Home e `/estoque` completos, responsivos e com identidade visual própria.
@@ -981,8 +981,16 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASE 0 concluída.** Nenhum código de aplicação escrito, nenhuma dependência
-instalada.
+**FASES 0 a 4 concluídas.** Backend com catálogo, autenticação e painel
+administrativo; site público com home, estoque filtrável, sobre e contato.
 
-**Próximo passo:** sua autorização para iniciar a **FASE 1**, idealmente junto
-com as respostas às decisões **A–I** de §15 do ARCHITECTURE.
+A verificação contra um banco real continua pendente: o ambiente de
+desenvolvimento usado até aqui não consegue baixar o binário do MongoDB em
+memória, então os testes de integração ficam pulados (126 dos 244). Rodar
+`npm test` com um Atlas configurado é o que fecha essa lacuna.
+
+O design de referência das telas está em
+[`docs/design/README.md`](./design/README.md).
+
+**Próximo passo:** sua autorização para a **FASE 5** (página da moto), que é
+também o que destrava o link "ver detalhes" nos cards do catálogo.
