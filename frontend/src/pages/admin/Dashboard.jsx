@@ -1,15 +1,19 @@
 import { Link } from 'react-router-dom';
 
+import { PageHeader } from '@/components/admin/PageHeader.jsx';
+import { StatCard } from '@/components/admin/StatCard.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
+import { Card, CardTitle } from '@/components/ui/Card.jsx';
+import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { marcasAdmin, motosAdmin } from '@/services/adminService.js';
 
 const STATUS_EXIBIDOS = [
-  ['AVAILABLE', 'Disponíveis'],
-  ['RESERVED', 'Reservadas'],
-  ['SOLD', 'Vendidas'],
-  ['INACTIVE', 'Inativas'],
+  ['AVAILABLE', 'Disponíveis', 'bg-ok'],
+  ['RESERVED', 'Reservadas', 'bg-warn'],
+  ['SOLD', 'Vendidas', 'bg-ink-400'],
+  ['INACTIVE', 'Inativas', 'bg-ink-600'],
 ];
 
 export function Dashboard() {
@@ -28,35 +32,97 @@ export function Dashboard() {
     };
   });
 
+  const total = data ? Object.values(data.porStatus).reduce((soma, n) => soma + n, 0) : 0;
+
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Painel</h1>
+    <div>
+      <PageHeader titulo="Painel" descricao="Visão geral do estoque">
+        <Link to="/admin/motos/nova" className={buttonClass()}>
+          + Nova moto
+        </Link>
+      </PageHeader>
 
       <Alert tone="error">{error?.message}</Alert>
 
       {isLoading ? (
-        <p className="text-ink-400">Carregando…</p>
+        <div role="status" aria-busy="true" aria-label="Carregando painel" className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {STATUS_EXIBIDOS.map(([status]) => (
+              <Skeleton key={status} className="h-28" />
+            ))}
+          </div>
+          <Skeleton className="h-52" />
+        </div>
       ) : (
         data && (
-          <>
+          <div className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STATUS_EXIBIDOS.map(([status, rotulo]) => (
-                <div key={status} className="rounded-xl border border-ink-800 bg-ink-800/30 p-5">
-                  <p className="text-xs tracking-wide text-ink-400 uppercase">{rotulo}</p>
-                  <p className="mt-2 text-3xl font-bold">{data.porStatus[status]}</p>
-                </div>
+                <StatCard
+                  key={status}
+                  rotulo={rotulo}
+                  valor={data.porStatus[status]}
+                  to={`/admin/motos?status=${status}`}
+                />
               ))}
             </div>
 
-            <div className="flex flex-wrap gap-3">
-              <Link to="/admin/motos/nova" className={buttonClass()}>
-                Cadastrar moto
-              </Link>
-              <Link to="/admin/marcas" className={buttonClass({ variant: 'secondary' })}>
-                {data.marcas} marca(s) cadastrada(s)
-              </Link>
+            <div className="grid gap-4 lg:grid-cols-2">
+              <Card>
+                <CardTitle>Estoque por status</CardTitle>
+
+                {total === 0 ? (
+                  <p className="mt-4 text-sm text-ink-400">Nenhuma moto cadastrada ainda.</p>
+                ) : (
+                  <div className="mt-5 space-y-4">
+                    {STATUS_EXIBIDOS.map(([status, rotulo, cor]) => (
+                      <div key={status}>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-ink-400">{rotulo}</span>
+                          <span className="font-semibold text-ink-50">
+                            {data.porStatus[status]}
+                          </span>
+                        </div>
+                        {/* A barra é decorativa: o número ao lado já informa,
+                            e repeti-lo em aria seria ruído no leitor de tela. */}
+                        <div
+                          aria-hidden="true"
+                          className="mt-2 h-1.5 overflow-hidden rounded-sm bg-ink-800"
+                        >
+                          <div
+                            className={`h-full ${cor}`}
+                            style={{ width: `${(data.porStatus[status] / total) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Card>
+
+              <Card>
+                <CardTitle>Atalhos</CardTitle>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <Link to="/admin/motos" className={buttonClass({ variant: 'secondary' })}>
+                    {total} moto{total === 1 ? '' : 's'} no total
+                  </Link>
+                  <Link to="/admin/marcas" className={buttonClass({ variant: 'secondary' })}>
+                    {data.marcas} marca{data.marcas === 1 ? '' : 's'}
+                  </Link>
+                  <Link to="/admin/configuracoes" className={buttonClass({ variant: 'secondary' })}>
+                    Configurações da loja
+                  </Link>
+                  <Link to="/" className={buttonClass({ variant: 'secondary' })}>
+                    Ver o site
+                  </Link>
+                </div>
+
+                <p className="mt-5 text-xs text-ink-500">
+                  O envio de fotos e o acompanhamento de leads entram nas próximas fases.
+                </p>
+              </Card>
             </div>
-          </>
+          </div>
         )
       )}
     </div>

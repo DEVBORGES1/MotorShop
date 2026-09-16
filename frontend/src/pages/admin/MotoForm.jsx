@@ -5,9 +5,12 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
+import { FormSection } from '@/components/admin/FormSection.jsx';
+import { PageHeader } from '@/components/admin/PageHeader.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
 import { Button } from '@/components/ui/Button.jsx';
-import { Field, inputClass } from '@/components/ui/Field.jsx';
+import { Field, inputClass, selectClass } from '@/components/ui/Field.jsx';
+import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { marcasAdmin, motosAdmin } from '@/services/adminService.js';
 
@@ -113,7 +116,7 @@ export function MotoForm() {
     }
   };
 
-  if (editando && isLoading) return <p className="text-ink-400">Carregando…</p>;
+  if (editando && isLoading) return <Skeleton className="h-96 max-w-3xl" />;
 
   const campoTexto = (nome, rotulo, opcoes = {}) => (
     <Field
@@ -132,7 +135,7 @@ export function MotoForm() {
   const campoSelect = (nome, rotulo, opcoes, required) => (
     <Field id={nome} label={rotulo} error={errors[nome]?.message} required={required}>
       {(props) => (
-        <select {...props} {...register(nome)} className={inputClass}>
+        <select {...props} {...register(nome)} className={selectClass}>
           <option value="">Selecione…</option>
           {opcoes.map(([valor, texto]) => (
             <option key={valor} value={valor}>
@@ -145,76 +148,68 @@ export function MotoForm() {
   );
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">
-        {editando ? 'Editar moto' : 'Cadastrar moto'}
-      </h1>
+    <div className="max-w-3xl">
+      <PageHeader
+        titulo={editando ? 'Editar moto' : 'Nova moto'}
+        descricao={editando ? 'As alterações valem no site assim que salvas.' : undefined}
+      />
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
         <Alert tone="error">{erro}</Alert>
 
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Identificação</legend>
+        <FormSection titulo="Identificação">
+          {campoSelect(
+            'brand',
+            'Marca',
+            (marcas ?? []).map((m) => [m.id, m.name]),
+            true,
+          )}
+          {campoTexto('model', 'Modelo', { required: true })}
+          {campoTexto('version', 'Versão')}
+          {campoTexto('year', 'Ano', { type: 'number', required: true })}
+          {campoTexto('color', 'Cor', { required: true })}
+          {campoTexto('licensePlate', 'Placa', { hint: 'Nunca exibida no site público' })}
+        </FormSection>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campoSelect(
-              'brand',
-              'Marca',
-              (marcas ?? []).map((m) => [m.id, m.name]),
-              true,
-            )}
-            {campoTexto('model', 'Modelo', { required: true })}
-            {campoTexto('version', 'Versão')}
-            {campoTexto('year', 'Ano', { type: 'number', required: true })}
-            {campoTexto('color', 'Cor', { required: true })}
-            {campoTexto('licensePlate', 'Placa', { hint: 'Nunca exibida no site público' })}
-          </div>
-        </fieldset>
+        <FormSection titulo="Ficha técnica">
+          {campoTexto('mileage', 'Quilometragem', { type: 'number', required: true })}
+          {campoTexto('engineCapacity', 'Cilindrada (cc)', { type: 'number', required: true })}
+          {campoSelect('fuel', 'Combustível', Object.entries(FUEL_LABEL), true)}
+          {campoSelect('transmission', 'Câmbio', Object.entries(TRANSMISSION_LABEL), true)}
+        </FormSection>
 
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Ficha técnica</legend>
+        <FormSection titulo="Preço e exibição">
+          {campoTexto('price', 'Preço (R$)', { type: 'number', required: true })}
+          {emOferta &&
+            campoTexto('previousPrice', 'Preço anterior (R$)', {
+              type: 'number',
+              required: true,
+            })}
+          {campoSelect('status', 'Status', Object.entries(MOTO_STATUS_LABEL))}
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campoTexto('mileage', 'Quilometragem', { type: 'number', required: true })}
-            {campoTexto('engineCapacity', 'Cilindrada (cc)', { type: 'number', required: true })}
-            {campoSelect('fuel', 'Combustível', Object.entries(FUEL_LABEL), true)}
-            {campoSelect('transmission', 'Câmbio', Object.entries(TRANSMISSION_LABEL), true)}
-          </div>
-        </fieldset>
-
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Preço e exibição</legend>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campoTexto('price', 'Preço (R$)', { type: 'number', required: true })}
-            {emOferta &&
-              campoTexto('previousPrice', 'Preço anterior (R$)', {
-                type: 'number',
-                required: true,
-              })}
-            {campoSelect('status', 'Status', Object.entries(MOTO_STATUS_LABEL))}
-          </div>
-
-          <div className="flex flex-wrap gap-6 pt-2">
-            <label className="flex items-center gap-2 text-sm text-ink-200">
-              <input type="checkbox" {...register('featured')} className="accent-brand-500" />
+          <div className="flex flex-wrap gap-6 pt-1 sm:col-span-2">
+            <label className="flex items-center gap-2.5 text-sm text-ink-200">
+              <input
+                type="checkbox"
+                {...register('featured')}
+                className="h-4 w-4 accent-brand-500"
+              />
               Destaque na home
             </label>
-            <label className="flex items-center gap-2 text-sm text-ink-200">
-              <input type="checkbox" {...register('onSale')} className="accent-brand-500" />
+            <label className="flex items-center gap-2.5 text-sm text-ink-200">
+              <input type="checkbox" {...register('onSale')} className="h-4 w-4 accent-brand-500" />
               Em oferta
             </label>
           </div>
-        </fieldset>
+        </FormSection>
 
-        <fieldset className="rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Descrição</legend>
+        <FormSection titulo="Descrição" colunas={1}>
           <Field id="description" label="Texto do anúncio" error={errors.description?.message}>
             {(props) => (
               <textarea {...props} {...register('description')} rows={5} className={inputClass} />
             )}
           </Field>
-        </fieldset>
+        </FormSection>
 
         <p className="text-xs text-ink-400">
           O envio de fotos entra na FASE 8. Por enquanto as motos são cadastradas sem imagens.

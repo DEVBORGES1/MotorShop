@@ -1,10 +1,14 @@
 import { MOTO_STATUS_LABEL } from '@motorshop/shared';
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 
+import { celulaClass, DataTable } from '@/components/admin/DataTable.jsx';
+import { PageHeader } from '@/components/admin/PageHeader.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
-import { Button, buttonClass } from '@/components/ui/Button.jsx';
-import { inputClass } from '@/components/ui/Field.jsx';
+import { buttonClass } from '@/components/ui/Button.jsx';
+import { inputClass, selectClass } from '@/components/ui/Field.jsx';
+import { Pagination } from '@/components/ui/Pagination.jsx';
+import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { motosAdmin } from '@/services/adminService.js';
 import { formatarKm, formatarPreco } from '@/utils/format.js';
@@ -16,11 +20,40 @@ const CORES_STATUS = {
   INACTIVE: 'text-danger',
 };
 
+const ABAS = [['', 'Todas'], ...Object.entries(MOTO_STATUS_LABEL)];
+
+const COLUNAS = [
+  { titulo: 'Moto' },
+  { titulo: 'Ano' },
+  { titulo: 'Km' },
+  { titulo: 'Preço' },
+  { titulo: 'Status' },
+  { titulo: '', alinhar: 'direita' },
+];
+
 export function MotosList() {
-  const [status, setStatus] = useState('');
-  const [busca, setBusca] = useState('');
-  const [pagina, setPagina] = useState(1);
+  // Filtros na URL, como no catálogo público: o atalho do painel pode apontar
+  // para /admin/motos?status=RESERVED, e recarregar não perde o filtro.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const status = searchParams.get('status') ?? '';
+  const busca = searchParams.get('q') ?? '';
+  const pagina = Number.parseInt(searchParams.get('page') ?? '1', 10) || 1;
+
   const [erroAcao, setErroAcao] = useState(null);
+
+  const aplicar = (mudancas) => {
+    const proximo = new URLSearchParams(searchParams);
+
+    for (const [chave, valor] of Object.entries(mudancas)) {
+      if (valor) proximo.set(chave, String(valor));
+      else proximo.delete(chave);
+    }
+
+    // Qualquer filtro novo recomeça na primeira página.
+    if (!('page' in mudancas)) proximo.delete('page');
+
+    setSearchParams(proximo, { replace: true });
+  };
 
   const { data, error, isLoading, refetch } = useAsyncData(
     () =>
@@ -47,129 +80,120 @@ export function MotosList() {
   const meta = data?.meta;
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">Motos</h1>
+    <div>
+      <PageHeader
+        titulo="Motos"
+        descricao={meta ? `${meta.total} cadastrada${meta.total === 1 ? '' : 's'}` : undefined}
+      >
         <Link to="/admin/motos/nova" className={buttonClass()}>
-          Cadastrar moto
+          + Nova moto
         </Link>
+      </PageHeader>
+
+      <div className="flex flex-wrap items-center gap-2 border-b border-ink-800 pb-4">
+        {ABAS.map(([valor, rotulo]) => (
+          <button
+            key={valor || 'todas'}
+            type="button"
+            onClick={() => aplicar({ status: valor })}
+            aria-pressed={status === valor}
+            className={`label-caps rounded-sm px-3 py-2 text-[10px] transition ${
+              status === valor
+                ? 'bg-brand-500 text-on-brand'
+                : 'border border-ink-800 text-ink-400 hover:border-ink-600 hover:text-ink-100'
+            }`}
+          >
+            {rotulo}
+          </button>
+        ))}
+
+        <BuscaAdmin valor={busca} onChange={(q) => aplicar({ q })} />
       </div>
 
-      <div className="flex flex-wrap gap-3">
-        <input
-          type="search"
-          value={busca}
-          onChange={(e) => {
-            setBusca(e.target.value);
-            setPagina(1);
-          }}
-          placeholder="Buscar por modelo…"
-          aria-label="Buscar motos"
-          className={`${inputClass} max-w-xs`}
-        />
-        <select
-          value={status}
-          onChange={(e) => {
-            setStatus(e.target.value);
-            setPagina(1);
-          }}
-          aria-label="Filtrar por status"
-          className={`${inputClass} max-w-[12rem]`}
-        >
-          <option value="">Todos os status</option>
-          {Object.entries(MOTO_STATUS_LABEL).map(([valor, rotulo]) => (
-            <option key={valor} value={valor}>
-              {rotulo}
-            </option>
-          ))}
-        </select>
+      <div className="mt-5">
+        <Alert tone="error">{error?.message ?? erroAcao}</Alert>
       </div>
-
-      <Alert tone="error">{error?.message ?? erroAcao}</Alert>
 
       {isLoading ? (
-        <p className="text-ink-400">Carregando…</p>
-      ) : motos.length === 0 ? (
-        <p className="rounded-xl border border-ink-800 p-8 text-center text-ink-400">
-          Nenhuma moto encontrada.
-        </p>
+        <Skeleton className="mt-5 h-64" />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-ink-800">
-          <table className="w-full text-sm">
-            <thead className="bg-ink-800/50 text-left text-xs tracking-wide text-ink-400 uppercase">
-              <tr>
-                <th className="px-4 py-3">Moto</th>
-                <th className="px-4 py-3">Ano</th>
-                <th className="px-4 py-3">Km</th>
-                <th className="px-4 py-3">Preço</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3" />
+        <div className="mt-5">
+          <DataTable colunas={COLUNAS} vazio="Nenhuma moto encontrada.">
+            {motos.map((moto) => (
+              <tr key={moto.id} className="transition hover:bg-surface-2">
+                <td className={celulaClass}>
+                  <span className="font-semibold text-ink-50">
+                    {moto.brand?.name} {moto.model}
+                  </span>
+                  {moto.version && <span className="text-ink-400"> {moto.version}</span>}
+                  <span className="block text-xs text-ink-500">/{moto.slug}</span>
+                </td>
+                <td className={`${celulaClass} text-ink-200`}>{moto.year}</td>
+                <td className={`${celulaClass} text-ink-200`}>{formatarKm(moto.mileage)}</td>
+                <td className={`${celulaClass} font-semibold text-ink-50`}>
+                  {formatarPreco(moto.price)}
+                </td>
+                <td className={celulaClass}>
+                  <select
+                    value={moto.status}
+                    onChange={(evento) => alterarStatus(moto.id, evento.target.value)}
+                    aria-label={`Status de ${moto.model}`}
+                    className={`${selectClass} w-auto py-1.5 pl-2.5 text-xs font-semibold ${CORES_STATUS[moto.status]}`}
+                  >
+                    {Object.entries(MOTO_STATUS_LABEL).map(([valor, rotulo]) => (
+                      <option key={valor} value={valor} className="bg-ink-900 text-ink-50">
+                        {rotulo}
+                      </option>
+                    ))}
+                  </select>
+                </td>
+                <td className={`${celulaClass} text-right`}>
+                  <Link
+                    to={`/admin/motos/${moto.id}/editar`}
+                    className="label-caps text-[10px] text-brand-500 hover:underline"
+                  >
+                    Editar
+                  </Link>
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-800">
-              {motos.map((moto) => (
-                <tr key={moto.id}>
-                  <td className="px-4 py-3">
-                    <span className="font-medium">
-                      {moto.brand?.name} {moto.model}
-                    </span>
-                    {moto.version && <span className="text-ink-400"> {moto.version}</span>}
-                  </td>
-                  <td className="px-4 py-3 text-ink-200">{moto.year}</td>
-                  <td className="px-4 py-3 text-ink-200">{formatarKm(moto.mileage)}</td>
-                  <td className="px-4 py-3 font-medium">{formatarPreco(moto.price)}</td>
-                  <td className="px-4 py-3">
-                    <select
-                      value={moto.status}
-                      onChange={(e) => alterarStatus(moto.id, e.target.value)}
-                      aria-label={`Status de ${moto.model}`}
-                      className={`bg-transparent text-sm font-medium outline-none ${CORES_STATUS[moto.status]}`}
-                    >
-                      {Object.entries(MOTO_STATUS_LABEL).map(([valor, rotulo]) => (
-                        <option key={valor} value={valor} className="bg-ink-900 text-ink-50">
-                          {rotulo}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <Link
-                      to={`/admin/motos/${moto.id}/editar`}
-                      className="text-brand-500 hover:underline"
-                    >
-                      Editar
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </DataTable>
         </div>
       )}
 
-      {meta && meta.totalPages > 1 && (
-        <div className="flex items-center justify-between text-sm">
-          <span className="text-ink-400">
-            Página {meta.page} de {meta.totalPages} · {meta.total} moto(s)
-          </span>
-          <div className="flex gap-2">
-            <Button
-              variant="secondary"
-              disabled={meta.page <= 1}
-              onClick={() => setPagina((p) => p - 1)}
-            >
-              Anterior
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={meta.page >= meta.totalPages}
-              onClick={() => setPagina((p) => p + 1)}
-            >
-              Próxima
-            </Button>
-          </div>
-        </div>
+      {meta?.totalPages > 1 && (
+        <Pagination
+          page={meta.page}
+          totalPages={meta.totalPages}
+          onChange={(page) => aplicar({ page })}
+          className="mt-8"
+        />
       )}
     </div>
+  );
+}
+
+/** Busca do painel, com espera para não disparar uma consulta por tecla. */
+function BuscaAdmin({ valor, onChange }) {
+  const [rascunho, setRascunho] = useState(valor);
+
+  useEffect(() => setRascunho(valor), [valor]);
+
+  useEffect(() => {
+    if (rascunho === valor) return undefined;
+
+    const id = setTimeout(() => onChange(rascunho), 400);
+    return () => clearTimeout(id);
+  }, [rascunho, valor, onChange]);
+
+  return (
+    <input
+      type="search"
+      value={rascunho}
+      onChange={(evento) => setRascunho(evento.target.value)}
+      placeholder="Buscar por modelo…"
+      aria-label="Buscar motos"
+      className={`${inputClass} ml-auto max-w-xs py-2`}
+    />
   );
 }

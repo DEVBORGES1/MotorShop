@@ -1,15 +1,27 @@
 import { PASSWORD_MIN_LENGTH, USER_ROLE, USER_ROLE_LABEL } from '@motorshop/shared';
 import { useState } from 'react';
 
+import { celulaClass, DataTable } from '@/components/admin/DataTable.jsx';
+import { PageHeader } from '@/components/admin/PageHeader.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
+import { Badge } from '@/components/ui/Badge.jsx';
 import { Button } from '@/components/ui/Button.jsx';
-import { Field, inputClass } from '@/components/ui/Field.jsx';
+import { Card, CardTitle } from '@/components/ui/Card.jsx';
+import { Field, inputClass, selectClass } from '@/components/ui/Field.jsx';
+import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import { usuariosAdmin } from '@/services/adminService.js';
 import { formatarData } from '@/utils/format.js';
 
 const VAZIO = { name: '', email: '', password: '', role: USER_ROLE.ADMIN };
+
+const COLUNAS = [
+  { titulo: 'Usuário' },
+  { titulo: 'Papel' },
+  { titulo: 'Último acesso' },
+  { titulo: '', alinhar: 'direita' },
+];
 
 export function Usuarios() {
   const { user: atual } = useAuth();
@@ -70,15 +82,18 @@ export function Usuarios() {
   );
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold tracking-tight">Usuários</h1>
+    <div className="max-w-4xl">
+      <PageHeader
+        titulo="Usuários"
+        descricao="Quem tem acesso ao painel. Contas são desativadas, nunca excluídas."
+      />
 
       <Alert tone={mensagem?.tone ?? 'error'}>{mensagem?.texto ?? error?.message}</Alert>
 
-      <form onSubmit={criar} className="max-w-2xl space-y-4 rounded-xl border border-ink-800 p-5">
-        <h2 className="text-sm font-semibold text-ink-400">Novo usuário</h2>
+      <Card as="form" onSubmit={criar} className="mt-5">
+        <CardTitle>Novo usuário</CardTitle>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {campo('name', 'Nome', 'text', { required: true })}
           {campo('email', 'E-mail', 'email', { required: true, autoComplete: 'off' })}
           {campo('password', 'Senha', 'password', {
@@ -93,7 +108,7 @@ export function Usuarios() {
                 {...props}
                 value={form.role}
                 onChange={(e) => setForm({ ...form, role: e.target.value })}
-                className={inputClass}
+                className={selectClass}
               >
                 {Object.entries(USER_ROLE_LABEL).map(([valor, rotulo]) => (
                   <option key={valor} value={valor}>
@@ -105,53 +120,49 @@ export function Usuarios() {
           </Field>
         </div>
 
-        <Button type="submit" disabled={salvando}>
+        <Button type="submit" disabled={salvando} className="mt-5">
           Criar usuário
         </Button>
-      </form>
+      </Card>
 
       {isLoading ? (
-        <p className="text-ink-400">Carregando…</p>
+        <Skeleton className="mt-5 h-48" />
       ) : (
-        <div className="overflow-x-auto rounded-xl border border-ink-800">
-          <table className="w-full text-sm">
-            <thead className="bg-ink-800/50 text-left text-xs tracking-wide text-ink-400 uppercase">
-              <tr>
-                <th className="px-4 py-3">Nome</th>
-                <th className="px-4 py-3">E-mail</th>
-                <th className="px-4 py-3">Papel</th>
-                <th className="px-4 py-3">Último acesso</th>
-                <th className="px-4 py-3" />
+        <div className="mt-5">
+          <DataTable colunas={COLUNAS} vazio="Nenhum usuário cadastrado.">
+            {(usuarios ?? []).map((usuario) => (
+              <tr key={usuario.id} className={usuario.active ? '' : 'opacity-50'}>
+                <td className={celulaClass}>
+                  <span className="font-semibold text-ink-50">{usuario.name}</span>
+                  {usuario.id === atual?.id && (
+                    <span className="ml-2 text-xs text-ink-500">(você)</span>
+                  )}
+                  <span className="block text-xs text-ink-500">{usuario.email}</span>
+                </td>
+                <td className={celulaClass}>
+                  <Badge tone={usuario.role === USER_ROLE.SUPER_ADMIN ? 'brand' : 'neutral'}>
+                    {USER_ROLE_LABEL[usuario.role]}
+                  </Badge>
+                </td>
+                <td className={`${celulaClass} text-ink-400`}>
+                  {formatarData(usuario.lastLoginAt)}
+                </td>
+                <td className={`${celulaClass} text-right`}>
+                  {usuario.active && usuario.id !== atual?.id && (
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => desativar(usuario)}
+                      disabled={salvando}
+                    >
+                      Desativar
+                    </Button>
+                  )}
+                  {!usuario.active && <Badge tone="outline">Inativo</Badge>}
+                </td>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-ink-800">
-              {usuarios?.map((usuario) => (
-                <tr key={usuario.id} className={usuario.active ? '' : 'opacity-50'}>
-                  <td className="px-4 py-3 font-medium">
-                    {usuario.name}
-                    {usuario.id === atual?.id && (
-                      <span className="ml-2 text-xs text-ink-400">(você)</span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3 text-ink-200">{usuario.email}</td>
-                  <td className="px-4 py-3 text-ink-200">{USER_ROLE_LABEL[usuario.role]}</td>
-                  <td className="px-4 py-3 text-ink-400">{formatarData(usuario.lastLoginAt)}</td>
-                  <td className="px-4 py-3 text-right">
-                    {usuario.active && usuario.id !== atual?.id && (
-                      <Button
-                        variant="danger"
-                        onClick={() => desativar(usuario)}
-                        disabled={salvando}
-                      >
-                        Desativar
-                      </Button>
-                    )}
-                    {!usuario.active && <span className="text-xs text-ink-400">inativo</span>}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            ))}
+          </DataTable>
         </div>
       )}
     </div>

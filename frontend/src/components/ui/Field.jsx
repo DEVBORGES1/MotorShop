@@ -49,3 +49,10 @@ export const selectClass = `${controlBase} appearance-none bg-[url("data:image/s
 /** Slider de faixa (preço, entrada, parcelas). */
 export const rangeClass =
   'h-1 w-full cursor-pointer appearance-none rounded-sm bg-ink-700 accent-brand-500';
+
+/**
+ * Seletor de cor. O `inputClass` comum espicharia o quadrado de cor por toda
+ * a largura do campo, com uma moldura em volta do nada.
+ */
+export const colorClass =
+  'h-11 w-full cursor-pointer rounded-md border border-ink-700 bg-ink-900 p-1 disabled:opacity-50';

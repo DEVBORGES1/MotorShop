@@ -8,6 +8,7 @@ import { Alert } from '@/components/ui/Alert.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Field, inputClass } from '@/components/ui/Field.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
+import { useStore } from '@/hooks/useStore.js';
 
 /**
  * A validação do cliente só checa que os campos existem — a mesma regra do
@@ -20,6 +21,7 @@ const schema = z.object({
 });
 
 export function Login() {
+  const { store } = useStore();
   const { signIn, isAuthenticated, isRestoring } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -48,16 +50,16 @@ export function Login() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <span className="text-2xl font-bold tracking-tight">
-            Motor<span className="text-brand-500">Shop</span>
+          <span className="font-display text-2xl font-extrabold tracking-tight text-ink-50">
+            {store.name}
           </span>
-          <p className="mt-1 text-sm text-ink-400">Acesso ao painel administrativo</p>
+          <p className="label-caps mt-2 text-[10px] text-ink-500">Painel administrativo</p>
         </div>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
           noValidate
-          className="space-y-4 rounded-xl border border-ink-800 bg-ink-800/30 p-6"
+          className="space-y-4 rounded-lg border border-ink-800 bg-surface p-6"
         >
           <Alert tone="error">{erro}</Alert>
 

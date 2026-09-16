@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
 
+import { FormSection } from '@/components/admin/FormSection.jsx';
+import { PageHeader } from '@/components/admin/PageHeader.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
 import { Button } from '@/components/ui/Button.jsx';
-import { Field, inputClass } from '@/components/ui/Field.jsx';
+import { Skeleton } from '@/components/ui/Skeleton.jsx';
+import { colorClass, Field, inputClass } from '@/components/ui/Field.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { useAuth } from '@/hooks/useAuth.js';
 import { storeAdmin } from '@/services/adminService.js';
@@ -93,7 +96,7 @@ export function Configuracoes() {
     }
   };
 
-  if (isLoading) return <p className="text-ink-400">Carregando…</p>;
+  if (isLoading) return <Skeleton className="h-96 max-w-3xl" />;
 
   const campo = (secao, chave, rotulo, extras = {}) => (
     <Field id={`${secao ?? 'root'}-${chave}`} label={rotulo} hint={extras.hint}>
@@ -104,15 +107,18 @@ export function Configuracoes() {
           value={(secao ? form[secao][chave] : form[chave]) ?? ''}
           onChange={alterar(secao, chave)}
           disabled={!podeEditar}
-          className={inputClass}
+          className={extras.type === 'color' ? colorClass : inputClass}
         />
       )}
     </Field>
   );
 
   return (
-    <div className="max-w-3xl space-y-6">
-      <h1 className="text-2xl font-bold tracking-tight">Configurações da loja</h1>
+    <div className="max-w-3xl">
+      <PageHeader
+        titulo="Configurações da loja"
+        descricao="Identidade, contato e cores aplicadas ao site público"
+      />
 
       {!podeEditar && (
         <Alert tone="info">
@@ -123,55 +129,40 @@ export function Configuracoes() {
       <Alert tone={mensagem?.tone ?? 'error'}>{mensagem?.texto ?? error?.message}</Alert>
 
       <form onSubmit={salvar} className="space-y-6">
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Identidade</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campo(null, 'name', 'Nome da loja')}
-            {campo(null, 'slogan', 'Slogan')}
-          </div>
-        </fieldset>
+        <FormSection titulo="Identidade" colunas={2}>
+          {campo(null, 'name', 'Nome da loja')}
+          {campo(null, 'slogan', 'Slogan')}
+        </FormSection>
 
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Contato</legend>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {campo('contact', 'whatsapp', 'WhatsApp', { hint: 'Com DDD' })}
-            {campo('contact', 'phone', 'Telefone')}
-            {campo('contact', 'email', 'E-mail', { type: 'email' })}
-          </div>
-        </fieldset>
+        <FormSection titulo="Contato" colunas={3}>
+          {campo('contact', 'whatsapp', 'WhatsApp', { hint: 'Com DDD' })}
+          {campo('contact', 'phone', 'Telefone')}
+          {campo('contact', 'email', 'E-mail', { type: 'email' })}
+        </FormSection>
 
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Endereço</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campo('address', 'street', 'Rua')}
-            {campo('address', 'number', 'Número')}
-            {campo('address', 'district', 'Bairro')}
-            {campo('address', 'city', 'Cidade')}
-            {campo('address', 'state', 'UF', { hint: 'Duas letras' })}
-            {campo('address', 'zipCode', 'CEP')}
-          </div>
-        </fieldset>
+        <FormSection titulo="Endereço" colunas={2}>
+          {campo('address', 'street', 'Rua')}
+          {campo('address', 'number', 'Número')}
+          {campo('address', 'district', 'Bairro')}
+          {campo('address', 'city', 'Cidade')}
+          {campo('address', 'state', 'UF', { hint: 'Duas letras' })}
+          {campo('address', 'zipCode', 'CEP')}
+        </FormSection>
 
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Redes sociais</legend>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {campo('social', 'instagram', 'Instagram')}
-            {campo('social', 'facebook', 'Facebook')}
-          </div>
-        </fieldset>
+        <FormSection titulo="Redes sociais" colunas={2}>
+          {campo('social', 'instagram', 'Instagram')}
+          {campo('social', 'facebook', 'Facebook')}
+        </FormSection>
 
-        <fieldset className="space-y-4 rounded-xl border border-ink-800 p-5">
-          <legend className="px-2 text-sm font-semibold text-ink-400">Cores</legend>
-          <p className="text-xs text-ink-400">
-            A cor primária é aplicada ao site público assim que salva, sem nova compilação. Os tons
-            de hover e o texto sobre ela são derivados automaticamente, com contraste garantido.
-          </p>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {campo('theme', 'primary', 'Primária', { type: 'color' })}
-            {campo('theme', 'secondary', 'Secundária', { type: 'color' })}
-            {campo('theme', 'accent', 'Destaque', { type: 'color' })}
-          </div>
-        </fieldset>
+        <FormSection
+          titulo="Cores"
+          colunas={3}
+          descricao="A primária é aplicada ao site público assim que salva, sem nova compilação. Os tons de hover e o texto sobre ela são derivados automaticamente, com contraste garantido."
+        >
+          {campo('theme', 'primary', 'Primária', { type: 'color' })}
+          {campo('theme', 'secondary', 'Secundária', { type: 'color' })}
+          {campo('theme', 'accent', 'Destaque', { type: 'color' })}
+        </FormSection>
 
         {podeEditar && (
           <Button type="submit" disabled={salvando}>
