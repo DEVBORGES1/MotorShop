@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
@@ -8,6 +8,7 @@ import { Alert } from '@/components/ui/Alert.jsx';
 import { Button } from '@/components/ui/Button.jsx';
 import { Field, inputClass } from '@/components/ui/Field.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 
 /**
@@ -22,7 +23,9 @@ const schema = z.object({
 
 export function Login() {
   const { store } = useStore();
-  const { signIn, isAuthenticated, isRestoring } = useAuth();
+  // Painel nunca indexado (o servidor já manda noindex no HTML inicial).
+  usePaginaSeo('admin');
+  const { signIn, isAuthenticated, isRestoring, verificarSessao } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [erro, setErro] = useState(null);
@@ -32,6 +35,9 @@ export function Login() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm({ resolver: zodResolver(schema), defaultValues: { email: '', password: '' } });
+
+  // Quem já tem sessão e abre o login vai direto para o painel.
+  useEffect(verificarSessao, [verificarSessao]);
 
   if (isRestoring) return <div className="p-8 text-ink-400">Verificando sessão…</div>;
   if (isAuthenticated) return <Navigate to={location.state?.from ?? '/admin'} replace />;

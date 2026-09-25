@@ -1354,6 +1354,28 @@ Por que isto é a escolha certa:
 Esta abordagem **exige que o HTML seja servido por um processo Node** —
 condição que orienta a decisão de deploy em §13.
 
+Como ficou implementado (FASE 9, `backend/src/seo/`):
+
+- Títulos, descrições e JSON-LD saem de **uma** fonte (`shared/src/seo.js`),
+  usada pelo servidor (HTML inicial) e pelo `useSeo` do cliente (navegação
+  SPA) — o título do preview e o da aba não divergem.
+- Todo valor do banco é escapado (`escapeHtml`); JSON-LD e dados embutidos
+  passam por `serializeJsonLd`, que troca `<` por `\u003c`. Testado com
+  descrição contendo `</script><script>`.
+- O HTML também leva **dados de partida** (`<script type="application/json"
+  id="dados-iniciais">`: a loja e, na página da moto, a moto) e pré-anuncia o
+  código da página (`modulepreload`, a partir do manifesto do Vite) e a foto
+  principal (`preload` com o mesmo `srcset` da galeria). O SPA desenha a
+  primeira tela sem esperar a API.
+- Moto vendida: 200, `SoldOut`, sem preço (decisão A). Moto inativa ou
+  inexistente e página de módulo desligado: **404** com `noindex`.
+- CSP própria (`config/security.js`): `script-src 'self'` (sem inline, sem
+  eval — o zod roda em modo `jitless`), imagens de `https:`, envio de fotos só
+  para a origem do provedor, `frame-ancestors 'none'`.
+- Fontes servidas pelo próprio site (`@fontsource`, subconjunto latino,
+  `swap`): sem CSS de terceiro bloqueando a pintura e sem enviar o IP do
+  visitante ao Google.
+
 ### 11.4 Demais itens de SEO
 
 - **URLs amigáveis** — `/motos/honda-cb-500f-2024`, slug imutável (§5.1.2),

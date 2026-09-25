@@ -42,6 +42,12 @@ const envSchema = z
       .regex(/^[a-z0-9][a-z0-9_/-]*[a-z0-9]$/i, 'use letras, números, "-", "_" e "/"')
       .default('motorshop'),
 
+    // robots.txt: `disallow` em staging e demonstração (ARCHITECTURE §11.4).
+    ROBOTS_POLICY: z.enum(['allow', 'disallow']).default('allow'),
+    // Build do site público servido por este processo (§13.2). Padrão:
+    // frontend/dist do monorepo. Sem build, a API sobe sem servir o site.
+    FRONTEND_DIST_DIR: z.string().trim().min(1).optional(),
+
     LOG_LEVEL: z.enum(LOG_LEVELS).default('info'),
     BODY_LIMIT: z.string().trim().default('100kb'),
   })

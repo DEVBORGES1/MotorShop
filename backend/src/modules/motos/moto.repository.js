@@ -289,3 +289,11 @@ export function pullImage(id, imageId) {
 export function setMainImage(id, mainImageId) {
   return Moto.updateOne({ _id: id }, { $set: { mainImageId } });
 }
+
+/** Motos do sitemap: só slug e data de alteração, das mais recentes. */
+export function findForSitemap(statuses) {
+  return Moto.find({ status: { $in: statuses } }, 'slug updatedAt')
+    .sort({ updatedAt: -1 })
+    .limit(50_000) // teto de URLs de um sitemap (protocolo sitemaps.org)
+    .lean();
+}

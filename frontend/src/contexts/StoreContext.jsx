@@ -3,6 +3,7 @@ import { createContext, useEffect, useMemo, useState } from 'react';
 import { storeFallback } from '@/config/storeFallback.js';
 import * as publicService from '@/services/publicService.js';
 import { variaveisDoTema } from '@/utils/cor.js';
+import { storeInicial } from '@/utils/dadosIniciais.js';
 
 export const StoreContext = createContext(null);
 
@@ -15,10 +16,16 @@ export const StoreContext = createContext(null);
  * configuração — genérico, nunca com dados de outra loja.
  */
 export function StoreProvider({ children }) {
-  const [store, setStore] = useState(storeFallback);
-  const [isLoading, setIsLoading] = useState(true);
+  // Em produção, a loja já vem no HTML (o servidor a embute): o primeiro
+  // render sai com nome, cores e contato certos, sem esperar a API.
+  const [store, setStore] = useState(() => {
+    const inicial = storeInicial();
+    return inicial ? { ...storeFallback, ...inicial } : storeFallback;
+  });
+  const [isLoading, setIsLoading] = useState(() => !storeInicial());
 
   useEffect(() => {
+    if (storeInicial()) return undefined;
     let ativo = true;
 
     publicService.store

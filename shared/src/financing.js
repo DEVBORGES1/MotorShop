@@ -1,7 +1,3 @@
-import { z } from 'zod';
-
-import { LEAD_LIMITS } from './enums.js';
-
 /**
  * Financiamento — tabela Price, fonte única para o site e para o servidor.
  *
@@ -114,23 +110,3 @@ export function checkFinancingRules({ vehiclePrice, downPayment, installments },
 
   return null;
 }
-
-/** Parâmetros de financiamento da loja (decisão F), editados nas Configurações. */
-export const financingSettingsSchema = z
-  .object({
-    monthlyRate: z
-      .number({ error: 'Informe a taxa' })
-      .min(0, 'A taxa não pode ser negativa')
-      .max(
-        FINANCING_LIMITS.MAX_MONTHLY_RATE,
-        `Taxa acima de ${FINANCING_LIMITS.MAX_MONTHLY_RATE}% a.m.`,
-      )
-      .nullable(),
-    installmentOptions: z
-      .array(z.number().int().min(LEAD_LIMITS.MIN_INSTALLMENTS).max(LEAD_LIMITS.MAX_INSTALLMENTS))
-      .max(FINANCING_INSTALLMENT_CHOICES.length)
-      .refine((options) => new Set(options).size === options.length, 'Prazo repetido')
-      .transform((options) => [...options].sort((a, b) => a - b)),
-    minDownPaymentPercent: z.number().min(0).max(FINANCING_LIMITS.MAX_MIN_DOWN_PAYMENT_PERCENT),
-  })
-  .strict();

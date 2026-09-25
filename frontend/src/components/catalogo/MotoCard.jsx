@@ -7,6 +7,7 @@ import { useStore } from '@/hooks/useStore.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
 import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
 import { caminhoDaMoto, urlDaMoto } from '@/utils/moto.js';
+import { carregarMotoDetalhe } from '@/routes/carregadores.js';
 import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
 
 /**
@@ -57,6 +58,11 @@ export function MotoCard({ moto }) {
         <h3 className="text-base font-bold text-ink-50">
           <Link
             to={caminhoDaMoto(moto.slug)}
+            // Intenção de clique (mouse em cima, foco, toque): baixa o código da
+            // página da moto antes do clique, que então abre sem espera.
+            onMouseEnter={carregarMotoDetalhe}
+            onFocus={carregarMotoDetalhe}
+            onTouchStart={carregarMotoDetalhe}
             className="after:absolute after:inset-0 after:content-[''] hover:text-brand-500"
           >
             {nome}

@@ -1,6 +1,7 @@
 import { CONSENT_TEXT_VERSION } from '@motorshop/shared';
 import { Link } from 'react-router-dom';
 
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import { textoDoConsentimento } from '@/utils/lead.js';
 
@@ -13,6 +14,7 @@ import { textoDoConsentimento } from '@/utils/lead.js';
  */
 export function Privacidade() {
   const { store } = useStore();
+  usePaginaSeo('privacidade');
   const controlador = store.legalName || store.name;
   const canal = store.contact?.email || store.contact?.phone;
 

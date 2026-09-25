@@ -4,6 +4,7 @@ import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-do
 
 import { Button } from '@/components/ui/Button.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import { iniciais } from '@/utils/format.js';
 
@@ -31,6 +32,8 @@ const LINKS = [
 export function AdminLayout() {
   const { user, signOut } = useAuth();
   const { store } = useStore();
+  // Painel nunca indexado (o servidor já manda noindex no HTML inicial).
+  usePaginaSeo('admin');
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const [gavetaAberta, setGavetaAberta] = useState(false);

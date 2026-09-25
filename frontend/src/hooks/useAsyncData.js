@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Carrega dados de uma função assíncrona, com estado de carregando/erro.
@@ -10,15 +10,21 @@ import { useCallback, useEffect, useState } from 'react';
  * @param {() => Promise<unknown>} fetcher
  * @param {Array<unknown>} deps
  */
-export function useAsyncData(fetcher, deps = []) {
-  const [data, setData] = useState(null);
+export function useAsyncData(fetcher, deps = [], { inicial } = {}) {
+  const [data, setData] = useState(inicial ?? null);
   const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(inicial === undefined);
   const [tentativa, setTentativa] = useState(0);
+  // Com dado inicial (vindo no HTML), a primeira busca é dispensável.
+  const pularPrimeira = useRef(inicial !== undefined);
 
   const refetch = useCallback(() => setTentativa((n) => n + 1), []);
 
   useEffect(() => {
+    if (pularPrimeira.current) {
+      pularPrimeira.current = false;
+      return undefined;
+    }
     let ativo = true;
     setIsLoading(true);
     setError(null);

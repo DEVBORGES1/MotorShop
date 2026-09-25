@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom';
 import { buttonClass } from '@/components/ui/Button.jsx';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 
 export function NotFound() {
+  usePaginaSeo('not-found');
   return (
     <div className="py-16 text-center">
       <p className="text-6xl font-bold text-brand-500">404</p>

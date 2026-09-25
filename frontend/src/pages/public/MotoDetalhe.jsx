@@ -1,10 +1,17 @@
-import { isFinancingConfigured, MOTO_STATUS } from '@motorshop/shared';
-import { useState } from 'react';
+import {
+  breadcrumbJsonLd,
+  coverImage,
+  isFinancingConfigured,
+  MOTO_STATUS,
+  motoJsonLd,
+  motoSeo,
+  pageSeo,
+  shareImageUrl,
+} from '@motorshop/shared';
+import { lazy, Suspense, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { FinancingSimulator } from '@/components/financiamento/FinancingSimulator.jsx';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
-import { InterestForm } from '@/components/leads/InterestForm.jsx';
 import { MotoFeatures } from '@/components/moto/MotoFeatures.jsx';
 import { MotoGallery } from '@/components/moto/MotoGallery.jsx';
 import { MotoSpecs } from '@/components/moto/MotoSpecs.jsx';
@@ -16,12 +23,29 @@ import { Button, buttonClass } from '@/components/ui/Button.jsx';
 import { Modal } from '@/components/ui/Modal.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
+import { baseDoSite, useSeo } from '@/hooks/useSeo.js';
+import { consumirMotoInicial } from '@/utils/dadosIniciais.js';
 import { useStore } from '@/hooks/useStore.js';
 import * as publicService from '@/services/publicService.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
 import { imagensDaGaleria, nomeDaMoto } from '@/utils/imagem.js';
 import { urlDaMoto } from '@/utils/moto.js';
 import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
+
+/*
+ * Carregados sob demanda: o formulário só existe depois do clique em "Tenho
+ * interesse", e o simulador fica abaixo da dobra. Com eles (e a validação que
+ * trazem) no chunk da página, a manchete esperava código que não mostra nada
+ * na primeira tela.
+ */
+const InterestForm = lazy(() =>
+  import('@/components/leads/InterestForm.jsx').then((m) => ({ default: m.InterestForm })),
+);
+const FinancingSimulator = lazy(() =>
+  import('@/components/financiamento/FinancingSimulator.jsx').then((m) => ({
+    default: m.FinancingSimulator,
+  })),
+);
 
 /**
  * Página da moto — a que efetivamente vende.
@@ -39,7 +63,22 @@ export function MotoDetalhe() {
     error,
     isLoading,
     refetch,
-  } = useAsyncData(() => publicService.motos.getBySlug(slug), [slug]);
+  } = useAsyncData(() => publicService.motos.getBySlug(slug), [slug], {
+    inicial: consumirMotoInicial(slug),
+  });
+  const { store } = useStore();
+
+  // Enquanto carrega, o <head> fica como está (o da página anterior, ou o que
+  // o servidor já mandou certo no HTML inicial).
+  useSeo(
+    isLoading
+      ? null
+      : error?.status === 404
+        ? pageSeo('not-found', store)
+        : moto
+          ? seoDaMoto(moto, store)
+          : null,
+  );
 
   if (isLoading) return <DetalheCarregando />;
   if (error?.status === 404) return <MotoNaoEncontrada />;
@@ -57,6 +96,25 @@ export function MotoDetalhe() {
   // `key` zera o estado da galeria (foto atual, modal) ao trocar de moto por
   // um card de similares — sem isso, a foto 4 da anterior viraria índice inválido.
   return <Detalhe key={moto.id} moto={moto} />;
+}
+
+/** Os mesmos metadados que o servidor injeta no HTML inicial desta rota. */
+function seoDaMoto(moto, store) {
+  const base = baseDoSite(store);
+  const url = `${base}/motos/${moto.slug}`;
+  return {
+    ...motoSeo(moto, store),
+    canonicalPath: `/motos/${moto.slug}`,
+    image: shareImageUrl(coverImage(moto)?.url ?? store.ogImage?.url ?? store.logo?.url),
+    jsonLd: [
+      motoJsonLd(moto, store, url),
+      breadcrumbJsonLd([
+        { name: 'Home', url: `${base}/` },
+        { name: 'Estoque', url: `${base}/estoque` },
+        { name: [moto.brand?.name, moto.model, moto.year].filter(Boolean).join(' '), url },
+      ]),
+    ],
+  };
 }
 
 function Detalhe({ moto }) {
@@ -193,11 +251,13 @@ function Detalhe({ moto }) {
           {simula && (
             <Secao titulo="Simule o financiamento">
               <div className="rounded-lg border border-ink-800 bg-surface p-5">
-                <FinancingSimulator
-                  valorFixo={moto.price}
-                  moto={{ id: moto.id, nome: [nome, moto.year].filter(Boolean).join(' ') }}
-                  idPrefixo="moto-sim"
-                />
+                <Suspense fallback={<Skeleton className="h-96" />}>
+                  <FinancingSimulator
+                    valorFixo={moto.price}
+                    moto={{ id: moto.id, nome: [nome, moto.year].filter(Boolean).join(' ') }}
+                    idPrefixo="moto-sim"
+                  />
+                </Suspense>
               </div>
             </Secao>
           )}
@@ -246,7 +306,9 @@ function Detalhe({ moto }) {
           </button>
         </div>
         <div className="p-5">
-          <InterestForm moto={moto} nome={nome} whatsapp={whatsapp} />
+          <Suspense fallback={<Skeleton className="h-72" />}>
+            <InterestForm moto={moto} nome={nome} whatsapp={whatsapp} />
+          </Suspense>
         </div>
       </Modal>
     </div>

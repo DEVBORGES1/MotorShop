@@ -80,6 +80,8 @@ site em `http://localhost:5173`, sem nenhum ajuste.
 | `STORAGE_FOLDER` | não | `motorshop` | Pasta-raiz no provedor, uma por loja e ambiente (ex.: `loja-x/prod`) |
 | `LOG_LEVEL` | não | `info` | Nível do log |
 | `BODY_LIMIT` | não | `100kb` | Limite do corpo JSON |
+| `ROBOTS_POLICY` | não | `allow` | `disallow` em staging/demonstração: `robots.txt` bloqueia tudo |
+| `FRONTEND_DIST_DIR` | não | `frontend/dist` | Build do site servido pela API em produção |
 
 Uma variável **declarada e vazia** (`MONGODB_URI=`) equivale a ausente — copiar
 o `.env.example` direto funciona.
@@ -171,6 +173,21 @@ frontend está falando com o backend.
 npm run dev:backend     # API com recarga automática (node --watch)
 npm run dev:frontend    # site com HMR
 ```
+
+### Como em produção (site servido pela API)
+
+Em produção um único processo serve a API **e** o site, com título,
+descrição, preview de link e dados estruturados já no HTML inicial
+(ARCHITECTURE §11.3 e §13.2). Para ver assim localmente:
+
+```bash
+npm run build           # gera frontend/dist
+npm start               # http://localhost:3000 — site e API na mesma origem
+curl -s http://localhost:3000/ | grep '<title'   # meta injetada, sem JS
+```
+
+No modo `npm run dev` (Vite na 5173) a meta **não** é injetada: é o
+HTML do Vite. Isso é esperado.
 
 ---
 

@@ -19,6 +19,11 @@ export default defineConfig({
 
   server: { port: 5173 },
 
+  // Manifesto (dist/.vite/manifest.json): o servidor o lê para anunciar no
+  // HTML o chunk da página pedida (`modulepreload`), em paralelo com o JS
+  // principal — em vez de o navegador só descobri-lo depois de executá-lo.
+  build: { manifest: true },
+
   // Sem proxy para /api de propósito: chamar a API na origem real exercita a
   // configuração de CORS em desenvolvimento, em vez de mascará-la.
   test: {

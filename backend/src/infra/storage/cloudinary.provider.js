@@ -26,6 +26,8 @@ export function createCloudinaryProvider({ cloudName, apiKey, apiSecret }) {
 
   return {
     name: 'cloudinary',
+    /** Origem para onde o navegador envia as fotos (liberada na CSP). */
+    uploadOrigin: 'https://api.cloudinary.com',
 
     /**
      * Assinatura de upload direto. Os parâmetros assinados viram restrições

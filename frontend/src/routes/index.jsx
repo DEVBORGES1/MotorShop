@@ -6,13 +6,13 @@ import { RootLayout } from '@/layouts/RootLayout.jsx';
 import { NotFound } from '@/pages/NotFound.jsx';
 import { Home } from '@/pages/public/Home.jsx';
 
+import { carregarMotoDetalhe } from './carregadores.js';
+
 /** Quem chega pela home não baixa o código do estoque antes de clicar nele. */
 const Estoque = lazy(() =>
   import('@/pages/public/Estoque.jsx').then((m) => ({ default: m.Estoque })),
 );
-const MotoDetalhe = lazy(() =>
-  import('@/pages/public/MotoDetalhe.jsx').then((m) => ({ default: m.MotoDetalhe })),
-);
+const MotoDetalhe = lazy(() => carregarMotoDetalhe().then((m) => ({ default: m.MotoDetalhe })));
 const Financiamento = lazy(() =>
   import('@/pages/public/Financiamento.jsx').then((m) => ({ default: m.Financiamento })),
 );

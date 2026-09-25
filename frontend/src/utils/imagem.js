@@ -1,3 +1,5 @@
+import { imageAttributes, optimizedImageUrl } from '@motorshop/shared';
+
 /**
  * Escolha da foto de capa da moto.
  *
@@ -55,56 +57,13 @@ export function imagensDaGaleria(moto) {
 }
 
 // --- Entrega otimizada (ARCHITECTURE §10.5) ---------------------------------
+// A regra mora no pacote compartilhado: o servidor pré-anuncia a foto principal
+// com o mesmo `srcset` que a galeria vai pedir. Aqui, só os nomes da tela.
 
-/**
- * Larguras geradas por contexto e o `sizes` que diz ao navegador quanto da
- * tela a imagem ocupa. Com isso o celular baixa a de 480 px, não a de 2560.
- */
-export const CONTEXTOS_DE_IMAGEM = Object.freeze({
-  miniatura: { larguras: [160, 320], sizes: '160px' },
-  card: {
-    larguras: [320, 480, 640, 960],
-    sizes: '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw',
-  },
-  galeria: {
-    larguras: [640, 960, 1280, 1920],
-    sizes: '(min-width: 1024px) 60vw, 100vw',
-  },
-  ampliada: { larguras: [960, 1280, 1920, 2560], sizes: '100vw' },
-});
+const CONTEXTO = { miniatura: 'thumbnail', card: 'card', galeria: 'gallery', ampliada: 'zoom' };
 
-const MARCA_DE_ENTREGA = '/image/upload/';
+/** URL redimensionada, com `f_auto` e `q_auto` (ver `optimizedImageUrl`). */
+export const urlOtimizada = optimizedImageUrl;
 
-/**
- * URL redimensionada, em AVIF/WebP conforme o navegador (`f_auto`) e com
- * qualidade adaptativa (`q_auto`).
- *
- * Só reescreve URLs do provedor de imagens; qualquer outra (foto de
- * demonstração, provedor futuro) volta como veio — a página continua
- * funcionando, só sem a otimização.
- */
-export function urlOtimizada(url, largura) {
-  if (!url || !url.includes(MARCA_DE_ENTREGA)) return url;
-  const [antes, depois] = url.split(MARCA_DE_ENTREGA);
-  return `${antes}${MARCA_DE_ENTREGA}c_limit,f_auto,q_auto,w_${largura}/${depois}`;
-}
-
-/**
- * Atributos de `<img>` para um contexto: `src`, `srcSet`, `sizes` e as
- * dimensões (que reservam o espaço antes do download — sem salto de layout).
- */
-export function atributosDeImagem(imagem, contexto) {
-  if (!imagem?.url) return null;
-  const { larguras, sizes } = CONTEXTOS_DE_IMAGEM[contexto];
-  const otimizavel = imagem.url.includes(MARCA_DE_ENTREGA);
-
-  return {
-    src: urlOtimizada(imagem.url, larguras.at(-1)),
-    srcSet: otimizavel
-      ? larguras.map((largura) => `${urlOtimizada(imagem.url, largura)} ${largura}w`).join(', ')
-      : undefined,
-    sizes: otimizavel ? sizes : undefined,
-    width: imagem.width,
-    height: imagem.height,
-  };
-}
+/** Atributos de `<img>` (`src`, `srcSet`, `sizes`, dimensões) para um contexto da tela. */
+export const atributosDeImagem = (imagem, contexto) => imageAttributes(imagem, CONTEXTO[contexto]);

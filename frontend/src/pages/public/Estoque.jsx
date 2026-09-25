@@ -1,5 +1,6 @@
-import { FUEL_LABEL, TRANSMISSION_LABEL } from '@motorshop/shared';
+import { breadcrumbJsonLd, FUEL_LABEL, TRANSMISSION_LABEL } from '@motorshop/shared';
 import { useCallback, useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { MotoFilters } from '@/components/catalogo/MotoFilters.jsx';
 import { MotoGrid } from '@/components/catalogo/MotoGrid.jsx';
@@ -8,6 +9,8 @@ import { Button } from '@/components/ui/Button.jsx';
 import { inputClass } from '@/components/ui/Field.jsx';
 import { Pagination } from '@/components/ui/Pagination.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
+import { baseDoSite, usePaginaSeo } from '@/hooks/useSeo.js';
+import { useStore } from '@/hooks/useStore.js';
 import { useFiltrosCatalogo } from '@/hooks/useFiltrosCatalogo.js';
 import * as publicService from '@/services/publicService.js';
 import { contarFiltrosAtivos, descreverFiltros, paramsDaApi } from '@/utils/catalogo.js';
@@ -22,6 +25,20 @@ const ROTULOS = {
 
 export function Estoque() {
   const { filtros, aplicar, alternarNaLista, limpar } = useFiltrosCatalogo();
+  const { store } = useStore();
+  const { search } = useLocation();
+  // Catálogo filtrado: fora do índice, canonical na lista sem filtro — como o
+  // servidor já responde no HTML inicial.
+  usePaginaSeo('estoque', {
+    robots: search ? 'noindex, follow' : undefined,
+    canonicalPath: '/estoque',
+    jsonLd: [
+      breadcrumbJsonLd([
+        { name: 'Home', url: `${baseDoSite(store)}/` },
+        { name: 'Estoque', url: `${baseDoSite(store)}/estoque` },
+      ]),
+    ],
+  });
   const [painelAberto, setPainelAberto] = useState(false);
 
   const params = paramsDaApi(filtros);

@@ -82,3 +82,11 @@ describe('parseEnv — variáveis declaradas porém vazias', () => {
     expect(result.success).toBe(false);
   });
 });
+
+describe('ROBOTS_POLICY', () => {
+  it('padrão libera; staging usa disallow', () => {
+    expect(parseEnv({}).data.ROBOTS_POLICY).toBe('allow');
+    expect(parseEnv({ ROBOTS_POLICY: 'disallow' }).data.ROBOTS_POLICY).toBe('disallow');
+    expect(parseEnv({ ROBOTS_POLICY: 'talvez' }).success).toBe(false);
+  });
+});

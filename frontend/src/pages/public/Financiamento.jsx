@@ -5,6 +5,7 @@ import { AvisoSimulacao } from '@/components/financiamento/AvisoSimulacao.jsx';
 import { FinancingSimulator } from '@/components/financiamento/FinancingSimulator.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { Card } from '@/components/ui/Card.jsx';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import { NotFound } from '@/pages/NotFound.jsx';
 import { formatarPercentual } from '@/utils/format.js';
@@ -32,6 +33,7 @@ const DOCUMENTOS = [
  */
 export function Financiamento() {
   const { store } = useStore();
+  usePaginaSeo(store.features?.financingEnabled ? 'financiamento' : 'not-found');
   if (!store.features?.financingEnabled) return <NotFound />;
 
   const configurado = isFinancingConfigured(store.financing);

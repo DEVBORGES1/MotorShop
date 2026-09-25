@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 
 import { useAuth } from '@/hooks/useAuth.js';
@@ -10,8 +11,11 @@ import { useAuth } from '@/hooks/useAuth.js';
  * mostre. Esconder um botão nunca protegeu um endpoint.
  */
 export function RequireAuth({ roles }) {
-  const { isAuthenticated, isRestoring, user } = useAuth();
+  const { isAuthenticated, isRestoring, user, verificarSessao } = useAuth();
   const location = useLocation();
+
+  // Primeira rota do painel visitada: é agora que a sessão é conferida.
+  useEffect(verificarSessao, [verificarSessao]);
 
   if (isRestoring) {
     return <div className="p-8 text-ink-400">Verificando sessão…</div>;

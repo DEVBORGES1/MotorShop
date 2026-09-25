@@ -11,6 +11,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@fontsource/archivo": "^5.3.0",
+    "@fontsource/barlow": "^5.3.0",
     "@hookform/resolvers": "^5.9.1",
     "@motorshop/shared": "^0.1.0",
     "axios": "^1.20.0",

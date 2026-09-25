@@ -4,20 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>MotorShop</title>
-    <meta name="description" content="Plataforma para lojas de motos usadas e seminovas." />
-
     <!--
-      Archivo (títulos e rótulos) e Barlow (corpo) — as duas famílias do tema
-      padrão, declaradas em src/styles/index.css. Carregadas da CDN por ora;
-      a FASE 9 decide se passam a ser servidas pelo próprio domínio.
+      Entre os marcadores abaixo, o servidor injeta título, descrição, Open
+      Graph, canonical e JSON-LD da rota pedida (backend/src/seo). É o que o
+      WhatsApp e o Facebook leem — eles não executam JavaScript. O conteúdo
+      atual é só o padrão do modo de desenvolvimento (Vite).
     -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800&family=Barlow:wght@400;500;600;700&display=swap"
-    />
+    <!--seo-->
+    <title>MotorShop</title>
+    <!--/seo-->
+
+    <!-- Fontes: servidas pelo próprio site, importadas em src/main.jsx. -->
   </head>
   <body>
     <div id="root"></div>

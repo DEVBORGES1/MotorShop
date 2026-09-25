@@ -1,4 +1,5 @@
 import { SellMotoForm } from '@/components/leads/SellMotoForm.jsx';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import { NotFound } from '@/pages/NotFound.jsx';
 
@@ -10,6 +11,7 @@ import { NotFound } from '@/pages/NotFound.jsx';
  */
 export function VendaSuaMoto() {
   const { store } = useStore();
+  usePaginaSeo(store.features?.sellMotoEnabled ? 'venda-sua-moto' : 'not-found');
   if (!store.features?.sellMotoEnabled) return <NotFound />;
 
   return (

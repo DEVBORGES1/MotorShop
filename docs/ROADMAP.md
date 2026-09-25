@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 8 concluídas (FASE 8 com teste manual pendente). FASE 9 aguardando autorização.**
+> **Status atual: FASES 0 a 9 concluídas (FASES 8 e 9 com verificações manuais pendentes). FASE 10 aguardando autorização.**
 
 ---
 
@@ -706,7 +706,7 @@ rede o formato entregue (AVIF/WebP).
 
 ---
 
-# FASE 9 — SEO + performance
+# FASE 9 — SEO + performance ✅ concluída (verificações manuais e LCP da página da moto pendentes)
 
 ### Objetivo
 Resolver **R-01** (preview de link) e atingir o orçamento de performance de
@@ -752,21 +752,68 @@ Nenhuma para meta no servidor (substituição de string). No cliente, ou
 preferindo o hook próprio se for suficiente.
 
 ### Critérios de conclusão
-- [ ] `curl` de `/motos/<slug>` (**sem JS**) retorna HTML **com** `title`,
+- [x] `curl` de `/motos/<slug>` (**sem JS**) retorna HTML **com** `title`,
       `description` e `og:image` corretos ← *resolve R-01*
 - [ ] Preview validado no depurador de links do Facebook e em um envio real de
-      WhatsApp
-- [ ] `sitemap.xml` lista as páginas estáticas e todas as motos indexáveis, com
+      WhatsApp *(manual: exige o site num endereço público — FASE 12)*
+- [x] `sitemap.xml` lista as páginas estáticas e todas as motos indexáveis, com
       `lastmod`
-- [ ] `robots.txt` bloqueia `/admin` e `/api` e aponta o sitemap
-- [ ] Staging com `Disallow: /`
-- [ ] JSON-LD sem erro no Rich Results Test do Google
-- [ ] Catálogo filtrado com `noindex`; canonical correto em todas as páginas
-- [ ] Lighthouse mobile ≥ 90 em Performance, e 100 em SEO e Best Practices
-- [ ] LCP < 2,5 s · CLS < 0,1 · INP < 200 ms (4G simulado)
-- [ ] JS inicial do site público < 180 kB gzip
-- [ ] `/admin` ausente do bundle inicial público
-- [ ] Meta correta após navegação SPA (não só no carregamento inicial)
+- [x] `robots.txt` bloqueia `/admin` e `/api` e aponta o sitemap
+- [x] Staging com `Disallow: /` (`ROBOTS_POLICY=disallow`)
+- [ ] JSON-LD sem erro no Rich Results Test do Google *(manual, com endereço
+      público; a estrutura é coberta por testes)*
+- [x] Catálogo filtrado com `noindex`; canonical correto em todas as páginas
+- [x] Lighthouse mobile ≥ 90 em Performance, e 100 em SEO e Best Practices
+      *(ver medições; a moto com foto pesada sem otimização fica em 84)*
+- [ ] LCP < 2,5 s · CLS < 0,1 · INP < 200 ms (4G simulado) — **parcial**: CLS
+      ≈ 0 e TBT < 90 ms em todas; LCP ok na home, no limite no estoque e
+      **2,65 s na página da moto**
+- [x] JS inicial do site público < 180 kB gzip (**138 kB**)
+- [x] `/admin` ausente do bundle inicial público
+- [x] Meta correta após navegação SPA (não só no carregamento inicial)
+
+**Medições** (Lighthouse 12, mobile, 4G simulado, backend servindo o build
+de produção com MongoDB real; mediana de 3 execuções):
+
+| Página | Perf. | SEO | Boas práticas | LCP | CLS | TBT |
+|---|---|---|---|---|---|---|
+| `/` | 97 | 100 | 100 | 2,12 s | 0,001 | 84 ms |
+| `/estoque` | 95 | 100 | 100 | 2,53 s | 0 | 68 ms |
+| `/motos/…` (sem foto) | 95 | 100 | 100 | 2,65 s | 0 | 53 ms |
+| `/motos/…` (foto de 314 kB **sem** otimização) | 84 | 100 | 100 | 4,22 s | 0 | 63 ms |
+
+A última linha é um pior caso artificial: este ambiente não alcança o
+Cloudinary, então a foto foi servida crua. Com o provedor real, o celular
+baixaria a versão de 640 px em AVIF/WebP (~50 kB), e o LCP tende ao da linha
+sem foto. INP não é medido pelo Lighthouse de navegação; TBT é o indicador
+disponível.
+
+**O que falta para o LCP < 2,5 s na página da moto:** o piso é o próprio SPA
+— nada aparece antes de ~140 kB de JS (React, React Router, Axios) baixar e
+executar. Os caminhos são estruturais e ficam para sua decisão:
+renderizar a página no servidor (`renderToString`, a escalada prevista em
+ARCHITECTURE §11.3) ou reduzir o JS base (por exemplo, `fetch` no lugar do
+Axios, −13 kB).
+
+### Como ficou (diferenças em relação ao planejado)
+- **Fonte única de metadados** (`shared/src/seo.js`) para servidor e cliente;
+  hook próprio (`useSeo`), sem `react-helmet-async`.
+- **Dados de partida no HTML** (loja e moto) e pré-anúncio do código da página
+  e da foto principal — cortou a ida à API antes da primeira pintura. O CLS
+  da home caiu de 0,079 para 0,001 (o slogan chegava depois).
+- **Fontes no próprio domínio** (`@fontsource`, dependência nova): o CSS do
+  Google bloqueava a pintura por 780 ms e enviava o IP do visitante ao Google.
+- **`zod` fora do caminho crítico**: `sideEffects: false` no pacote
+  compartilhado, schemas em arquivos próprios e formulário/simulador da
+  página da moto carregados sob demanda. JS inicial: 157 → 138 kB.
+- **Sessão só no painel**: o site público renovava a sessão a cada visita
+  (401 no console de todo visitante). Agora a renovação só ocorre nas rotas
+  do painel.
+- **CSP própria e CORS de mesma origem**, necessários para o site e a API no
+  mesmo processo.
+- Páginas de módulo desligado e motos inexistentes respondem 404 de verdade.
+- Revisão de re-render com o Profiler: não havia custo medido (TBT < 90 ms),
+  então nada foi memoizado.
 
 ### Testes necessários
 | Tipo | O que |
@@ -1074,11 +1121,13 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 8 concluídas.** Backend com catálogo, autenticação, painel
+**FASES 0 a 9 concluídas.** Backend com catálogo, autenticação, painel
 administrativo e leads; site público com home, estoque filtrável, página da
 moto (galeria, ficha, similares, interesse, simulador), financiamento, venda
 sua moto, sobre, contato e privacidade; fotos das motos com envio direto ao
-provedor. A FASE 8 aguarda o teste manual com uma conta Cloudinary real.
+provedor; SEO com meta, dados estruturados e sitemap no HTML inicial. A FASE 8
+aguarda o teste manual com uma conta Cloudinary real; a FASE 9, a validação de
+preview com endereço público e a decisão sobre o LCP da página da moto.
 
 **Testes de integração verificados contra MongoDB real** (a suíte inteira, com a
 imagem oficial `mongo:7`). Rodá-los pela primeira vez revelou dívidas das FASES
@@ -1093,5 +1142,5 @@ contra um MongoDB acessível para ter a verificação completa.
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 9** (SEO e performance). A decisão **E** (retenção de leads) continua pendente e é
+**Próximo passo:** sua autorização para a **FASE 10** (segurança). A decisão **E** (retenção de leads) continua pendente e é
 pré-requisito da FASE 10.

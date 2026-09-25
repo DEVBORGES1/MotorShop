@@ -1,6 +1,7 @@
 import { ContactForm } from '@/components/leads/ContactForm.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { Card, CardTitle } from '@/components/ui/Card.jsx';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import { cidadeLinha, enderecoLinha, horariosAgrupados } from '@/utils/loja.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
@@ -11,6 +12,7 @@ import { linkWhatsApp } from '@/utils/whatsapp.js';
  */
 export function Contato() {
   const { store } = useStore();
+  usePaginaSeo('contato');
   const horarios = horariosAgrupados(store.businessHours);
   const endereco = enderecoLinha(store.address);
   const cidade = cidadeLinha(store.address);

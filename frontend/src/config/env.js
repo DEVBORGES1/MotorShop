@@ -8,7 +8,12 @@
  * Nunca coloque segredo nestas variáveis.
  */
 
-const DEFAULT_API_URL = 'http://localhost:3000/api';
+/**
+ * Em produção o site e a API são servidos pelo mesmo processo (ARCHITECTURE
+ * §13.2): caminho relativo, mesma origem, sem CORS. Em desenvolvimento, o Vite
+ * roda em outra porta e a API fica na 3000.
+ */
+const DEFAULT_API_URL = import.meta.env.DEV ? 'http://localhost:3000/api' : '/api';
 
 /** Base da API, sem barra final. */
 export const apiBaseUrl = (import.meta.env.VITE_API_URL ?? DEFAULT_API_URL).replace(/\/+$/, '');
