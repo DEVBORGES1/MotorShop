@@ -1,7 +1,8 @@
-import { MOTO_STATUS } from '@motorshop/shared';
+import { isFinancingConfigured, MOTO_STATUS } from '@motorshop/shared';
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { FinancingSimulator } from '@/components/financiamento/FinancingSimulator.jsx';
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
 import { InterestForm } from '@/components/leads/InterestForm.jsx';
 import { MotoFeatures } from '@/components/moto/MotoFeatures.jsx';
@@ -69,14 +70,21 @@ function Detalhe({ moto }) {
   const url = urlDaMoto(moto.slug, store.seo?.siteUrl || window.location.origin);
   const whatsapp = linkWhatsApp(store.contact?.whatsapp, mensagemInteresse(moto, url));
   const rotuloCta = vendida ? 'Avise-me de uma similar' : 'Tenho interesse';
+  // Simulador só onde faz sentido: módulo ligado, taxa configurada e moto à
+  // venda com preço (a vendida não tem preço público — decisão A).
+  const simula =
+    store.features?.financingEnabled &&
+    isFinancingConfigured(store.financing) &&
+    !vendida &&
+    moto.price > 0;
 
   const resumo = [moto.year, formatarKm(moto.mileage), formatarCilindrada(moto.engineCapacity)]
     .filter((parte) => parte != null && parte !== '—')
     .join(' · ');
 
-  const cta = (className = '') => (
+  const cta = (className = '', size = 'lg') => (
     <Button
-      size="lg"
+      size={size}
       className={className}
       onClick={() => setInteresseAberto(true)}
       aria-haspopup="dialog"
@@ -181,6 +189,18 @@ function Detalhe({ moto }) {
               <MotoFeatures features={moto.features} />
             </Secao>
           )}
+
+          {simula && (
+            <Secao titulo="Simule o financiamento">
+              <div className="rounded-lg border border-ink-800 bg-surface p-5">
+                <FinancingSimulator
+                  valorFixo={moto.price}
+                  moto={{ id: moto.id, nome: [nome, moto.year].filter(Boolean).join(' ') }}
+                  idPrefixo="moto-sim"
+                />
+              </div>
+            </Secao>
+          )}
         </div>
       </div>
 
@@ -196,7 +216,8 @@ function Detalhe({ moto }) {
               {vendida ? 'Vendida' : formatarPreco(moto.price)}
             </p>
           </div>
-          {cta('shrink-0')}
+          {/* Botão médio na barra: com o grande, o preço era cortado em 360px. */}
+          {cta('shrink-0', 'md')}
         </div>
       </div>
 

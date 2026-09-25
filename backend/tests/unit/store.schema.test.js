@@ -93,3 +93,26 @@ describe('updateStoreSchema — módulos e identidade', () => {
     expect(data.address.complement).toBe('Sala 2');
   });
 });
+
+describe('updateStoreSchema — financiamento', () => {
+  it('aceita parâmetros de financiamento', () => {
+    expect(
+      valido({
+        financing: { monthlyRate: 1.79, installmentOptions: [12, 24], minDownPaymentPercent: 20 },
+      }),
+    ).toBe(true);
+  });
+
+  it('recusa campo desconhecido no financiamento', () => {
+    expect(
+      valido({
+        financing: {
+          monthlyRate: 1.79,
+          installmentOptions: [12],
+          minDownPaymentPercent: 20,
+          cet: 30,
+        },
+      }),
+    ).toBe(false);
+  });
+});

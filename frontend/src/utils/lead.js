@@ -18,7 +18,8 @@ const semVazios = (objeto) =>
 /**
  * @param {string} type LEAD_TYPE
  * @param {object} valores saída do formulário, já validada
- * @param {{ source: object, motoId?: string }} contexto
+ * @param {{ source: object, motoId?: string }} contexto  `motoId` vincula o lead
+ *   à moto (obrigatório no interesse, opcional na simulação)
  */
 export function montarLead(type, valores, { source, motoId } = {}) {
   const { name, phone, email, message, website } = valores;
@@ -35,6 +36,14 @@ export function montarLead(type, valores, { source, motoId } = {}) {
   });
 
   if (type === LEAD_TYPE.MOTO_INTEREST) lead.moto = motoId;
+
+  // Simulação: só os parâmetros escolhidos. Taxa e parcela o servidor calcula
+  // com a configuração dele — mandar daqui seria pedir para confiar no cliente.
+  if (type === LEAD_TYPE.FINANCING) {
+    if (motoId) lead.moto = motoId;
+    const { vehiclePrice, downPayment, installments } = valores;
+    lead.data = { vehiclePrice, downPayment, installments };
+  }
 
   if (type === LEAD_TYPE.SELL_MOTO) {
     lead.data = semVazios(Object.fromEntries(CAMPOS_DE_VENDA.map((c) => [c, valores[c]])));

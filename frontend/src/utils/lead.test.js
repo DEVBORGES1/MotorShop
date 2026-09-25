@@ -53,4 +53,25 @@ describe('montarLead', () => {
   it('manda o honeypot quando preenchido — o servidor decide descartar', () => {
     expect(montarLead('CONTACT', { ...contato, website: 'x' }).website).toBe('x');
   });
+
+  it('financiamento: manda só os parâmetros escolhidos, nunca taxa nem parcela', () => {
+    const lead = montarLead(
+      'FINANCING',
+      { ...contato, vehiclePrice: 30000, downPayment: 6000, installments: 48, monthlyRate: 9 },
+      { motoId: 'abc' },
+    );
+
+    expect(lead.data).toEqual({ vehiclePrice: 30000, downPayment: 6000, installments: 48 });
+    expect(lead.moto).toBe('abc');
+  });
+
+  it('financiamento sem moto (página de financiamento) não manda moto', () => {
+    const lead = montarLead('FINANCING', {
+      ...contato,
+      vehiclePrice: 30000,
+      downPayment: 6000,
+      installments: 48,
+    });
+    expect(lead).not.toHaveProperty('moto');
+  });
 });

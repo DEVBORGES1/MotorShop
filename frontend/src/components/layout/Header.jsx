@@ -9,12 +9,12 @@ import { linkWhatsApp } from '@/utils/whatsapp.js';
  * Cabeçalho do site público.
  *
  * O menu lista apenas rotas que existem — e, entre as de módulo, só as que a
- * loja ligou. Financiamento entra com a página dele (FASE 7): menu que leva a
- * lugar nenhum é pior que menu curto.
+ * loja ligou: menu que leva a lugar nenhum é pior que menu curto.
  */
 
 const LINKS = [
   { to: '/estoque', label: 'Estoque' },
+  { to: '/financiamento', label: 'Financiamento', modulo: 'financingEnabled' },
   { to: '/venda-sua-moto', label: 'Venda sua moto', modulo: 'sellMotoEnabled' },
   { to: '/sobre', label: 'Sobre' },
   { to: '/contato', label: 'Contato' },

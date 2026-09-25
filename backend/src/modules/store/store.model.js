@@ -79,6 +79,15 @@ const storeSchema = new mongoose.Schema(
       financingEnabled: { type: Boolean, default: true },
       sellMotoEnabled: { type: Boolean, default: true },
     },
+
+    // Parâmetros do simulador (decisão F): cada loja tem acordo próprio com a
+    // financeira. Sem taxa configurada o site não simula — nenhuma taxa
+    // "padrão" no código faria o lojista anunciar uma condição que não tem.
+    financing: {
+      monthlyRate: { type: Number, min: 0, default: null }, // % ao mês: 1.79
+      installmentOptions: { type: [Number], default: [] }, // [12, 24, 36, 48]
+      minDownPaymentPercent: { type: Number, min: 0, default: 0 },
+    },
   },
   { timestamps: true },
 );

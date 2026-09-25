@@ -47,10 +47,6 @@ export function Home() {
   const total = recentes.data?.meta?.total;
   const whatsapp = (mensagem) => linkWhatsApp(store.contact?.whatsapp, mensagem);
 
-  const linkFinanciamento = whatsapp(
-    `Olá! Gostaria de simular um financiamento. (via site da ${store.name})`,
-  );
-
   return (
     <>
       <Hero store={store} total={total} whatsapp={whatsapp} />
@@ -100,8 +96,7 @@ export function Home() {
 
       <Beneficios />
 
-      {/* Venda leva ao formulário (vira lead). Financiamento é a FASE 7: até
-          lá, WhatsApp. Cada chamada some se a loja desligou o módulo. */}
+      {/* Cada chamada leva à página do módulo e some se a loja o desligou. */}
       <div className="mx-auto grid max-w-7xl gap-5 px-4 pb-4 sm:px-6 md:grid-cols-2">
         {store.features?.sellMotoEnabled && (
           <Chamada
@@ -110,11 +105,11 @@ export function Home() {
             acao={{ to: '/venda-sua-moto', label: 'Quero avaliar' }}
           />
         )}
-        {store.features?.financingEnabled && linkFinanciamento && (
+        {store.features?.financingEnabled && (
           <Chamada
             titulo="Financiamento"
-            texto="Trabalhamos com as principais financeiras. Simulação sem compromisso."
-            acao={{ href: linkFinanciamento, label: 'Simular agora' }}
+            texto="Simule as parcelas agora e envie para a loja. Sem compromisso."
+            acao={{ to: '/financiamento', label: 'Simular agora' }}
           />
         )}
       </div>

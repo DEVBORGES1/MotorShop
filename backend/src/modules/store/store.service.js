@@ -18,6 +18,7 @@ const DEFAULTS = Object.freeze({
   businessHours: [],
   seo: {},
   features: { financingEnabled: true, sellMotoEnabled: true },
+  financing: { monthlyRate: null, installmentOptions: [], minDownPaymentPercent: 0 },
   configured: false,
 });
 

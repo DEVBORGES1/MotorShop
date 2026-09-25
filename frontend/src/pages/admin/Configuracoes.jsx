@@ -1,3 +1,4 @@
+import { FINANCING_INSTALLMENT_CHOICES } from '@motorshop/shared';
 import { useEffect, useState } from 'react';
 
 import { FormSection } from '@/components/admin/FormSection.jsx';
@@ -47,6 +48,7 @@ const VAZIO = {
   social: { instagram: '', facebook: '', youtube: '' },
   theme: { primary: '#4CD62B', secondary: '#0A0B0A', accent: '#38C172' },
   features: { financingEnabled: true, sellMotoEnabled: true },
+  financing: { monthlyRate: '', installmentOptions: [], minDownPaymentPercent: '' },
   horarios: horariosParaFormulario([]),
 };
 
@@ -60,7 +62,8 @@ const MODULOS = [
   {
     chave: 'financingEnabled',
     rotulo: 'Financiamento',
-    descricao: 'Mostra na página inicial a chamada de simulação de financiamento.',
+    descricao:
+      'Página “Financiamento”, simulador na página da moto, item no menu e chamada na página inicial.',
   },
 ];
 
@@ -75,6 +78,11 @@ function comDefaults(dados) {
     social: { ...VAZIO.social, ...(dados.social ?? {}) },
     theme: { ...VAZIO.theme, ...(dados.theme ?? {}) },
     features: { ...VAZIO.features, ...(dados.features ?? {}) },
+    financing: {
+      monthlyRate: dados.financing?.monthlyRate ?? '',
+      installmentOptions: dados.financing?.installmentOptions ?? [],
+      minDownPaymentPercent: dados.financing?.minDownPaymentPercent ?? '',
+    },
     horarios: horariosParaFormulario(dados.businessHours),
   };
 }
@@ -110,6 +118,15 @@ export function Configuracoes() {
         ? { ...atual, [secao]: { ...atual[secao], [chave]: evento.target.value } }
         : { ...atual, [chave]: evento.target.value },
     );
+
+  const alternarPrazo = (prazo) => (evento) =>
+    setForm((atual) => {
+      const atuais = atual.financing.installmentOptions;
+      const proximos = evento.target.checked
+        ? [...atuais, prazo].sort((a, b) => a - b)
+        : atuais.filter((p) => p !== prazo);
+      return { ...atual, financing: { ...atual.financing, installmentOptions: proximos } };
+    });
 
   const alterarModulo = (chave) => (ligado) =>
     setForm((atual) => ({ ...atual, features: { ...atual.features, [chave]: ligado } }));
@@ -153,6 +170,12 @@ export function Configuracoes() {
         social: paraEnvio(form.social),
         businessHours: horariosParaEnvio(form.horarios),
         features: form.features,
+        financing: {
+          monthlyRate:
+            form.financing.monthlyRate === '' ? null : Number(form.financing.monthlyRate),
+          installmentOptions: form.financing.installmentOptions,
+          minDownPaymentPercent: Number(form.financing.minDownPaymentPercent) || 0,
+        },
         theme: form.theme,
       });
       setMensagem({ tone: 'success', texto: 'Configurações salvas.' });
@@ -175,6 +198,7 @@ export function Configuracoes() {
         <input
           {...props}
           type={extras.type ?? 'text'}
+          step={extras.step}
           value={(secao ? form[secao][chave] : form[chave]) ?? ''}
           onChange={alterar(secao, chave)}
           disabled={!podeEditar}
@@ -306,6 +330,40 @@ export function Configuracoes() {
               disabled={!podeEditar}
             />
           ))}
+        </FormSection>
+
+        <FormSection
+          titulo="Financiamento"
+          colunas={2}
+          descricao="Parâmetros do simulador (tabela Price), conforme o acordo da loja com a financeira. Sem taxa ou sem nenhum prazo marcado, o site não simula: a página de financiamento mostra só o contato."
+        >
+          {campo('financing', 'monthlyRate', 'Taxa de juros (% ao mês)', {
+            type: 'number',
+            step: '0.01',
+            hint: 'Ex.: 1,79',
+          })}
+          {campo('financing', 'minDownPaymentPercent', 'Entrada mínima (% do valor)', {
+            type: 'number',
+            step: '1',
+            hint: '0 para aceitar sem entrada',
+          })}
+          <fieldset className="sm:col-span-2">
+            <legend className="label-caps text-[11px] text-ink-400">Prazos oferecidos</legend>
+            <div className="mt-2.5 flex flex-wrap gap-x-5 gap-y-2.5">
+              {FINANCING_INSTALLMENT_CHOICES.map((prazo) => (
+                <label key={prazo} className="flex items-center gap-2 text-sm text-ink-200">
+                  <input
+                    type="checkbox"
+                    checked={form.financing.installmentOptions.includes(prazo)}
+                    onChange={alternarPrazo(prazo)}
+                    disabled={!podeEditar}
+                    className="h-4 w-4 accent-brand-500"
+                  />
+                  {prazo}x
+                </label>
+              ))}
+            </div>
+          </fieldset>
         </FormSection>
 
         <FormSection

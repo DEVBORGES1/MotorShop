@@ -13,6 +13,9 @@ const Estoque = lazy(() =>
 const MotoDetalhe = lazy(() =>
   import('@/pages/public/MotoDetalhe.jsx').then((m) => ({ default: m.MotoDetalhe })),
 );
+const Financiamento = lazy(() =>
+  import('@/pages/public/Financiamento.jsx').then((m) => ({ default: m.Financiamento })),
+);
 const VendaSuaMoto = lazy(() =>
   import('@/pages/public/VendaSuaMoto.jsx').then((m) => ({ default: m.VendaSuaMoto })),
 );
@@ -65,6 +68,7 @@ export const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'estoque', element: comSuspense(<Estoque />) },
       { path: 'motos/:slug', element: comSuspense(<MotoDetalhe />) },
+      { path: 'financiamento', element: comSuspense(<Financiamento />) },
       { path: 'venda-sua-moto', element: comSuspense(<VendaSuaMoto />) },
       { path: 'privacidade', element: comSuspense(<Privacidade />) },
       { path: 'sobre', element: comSuspense(<Sobre />) },

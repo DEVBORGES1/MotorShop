@@ -3,7 +3,8 @@ import { StoreSettings } from './store.model.js';
 const SINGLETON_KEY = 'default';
 
 /** Campos expostos publicamente — allowlist. `seo` e internos ficam de fora. */
-const PUBLIC_FIELDS = 'name slogan logo theme contact address social businessHours seo features';
+const PUBLIC_FIELDS =
+  'name slogan logo theme contact address social businessHours seo features financing';
 
 export function findPublic() {
   return StoreSettings.findOne({ key: SINGLETON_KEY }, PUBLIC_FIELDS).lean();

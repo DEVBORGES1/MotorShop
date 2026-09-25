@@ -8,10 +8,14 @@ vi.mock('../../src/modules/leads/lead.repository.js', () => ({
 vi.mock('../../src/modules/motos/moto.repository.js', () => ({
   existsPublic: vi.fn(),
 }));
+vi.mock('../../src/modules/store/store.repository.js', () => ({
+  findPublic: vi.fn(),
+}));
 
 const { logger } = await import('../../src/config/logger.js');
 const repository = await import('../../src/modules/leads/lead.repository.js');
 const motoRepository = await import('../../src/modules/motos/moto.repository.js');
+const storeRepository = await import('../../src/modules/store/store.repository.js');
 const service = await import('../../src/modules/leads/lead.service.js');
 
 const agora = new Date('2026-09-25T15:00:00Z');
@@ -41,6 +45,13 @@ describe('lead.service.create', () => {
       createdAt: agora,
     }));
     motoRepository.existsPublic.mockResolvedValue(true);
+    storeRepository.findPublic.mockResolvedValue({
+      financing: {
+        monthlyRate: 1.79,
+        installmentOptions: [12, 24, 36, 48],
+        minDownPaymentPercent: 20,
+      },
+    });
   });
 
   it('grava o consentimento com data do servidor e versão aceita', async () => {
@@ -123,5 +134,52 @@ describe('lead.service.create', () => {
     expect(repository.create.mock.calls[0][0].data.expectedPrice).toBe(1_250_050);
     // Quilometragem não é dinheiro: fica como veio.
     expect(repository.create.mock.calls[0][0].data.mileage).toBe(30000);
+  });
+
+  describe('financiamento', () => {
+    const simulacao = (data) => entrada({ type: LEAD_TYPE.FINANCING, message: undefined, data });
+
+    it('recalcula a parcela com a taxa do servidor e grava taxa e parcela', async () => {
+      await service.create(
+        simulacao({ vehiclePrice: 30000, downPayment: 6000, installments: 48 }),
+        { now: agora },
+      );
+
+      const { data } = repository.create.mock.calls[0][0];
+      // Centavos (D-04). Parcela de referência: R$ 749,39 a 1,79% a.m. em 48x.
+      expect(data).toEqual({
+        vehiclePrice: 3_000_000,
+        downPayment: 600_000,
+        installments: 48,
+        monthlyRate: 1.79,
+        installmentValue: 74_939,
+      });
+    });
+
+    it('recusa prazo que a loja não oferece', async () => {
+      await expect(
+        service.create(simulacao({ vehiclePrice: 30000, downPayment: 6000, installments: 60 }), {
+          now: agora,
+        }),
+      ).rejects.toMatchObject({ statusCode: 422 });
+      expect(repository.create).not.toHaveBeenCalled();
+    });
+
+    it('recusa entrada abaixo do mínimo da loja', async () => {
+      await expect(
+        service.create(simulacao({ vehiclePrice: 30000, downPayment: 1000, installments: 48 }), {
+          now: agora,
+        }),
+      ).rejects.toMatchObject({ statusCode: 422 });
+    });
+
+    it('recusa simulação quando a loja não configurou financiamento', async () => {
+      storeRepository.findPublic.mockResolvedValue(null);
+      await expect(
+        service.create(simulacao({ vehiclePrice: 30000, downPayment: 6000, installments: 48 }), {
+          now: agora,
+        }),
+      ).rejects.toMatchObject({ statusCode: 422 });
+    });
   });
 });

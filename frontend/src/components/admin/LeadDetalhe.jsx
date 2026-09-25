@@ -14,7 +14,13 @@ import { inputClass, selectClass } from '@/components/ui/Field.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
 import { useStore } from '@/hooks/useStore.js';
 import { leadsAdmin } from '@/services/adminService.js';
-import { formatarDataHora, formatarKm, formatarPreco, formatarTelefone } from '@/utils/format.js';
+import {
+  formatarDataHora,
+  formatarKm,
+  formatarPercentual,
+  formatarPreco,
+  formatarTelefone,
+} from '@/utils/format.js';
 import { caminhoDaMoto } from '@/utils/moto.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
 
@@ -233,7 +239,18 @@ function DadosDoTipo({ lead }) {
           itens={[
             ['Valor da moto', formatarPreco(d.vehiclePrice)],
             ['Entrada', formatarPreco(d.downPayment)],
-            ['Parcelas', d.installments ? `${d.installments}x` : null],
+            [
+              'Parcela simulada',
+              d.installments && d.installmentValue != null
+                ? `${d.installments}x de ${formatarPreco(d.installmentValue)}`
+                : d.installments
+                  ? `${d.installments}x`
+                  : null,
+            ],
+            [
+              'Taxa usada',
+              d.monthlyRate != null ? `${formatarPercentual(d.monthlyRate)} a.m.` : null,
+            ],
           ]}
         />
       </Bloco>

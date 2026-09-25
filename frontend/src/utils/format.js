@@ -45,3 +45,8 @@ export function formatarTelefone(telefone) {
 
 export const formatarDataHora = (iso) =>
   iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';
+
+const PERCENTUAL = new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 2 });
+
+/** 1.79 → "1,79%". Recebe o número já em pontos percentuais. */
+export const formatarPercentual = (valor) => (valor == null ? '—' : `${PERCENTUAL.format(valor)}%`);

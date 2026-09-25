@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 6 concluídas. FASE 7 aguardando autorização.**
+> **Status atual: FASES 0 a 7 concluídas. FASE 8 aguardando autorização.**
 
 ---
 
@@ -538,7 +538,7 @@ e ausência de telefone, nome e e-mail no log.
 
 ---
 
-# FASE 7 — Financiamento
+# FASE 7 — Financiamento ✅ concluída
 
 ### Objetivo
 Simulador claro e honesto, que gera lead qualificado sem prometer crédito.
@@ -572,15 +572,37 @@ Nenhuma nova. **Sem** biblioteca financeira: tabela Price são poucas linhas e
 manter o cálculo próprio o torna auditável e testável.
 
 ### Critérios de conclusão
-- [ ] Cálculo conferido contra valores de referência (erro < R$ 0,01)
-- [ ] Entrada ≥ valor da moto → erro claro, não `NaN` nem `Infinity`
-- [ ] Taxa zero tratada (divisão por zero na Price)
-- [ ] Taxa e prazos vêm de `StoreSettings`, **não** de constante no código
-- [ ] Aviso legal visível em toda superfície de simulação
-- [ ] Simulador na página da moto já vem com o preço preenchido
-- [ ] Envio gera lead `FINANCING` com os parâmetros simulados
-- [ ] Nenhum dado de análise de crédito é coletado
-- [ ] Funcional e legível no mobile
+- [x] Cálculo conferido contra valores de referência (erro < R$ 0,01)
+- [x] Entrada ≥ valor da moto → erro claro, não `NaN` nem `Infinity`
+- [x] Taxa zero tratada (divisão por zero na Price)
+- [x] Taxa e prazos vêm de `StoreSettings`, **não** de constante no código
+- [x] Aviso legal visível em toda superfície de simulação
+- [x] Simulador na página da moto já vem com o preço preenchido
+- [x] Envio gera lead `FINANCING` com os parâmetros simulados
+- [x] Nenhum dado de análise de crédito é coletado
+- [x] Funcional e legível no mobile
+
+Valores de referência calculados de forma independente (Python, `Decimal`).
+Verificado ponta a ponta com backend e MongoDB reais: configuração pelo
+painel, simulação, envio e lead no painel.
+
+### Como ficou (diferenças em relação ao planejado)
+- **Cálculo no pacote compartilhado** (`shared/src/financing.js`), não só no
+  cliente: o site simula e o **servidor refaz a conta** ao receber o lead, com
+  a taxa configurada. A parcela e a taxa gravadas no lead são as do servidor,
+  e o prazo e a entrada mínima são conferidos contra as regras da loja.
+- **Sem taxa padrão no código.** Enquanto a loja não configura taxa e prazos,
+  o simulador não aparece: `/financiamento` explica o processo e oferece o
+  contato, e a página da moto não mostra a seção.
+- Parâmetros editados na seção **Financiamento** das Configurações: taxa
+  (% a.m.), entrada mínima (%) e prazos oferecidos (6x a 72x).
+- Moto vendida não tem simulador (não tem preço público, decisão A).
+- Tabela de prazos no próprio simulador: a parcela de cada prazo oferecido,
+  clicável.
+- A configuração pública tem cache de 5 minutos (FASE 4): depois de salvar,
+  o próprio navegador do lojista pode levar esse tempo para ver a mudança.
+- Corrigido de passagem: em 360px, a barra fixa da página da moto cortava o
+  preço.
 
 ### Testes necessários
 | Tipo | O que |
@@ -1025,23 +1047,24 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 6 concluídas.** Backend com catálogo, autenticação, painel
+**FASES 0 a 7 concluídas.** Backend com catálogo, autenticação, painel
 administrativo e leads; site público com home, estoque filtrável, página da
-moto (galeria, ficha, similares, interesse), venda sua moto, sobre, contato e
-privacidade.
+moto (galeria, ficha, similares, interesse, simulador), financiamento, venda
+sua moto, sobre, contato e privacidade.
 
-**Testes de integração verificados contra MongoDB real** (310 de 310, com a
+**Testes de integração verificados contra MongoDB real** (a suíte inteira, com a
 imagem oficial `mongo:7`). Rodá-los pela primeira vez revelou dívidas das FASES
 2 e 3, corrigidas no commit `fix: testes de integração nunca rodavam de
 verdade`.
 
 Atenção: `npm test` usa o MongoDB **em memória**, que baixa o binário na
 primeira execução. Onde esse download é bloqueado, os testes de integração
-aparecem como **pulados** (152 dos 310), não como aprovados, e é preciso rodar
+aparecem como **pulados** (os que dependem de banco), não como aprovados, e é preciso rodar
 contra um MongoDB acessível para ter a verificação completa.
 
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 7** (financiamento). A
-decisão **E** (retenção de leads) continua pendente e é pré-requisito da FASE 10.
+**Próximo passo:** sua autorização para a **FASE 8** (upload e gestão de
+imagens). A decisão **E** (retenção de leads) continua pendente e é
+pré-requisito da FASE 10.

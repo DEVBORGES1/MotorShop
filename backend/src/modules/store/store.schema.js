@@ -1,3 +1,4 @@
+import { financingSettingsSchema } from '@motorshop/shared';
 import { z } from 'zod';
 
 /**
@@ -142,5 +143,7 @@ export const updateStoreSchema = z
       })
       .strict()
       .optional(),
+
+    financing: financingSettingsSchema.optional(),
   })
   .strict();

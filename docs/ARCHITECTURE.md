@@ -669,7 +669,8 @@ Documento **único** (singleton) que concentra tudo que muda de loja para loja:
   social:  { instagram?, facebook?, youtube?, tiktok? },
   businessHours: [{ weekday, opensAt, closesAt, closed }],
   seo: { defaultTitle, titleTemplate, defaultDescription, siteUrl },
-  features: { financingEnabled, sellMotoEnabled, tradeInEnabled }
+  features: { financingEnabled, sellMotoEnabled, tradeInEnabled },
+  financing: { monthlyRate, installmentOptions, minDownPaymentPercent }  // decisão F
 }
 ```
 
@@ -833,6 +834,11 @@ page       limit         (limit padrão 12, máximo 48)
 endpoint. É cálculo determinístico sem dado sensível; ir ao servidor só
 adicionaria latência. O endpoint existente é `POST /api/leads` com
 `type: FINANCING`, quando o usuário decide enviar a simulação.
+
+A função de cálculo mora no pacote compartilhado (`shared/src/financing.js`):
+ao receber o lead, o servidor confere prazo e entrada mínima contra a
+configuração da loja e **refaz a conta com a taxa dele**. A parcela e a taxa
+gravadas no lead nunca são as enviadas pelo navegador.
 
 ### 6.5 Ajustes propostos aos endpoints do briefing
 

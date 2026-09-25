@@ -1,11 +1,18 @@
 import { randomBytes } from 'node:crypto';
 
-import { LEAD_LIMITS, PUBLIC_DETAIL_STATUSES } from '@motorshop/shared';
+import {
+  checkFinancingRules,
+  LEAD_LIMITS,
+  LEAD_TYPE,
+  PUBLIC_DETAIL_STATUSES,
+  simulateFinancing,
+} from '@motorshop/shared';
 
 import { logger } from '../../config/logger.js';
 import { ApiError } from '../../utils/ApiError.js';
 import { buildMeta, buildPagination } from '../../utils/pagination.js';
 import * as motoRepository from '../motos/moto.repository.js';
+import * as storeRepository from '../store/store.repository.js';
 import * as repository from './lead.repository.js';
 import { dataToStorage, serializeCreated, serializeLead } from './lead.serializer.js';
 
@@ -56,9 +63,11 @@ export async function create(input, { now = new Date() } = {}) {
     return serializeCreated(repetido);
   }
 
+  const data = lead.type === LEAD_TYPE.FINANCING ? await financingData(lead.data) : lead.data;
+
   const created = await repository.create({
     ...lead,
-    data: dataToStorage(lead.type, lead.data),
+    data: dataToStorage(lead.type, data),
     source: source ?? {},
     // A data do aceite é do servidor: o cliente não escolhe quando consentiu.
     consent: { accepted: true, at: now, textVersion: consent.textVersion },
@@ -66,6 +75,31 @@ export async function create(input, { now = new Date() } = {}) {
 
   logger.info({ leadId: String(created._id), type: created.type }, 'Lead criado');
   return serializeCreated(created);
+}
+
+/**
+ * Simulação enviada como lead. Confere as regras da loja (prazo oferecido,
+ * entrada mínima) e **refaz o cálculo com a taxa do servidor**: o valor da
+ * parcela que a loja vê nunca é o que o navegador mandou, e a taxa gravada é a
+ * que valia no momento do envio — se a loja mudar a taxa amanhã, o lead
+ * continua dizendo o que foi simulado.
+ */
+async function financingData(input) {
+  const store = await storeRepository.findPublic();
+  const erro = checkFinancingRules(input, store?.financing);
+  if (erro) {
+    throw new ApiError(422, 'Dados inválidos', [{ field: 'data', code: 'custom', message: erro }]);
+  }
+
+  const { monthlyRate } = store.financing;
+  const simulacao = simulateFinancing({ ...input, monthlyRate });
+  if (!simulacao.valid) {
+    throw new ApiError(422, 'Dados inválidos', [
+      { field: 'data', code: 'custom', message: simulacao.error },
+    ]);
+  }
+
+  return { ...input, monthlyRate, installmentValue: simulacao.installmentValue };
 }
 
 export async function list(query) {

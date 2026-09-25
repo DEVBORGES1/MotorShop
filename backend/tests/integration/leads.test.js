@@ -7,6 +7,7 @@ import { RefreshToken } from '../../src/modules/auth/refreshToken.model.js';
 import { Brand } from '../../src/modules/brands/brand.model.js';
 import { Lead } from '../../src/modules/leads/lead.model.js';
 import { Moto } from '../../src/modules/motos/moto.model.js';
+import { StoreSettings } from '../../src/modules/store/store.model.js';
 import { User } from '../../src/modules/users/user.model.js';
 import { autenticar, comToken, criarUsuario } from '../helpers/auth.js';
 import { connect, disconnect, skipWithoutDb } from '../helpers/db.js';
@@ -47,8 +48,17 @@ describe.skipIf(skipWithoutDb)('API de leads', () => {
       Brand.deleteMany({}),
       User.deleteMany({}),
       RefreshToken.deleteMany({}),
+      StoreSettings.deleteMany({}),
     ]);
     honda = await Brand.create({ name: 'Honda', slug: 'honda' });
+    await StoreSettings.create({
+      name: 'Loja Teste',
+      financing: {
+        monthlyRate: 1.79,
+        installmentOptions: [12, 24, 36, 48],
+        minDownPaymentPercent: 20,
+      },
+    });
   });
 
   async function tokenDe(role = USER_ROLE.ADMIN) {
@@ -96,6 +106,40 @@ describe.skipIf(skipWithoutDb)('API de leads', () => {
       expect(venda.data.expectedPrice).toBe(1_400_000); // centavos
       expect(venda.phone).toBe('+5549988887777');
       expect(venda.status).toBe(LEAD_STATUS.NEW);
+    });
+
+    it('simulação vira lead FINANCING com a parcela calculada pelo servidor', async () => {
+      const moto = await criarMoto(honda._id);
+
+      const response = await enviar({
+        ...contato,
+        type: 'FINANCING',
+        moto: String(moto._id),
+        data: { vehiclePrice: 30000, downPayment: 6000, installments: 48 },
+      });
+
+      expect(response.status).toBe(201);
+      const lead = await Lead.findOne().lean();
+      expect(String(lead.moto)).toBe(String(moto._id));
+      expect(lead.data).toEqual({
+        vehiclePrice: 3_000_000,
+        downPayment: 600_000,
+        installments: 48,
+        monthlyRate: 1.79,
+        installmentValue: 74_939,
+      });
+    });
+
+    it('422 para simulação fora das regras da loja', async () => {
+      const fora = (data) => enviar({ ...contato, type: 'FINANCING', data });
+
+      expect(
+        (await fora({ vehiclePrice: 30000, downPayment: 6000, installments: 60 })).status,
+      ).toBe(422);
+      expect(
+        (await fora({ vehiclePrice: 30000, downPayment: 1000, installments: 48 })).status,
+      ).toBe(422);
+      expect(await Lead.countDocuments()).toBe(0);
     });
 
     it('lead de interesse referencia a moto certa', async () => {
