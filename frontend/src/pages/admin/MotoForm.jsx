@@ -2,10 +2,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { FUEL_LABEL, MOTO_LIMITS, MOTO_STATUS_LABEL, TRANSMISSION_LABEL } from '@motorshop/shared';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { z } from 'zod';
 
 import { FormSection } from '@/components/admin/FormSection.jsx';
+import { ImageManager } from '@/components/admin/fotos/ImageManager.jsx';
 import { PageHeader } from '@/components/admin/PageHeader.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
 import { Button } from '@/components/ui/Button.jsx';
@@ -65,6 +66,7 @@ function limpar(valores) {
 export function MotoForm() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { state } = useLocation();
   const editando = Boolean(id);
   const [erro, setErro] = useState(null);
 
@@ -105,10 +107,15 @@ export function MotoForm() {
       const payload = limpar(valores);
       if (editando) {
         await motosAdmin.update(id, payload);
+        navigate('/admin/motos');
       } else {
-        await motosAdmin.create(payload);
+        // Recém-cadastrada: segue para a edição, onde as fotos são enviadas —
+        // o envio precisa do id da moto para escopar a pasta no provedor.
+        const criada = await motosAdmin.create(payload);
+        navigate(`/admin/motos/${criada.id}/editar`, {
+          state: { aviso: 'Moto cadastrada. Agora adicione as fotos.' },
+        });
       }
-      navigate('/admin/motos');
     } catch (causa) {
       // Erros por campo vindos do servidor: mostra todos, não só o primeiro.
       const detalhes = causa.errors?.map((e) => `${e.field ?? ''} ${e.message}`.trim()).join(' · ');
@@ -155,6 +162,7 @@ export function MotoForm() {
       />
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
+        <Alert tone="success">{state?.aviso}</Alert>
         <Alert tone="error">{erro}</Alert>
 
         <FormSection titulo="Identificação">
@@ -211,9 +219,11 @@ export function MotoForm() {
           </Field>
         </FormSection>
 
-        <p className="text-xs text-ink-400">
-          O envio de fotos entra na FASE 8. Por enquanto as motos são cadastradas sem imagens.
-        </p>
+        {!editando && (
+          <p className="text-xs text-ink-400">
+            As fotos são adicionadas logo depois de salvar o cadastro.
+          </p>
+        )}
 
         <div className="flex gap-3">
           <Button type="submit" disabled={isSubmitting}>
@@ -224,6 +234,24 @@ export function MotoForm() {
           </Button>
         </div>
       </form>
+
+      {/* Fora do <form>: o gestor tem botões e envios próprios, e formulário
+          dentro de formulário não é HTML válido. */}
+      {editando && moto && (
+        <section aria-labelledby="fotos-titulo" className="mt-10">
+          <h2 id="fotos-titulo" className="label-caps mb-3 text-[11px] text-ink-400">
+            Fotos
+          </h2>
+          <div className="rounded-lg border border-ink-800 bg-surface p-5">
+            <ImageManager
+              key={moto.id}
+              motoId={moto.id}
+              imagensIniciais={moto.images ?? []}
+              principalInicial={moto.mainImageId}
+            />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

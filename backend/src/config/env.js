@@ -29,6 +29,19 @@ const envSchema = z
     JWT_ISSUER: z.string().trim().min(1).default('motorshop'),
     JWT_AUDIENCE: z.string().trim().min(1).default('motorshop-admin'),
 
+    // Armazenamento de imagens (ARCHITECTURE §10). Sem provedor, a API sobe
+    // normalmente e só o envio de fotos responde 503.
+    STORAGE_PROVIDER: z.enum(['none', 'cloudinary']).default('none'),
+    CLOUDINARY_CLOUD_NAME: z.string().trim().min(1).optional(),
+    CLOUDINARY_API_KEY: z.string().trim().min(1).optional(),
+    CLOUDINARY_API_SECRET: z.string().trim().min(1).optional(),
+    // Pasta-raiz no provedor: uma por loja/ambiente (ex.: "loja-x/prod").
+    STORAGE_FOLDER: z
+      .string()
+      .trim()
+      .regex(/^[a-z0-9][a-z0-9_/-]*[a-z0-9]$/i, 'use letras, números, "-", "_" e "/"')
+      .default('motorshop'),
+
     LOG_LEVEL: z.enum(LOG_LEVELS).default('info'),
     BODY_LIMIT: z.string().trim().default('100kb'),
   })
@@ -49,6 +62,18 @@ const envSchema = z
         path: ['JWT_SECRET'],
         message: 'deve ter no mínimo 32 caracteres',
       });
+    }
+
+    if (value.STORAGE_PROVIDER === 'cloudinary') {
+      for (const name of ['CLOUDINARY_CLOUD_NAME', 'CLOUDINARY_API_KEY', 'CLOUDINARY_API_SECRET']) {
+        if (!value[name]) {
+          ctx.addIssue({
+            code: 'custom',
+            path: [name],
+            message: 'é obrigatória quando STORAGE_PROVIDER=cloudinary',
+          });
+        }
+      }
     }
 
     if (value.NODE_ENV === 'production') {

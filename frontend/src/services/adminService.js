@@ -39,3 +39,15 @@ export const leadsAdmin = {
   update: (id, data) => api.patch(`/admin/leads/${id}`, data).then((e) => e.data),
   remove: (id) => api.delete(`/admin/leads/${id}`),
 };
+
+/** Fotos da moto. O arquivo vai direto ao provedor (`uploadService`); aqui, só metadados. */
+export const fotosAdmin = {
+  assinatura: (motoId) => api.post('/admin/uploads/assinatura', { motoId }).then((e) => e.data),
+  vincular: (motoId, meta) => api.post(`/admin/motos/${motoId}/imagens`, meta).then((e) => e.data),
+  ordenar: (motoId, body) =>
+    api.patch(`/admin/motos/${motoId}/imagens/ordem`, body).then((e) => e.data),
+  alterar: (motoId, imageId, body) =>
+    api.patch(`/admin/motos/${motoId}/imagens/${imageId}`, body).then((e) => e.data),
+  remover: (motoId, imageId) =>
+    api.delete(`/admin/motos/${motoId}/imagens/${imageId}`).then((e) => e.data),
+};

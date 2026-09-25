@@ -1,4 +1,5 @@
 import { ok } from '../../utils/apiResponse.js';
+import * as imageService from './moto.images.service.js';
 import * as service from './moto.service.js';
 
 /** Traduz HTTP ⇄ domínio. Nenhuma regra de negócio aqui. */
@@ -47,4 +48,27 @@ export async function changeStatus(req, res) {
 export async function deactivate(req, res) {
   const moto = await service.deactivate(req.validated.params.id);
   res.json(ok(moto, { message: 'Moto desativada' }));
+}
+
+// --- Fotos -------------------------------------------------------------------
+
+export async function attachImage(req, res) {
+  const moto = await imageService.attachImage(req.validated.params.id, req.validated.body);
+  res.status(201).json(ok(moto, { message: 'Foto adicionada' }));
+}
+
+export async function reorderImages(req, res) {
+  const moto = await imageService.reorderImages(req.validated.params.id, req.validated.body);
+  res.json(ok(moto, { message: 'Ordem das fotos salva' }));
+}
+
+export async function updateImage(req, res) {
+  const { id, imageId } = req.validated.params;
+  res.json(ok(await imageService.updateImage(id, imageId, req.validated.body)));
+}
+
+export async function removeImage(req, res) {
+  const { id, imageId } = req.validated.params;
+  const moto = await imageService.removeImage(id, imageId);
+  res.json(ok(moto, { message: 'Foto removida' }));
 }

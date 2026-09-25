@@ -1,5 +1,6 @@
 import {
   FUEL,
+  MOTO_IMAGE_RULES,
   MOTO_LIMITS,
   MOTO_SORT,
   MOTO_STATUS,
@@ -98,18 +99,6 @@ function checkRanges(query, ctx) {
 
 // --- Escrita ----------------------------------------------------------------
 
-const imageSchema = z
-  .object({
-    id: z.string().min(1),
-    publicId: z.string().min(1),
-    url: z.string().url(),
-    width: z.number().int().positive().optional(),
-    height: z.number().int().positive().optional(),
-    alt: z.string().max(200).optional(),
-    order: z.number().int().min(0).optional(),
-  })
-  .strict();
-
 const motoWriteBase = z
   .object({
     brand: objectId,
@@ -133,9 +122,6 @@ const motoWriteBase = z
     licensePlate: z.string().trim().max(10).nullish(),
     description: z.string().trim().max(MOTO_LIMITS.MAX_DESCRIPTION).nullish(),
     features: z.array(z.string().trim().min(1).max(80)).max(MOTO_LIMITS.MAX_FEATURES).optional(),
-
-    images: z.array(imageSchema).max(MOTO_LIMITS.MAX_IMAGES).optional(),
-    mainImageId: z.string().nullish(),
 
     featured: z.boolean().optional(),
     onSale: z.boolean().optional(),
@@ -179,3 +165,51 @@ export const slugParamSchema = z.object({
 });
 
 export const idParamSchema = z.object({ id: objectId });
+
+// --- Fotos -------------------------------------------------------------------
+// As fotos NÃO entram por create/update da moto: só por estas rotas, que
+// verificam o upload com o provedor. Antes desta separação, o cadastro aceitava
+// `images` com qualquer URL — uma foto "de" qualquer lugar, sem verificação.
+
+export const imageParamSchema = z.object({ id: objectId, imageId: z.uuid() });
+
+/**
+ * Metadados que o navegador repassa depois de enviar ao provedor. Nada daqui é
+ * aceito às cegas: `signature` prova que o upload existiu, a pasta de
+ * `publicId` precisa ser a da moto, e a URL é montada pelo servidor.
+ */
+export const attachImageSchema = z
+  .object({
+    publicId: z
+      .string()
+      .max(300)
+      .regex(/^[\w-]+(\/[\w-]+)*$/, 'Identificador de arquivo inválido'),
+    version: z.number().int().positive(),
+    signature: z.string().regex(/^[0-9a-f]{40}$/, 'Assinatura inválida'),
+    format: z.enum(MOTO_IMAGE_RULES.FORMATS, { error: 'Formato de imagem não permitido' }),
+    bytes: z.number().int().positive().max(MOTO_IMAGE_RULES.MAX_BYTES, 'Arquivo acima de 10 MB'),
+    width: z.number().int().positive().max(20_000),
+    height: z.number().int().positive().max(20_000),
+    alt: z.string().trim().max(MOTO_IMAGE_RULES.MAX_ALT).optional(),
+  })
+  .strict();
+
+/** Nova ordem (todos os ids, sem faltar nem sobrar) e a foto principal. */
+export const reorderImagesSchema = z
+  .object({
+    order: z.array(z.uuid()).min(1).max(MOTO_LIMITS.MAX_IMAGES),
+    mainImageId: z.uuid(),
+  })
+  .strict()
+  .refine((body) => new Set(body.order).size === body.order.length, {
+    path: ['order'],
+    message: 'Foto repetida na ordem',
+  })
+  .refine((body) => body.order.includes(body.mainImageId), {
+    path: ['mainImageId'],
+    message: 'A principal precisa estar entre as fotos',
+  });
+
+export const updateImageSchema = z
+  .object({ alt: z.string().trim().max(MOTO_IMAGE_RULES.MAX_ALT) })
+  .strict();

@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "node --env-file-if-exists=../.env --watch src/server.js",
     "start": "node --env-file-if-exists=../.env src/server.js",
-    "build": "node --env-file-if-exists=../.env --input-type=module -e \"await import('./src/app.js'); console.log('backend: verifica\u00e7\u00e3o de build OK');\"",
+    "build": "node --env-file-if-exists=../.env --input-type=module -e \"await import('./src/app.js'); console.log('backend: verificação de build OK');\"",
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "node --env-file-if-exists=../.env src/scripts/seed.js",
@@ -17,6 +17,7 @@
   "dependencies": {
     "@motorshop/shared": "*",
     "argon2": "^0.45.1",
+    "cloudinary": "^2.11.0",
     "compression": "^1.8.2",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",

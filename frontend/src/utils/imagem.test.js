@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { imagemPrincipal, imagensDaGaleria, nomeDaMoto } from './imagem.js';
+import {
+  atributosDeImagem,
+  imagemPrincipal,
+  imagensDaGaleria,
+  nomeDaMoto,
+  urlOtimizada,
+} from './imagem.js';
 
 const moto = (images, mainImageId) => ({
   brand: { name: 'Honda' },
@@ -88,5 +94,41 @@ describe('imagensDaGaleria', () => {
   it('moto sem fotos devolve lista vazia', () => {
     expect(imagensDaGaleria(moto([]))).toEqual([]);
     expect(imagensDaGaleria(null)).toEqual([]);
+  });
+});
+
+describe('entrega otimizada', () => {
+  const cloudinary = 'https://res.cloudinary.com/loja/image/upload/v17/loja/motos/a/foto.jpg';
+
+  it('insere redimensionamento, f_auto e q_auto na URL do provedor', () => {
+    expect(urlOtimizada(cloudinary, 480)).toBe(
+      'https://res.cloudinary.com/loja/image/upload/c_limit,f_auto,q_auto,w_480/v17/loja/motos/a/foto.jpg',
+    );
+  });
+
+  it('URL de fora do provedor volta intacta', () => {
+    expect(urlOtimizada('https://exemplo.com/foto.jpg', 480)).toBe('https://exemplo.com/foto.jpg');
+  });
+
+  it('monta srcset e sizes por contexto', () => {
+    const attrs = atributosDeImagem({ url: cloudinary, width: 1600, height: 1200 }, 'card');
+
+    expect(attrs.srcSet.split(', ')).toHaveLength(4);
+    expect(attrs.srcSet).toContain('w_320/v17/loja/motos/a/foto.jpg 320w');
+    expect(attrs.srcSet).toContain('w_960/v17/loja/motos/a/foto.jpg 960w');
+    expect(attrs.sizes).toMatch(/33vw/);
+    expect(attrs.src).toContain('w_960');
+    expect(attrs).toMatchObject({ width: 1600, height: 1200 });
+  });
+
+  it('sem otimização possível, não inventa srcset', () => {
+    const attrs = atributosDeImagem({ url: 'https://exemplo.com/f.jpg' }, 'galeria');
+    expect(attrs.src).toBe('https://exemplo.com/f.jpg');
+    expect(attrs.srcSet).toBeUndefined();
+    expect(attrs.sizes).toBeUndefined();
+  });
+
+  it('sem imagem, nada', () => {
+    expect(atributosDeImagem(null, 'card')).toBeNull();
   });
 });

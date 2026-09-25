@@ -33,6 +33,13 @@ const ROTAS_ADMIN = [
   ['DELETE', '/api/admin/usuarios/507f1f77bcf86cd799439011'],
   ['GET', '/api/admin/store'],
   ['PATCH', '/api/admin/store'],
+  ['POST', '/api/admin/uploads/assinatura'],
+  ['POST', '/api/admin/motos/507f1f77bcf86cd799439011/imagens'],
+  ['PATCH', '/api/admin/motos/507f1f77bcf86cd799439011/imagens/ordem'],
+  [
+    'DELETE',
+    '/api/admin/motos/507f1f77bcf86cd799439011/imagens/2b1f9a8e-6d2c-4f6e-9b0a-1c2d3e4f5a6b',
+  ],
   ['GET', '/api/admin/leads'],
   ['GET', '/api/admin/leads/507f1f77bcf86cd799439011'],
   ['PATCH', '/api/admin/leads/507f1f77bcf86cd799439011'],

@@ -227,3 +227,65 @@ export function updateById(id, data) {
     .populate('brand', 'name slug')
     .lean();
 }
+
+// --- Fotos -------------------------------------------------------------------
+
+/**
+ * Acrescenta a foto só se a moto ainda tiver vaga. O limite é conferido **na
+ * própria escrita** (`images.<limite-1>` não existe), não num `count` antes:
+ * dois envios simultâneos com 19 fotos não conseguem ambos passar.
+ *
+ * @returns {Promise<object|null>} moto atualizada, ou `null` se estava cheia
+ */
+export function pushImageIfRoom(id, image, maxImages) {
+  return Moto.findOneAndUpdate(
+    { _id: id, [`images.${maxImages - 1}`]: { $exists: false } },
+    { $push: { images: image } },
+    { new: true },
+  ).lean();
+}
+
+/** Define a principal só se ainda não houver uma (primeira foto enviada). */
+export function setMainImageIfEmpty(id, imageId) {
+  return Moto.updateOne({ _id: id, mainImageId: null }, { $set: { mainImageId: imageId } });
+}
+
+/**
+ * Substitui a lista inteira (nova ordem) com trava otimista: só grava se o
+ * conjunto de fotos ainda for o que o painel viu. Se alguém enviou ou excluiu
+ * uma foto no meio tempo, devolve `null` em vez de apagar a mudança do outro.
+ */
+export function replaceImagesIfUnchanged(id, expectedIds, images, mainImageId) {
+  return Moto.findOneAndUpdate(
+    { _id: id, images: { $size: expectedIds.length }, 'images.id': { $all: expectedIds } },
+    { $set: { images, mainImageId } },
+    { new: true },
+  )
+    .select('+licensePlate')
+    .populate('brand', 'name slug')
+    .lean();
+}
+
+export function updateImageAlt(id, imageId, alt) {
+  return Moto.findOneAndUpdate(
+    { _id: id, 'images.id': imageId },
+    { $set: { 'images.$.alt': alt } },
+    { new: true },
+  )
+    .select('+licensePlate')
+    .populate('brand', 'name slug')
+    .lean();
+}
+
+/** Remove a foto e devolve o documento **anterior** (para achar o publicId). */
+export function pullImage(id, imageId) {
+  return Moto.findOneAndUpdate(
+    { _id: id, 'images.id': imageId },
+    { $pull: { images: { id: imageId } } },
+    { new: false },
+  ).lean();
+}
+
+export function setMainImage(id, mainImageId) {
+  return Moto.updateOne({ _id: id }, { $set: { mainImageId } });
+}

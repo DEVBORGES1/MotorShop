@@ -73,6 +73,11 @@ site em `http://localhost:5173`, sem nenhum ajuste.
 | `FRONTEND_URL` | não | `http://localhost:5173` | Origem(ns) liberada(s) no CORS. Aceita lista separada por vírgula. |
 | `MONGODB_URI` | **em produção** | — | String de conexão do Atlas |
 | `JWT_SECRET` | **em produção** | — | Mínimo 32 caracteres. Usado a partir da FASE 3. |
+| `STORAGE_PROVIDER` | não | `none` | `none` \| `cloudinary`. Sem provedor, o site funciona e só o envio de fotos responde 503. |
+| `CLOUDINARY_CLOUD_NAME` | se `cloudinary` | — | Nome da conta |
+| `CLOUDINARY_API_KEY` | se `cloudinary` | — | Chave da API |
+| `CLOUDINARY_API_SECRET` | se `cloudinary` | — | **Segredo.** Só no `.env` do backend |
+| `STORAGE_FOLDER` | não | `motorshop` | Pasta-raiz no provedor, uma por loja e ambiente (ex.: `loja-x/prod`) |
 | `LOG_LEVEL` | não | `info` | Nível do log |
 | `BODY_LIMIT` | não | `100kb` | Limite do corpo JSON |
 
@@ -113,6 +118,31 @@ MONGODB_URI=mongodb+srv://USUARIO:SENHA@cluster.mongodb.net/motorshop_dev?retryW
 ```
 
 Use databases distintos por ambiente: `motorshop_dev`, `_staging`, `_prod`.
+
+---
+
+## 4.1 Fotos das motos (Cloudinary)
+
+O navegador envia as fotos **direto** ao Cloudinary, com uma assinatura emitida
+pela API — o arquivo nunca passa pelo backend (ARCHITECTURE §10.4).
+
+1. Crie uma conta gratuita em [cloudinary.com](https://cloudinary.com).
+2. No Dashboard, em **Product Environment Credentials**, copie *Cloud name*,
+   *API Key* e *API Secret* para o `.env`:
+
+```bash
+STORAGE_PROVIDER=cloudinary
+CLOUDINARY_CLOUD_NAME=seu-cloud-name
+CLOUDINARY_API_KEY=123456789012345
+CLOUDINARY_API_SECRET=...        # segredo: nunca em VITE_*, nunca no Git
+STORAGE_FOLDER=motorshop/dev
+```
+
+3. Reinicie a API e abra **Motos → Editar** no painel: a seção **Fotos**
+   aceita arrastar vários arquivos de uma vez.
+
+Nada precisa ser configurado no Cloudinary além disso: pasta, formatos
+aceitos e o limite de resolução (2560 px) vão na própria assinatura.
 
 ---
 

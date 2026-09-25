@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 7 concluídas. FASE 8 aguardando autorização.**
+> **Status atual: FASES 0 a 8 concluídas (FASE 8 com teste manual pendente). FASE 9 aguardando autorização.**
 
 ---
 
@@ -613,7 +613,7 @@ painel, simulação, envio e lead no painel.
 
 ---
 
-# FASE 8 — Upload e gestão de imagens
+# FASE 8 — Upload e gestão de imagens ✅ concluída (teste com conta Cloudinary real pendente)
 
 ### Objetivo
 Loja consegue subir, ordenar e escolher fotos pelo painel, com entrega
@@ -655,19 +655,46 @@ Backend: `cloudinary`. Frontend: nenhuma (`dnd` nativo de HTML5; biblioteca de
 arrastar-e-soltar só se a necessidade se confirmar).
 
 ### Critérios de conclusão
-- [ ] Upload de 10 fotos de ~4 MB conclui sem passar pela API
-- [ ] `body limit` da API segue em 100 kB (§8.1) — confirma o fluxo direto
-- [ ] Assinatura exige autenticação de ADMIN (`401` anônimo)
-- [ ] Assinatura escopada: formato/pasta/tamanho fora do permitido é recusado
-- [ ] Backend rejeita metadado com `public_id` fora da pasta esperada
-- [ ] Reordenar persiste; imagem principal reflete no card e no OG
-- [ ] Excluir imagem remove metadado **e** arquivo no provedor
-- [ ] Falha do provedor na exclusão não derruba a operação (e é logada)
-- [ ] 21ª imagem recusada
-- [ ] Imagens servidas em WebP/AVIF conforme o navegador
-- [ ] `width`/`height` presentes; sem salto de layout
-- [ ] Nenhum import de `cloudinary` fora de `cloudinary.provider.js`
-      (verificável por busca)
+- [x] Upload de 10 fotos de ~4 MB conclui sem passar pela API *(provedor
+      simulado; maior corpo enviado à API: 192 bytes)*
+- [x] `body limit` da API segue em 100 kB (§8.1) — confirma o fluxo direto
+- [x] Assinatura exige autenticação de ADMIN (`401` anônimo)
+- [x] Assinatura escopada: formato/pasta fora do permitido é recusado pelo
+      provedor; tamanho, pelo navegador e pelo servidor ao vincular (ver §10.4)
+- [x] Backend rejeita metadado com `public_id` fora da pasta esperada
+- [x] Reordenar persiste; imagem principal reflete no card *(OG é da FASE 9)*
+- [x] Excluir imagem remove metadado **e** pede a exclusão no provedor
+- [x] Falha do provedor na exclusão não derruba a operação (e é logada)
+- [x] 21ª imagem recusada
+- [x] URLs de entrega com `f_auto`/`q_auto` e `srcset` por contexto
+      *(o formato efetivamente entregue depende da conta real)*
+- [x] `width`/`height` presentes; sem salto de layout
+- [x] Nenhum import de `cloudinary` fora de `cloudinary.provider.js`
+
+**Pendente — teste manual com conta real:** este ambiente não alcança o
+Cloudinary e não há credenciais. O fluxo foi verificado de ponta a ponta com
+o provedor **simulado** no navegador (respostas assinadas com o segredo, como
+o Cloudinary faz). Falta, com uma conta real (docs/SETUP.md §4.1): enviar 10
+fotos, conferir no painel do Cloudinary a pasta e a exclusão, e ver na aba de
+rede o formato entregue (AVIF/WebP).
+
+### Como ficou (diferenças em relação ao planejado)
+- **Prova do upload por assinatura:** o backend confere a assinatura que o
+  Cloudinary põe na resposta e **monta a URL ele mesmo**; a URL vinda do
+  navegador nem é aceita.
+- **Brecha fechada:** o cadastro e a edição da moto aceitavam `images` com
+  qualquer URL, sem verificação. Agora as fotos só entram pelas rotas de
+  imagem.
+- Limite de 20 conferido na própria escrita (sem corrida entre envios).
+- `PATCH .../imagens/:imageId` para o texto alternativo, além de ordem e
+  exclusão.
+- Moto nova: depois de salvar, o painel segue para a edição, onde ficam as
+  fotos (o envio precisa do id da moto para escopar a pasta).
+- Reordenar tem botões ← → além do arrastar (teclado e toque).
+- Sem provedor configurado (`STORAGE_PROVIDER=none`), o site funciona e só o
+  envio responde 503 com a instrução.
+- Componentes em `components/admin/fotos/`; entrega otimizada em
+  `utils/imagem.js`.
 
 ### Testes necessários
 | Tipo | O que |
@@ -1047,10 +1074,11 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 7 concluídas.** Backend com catálogo, autenticação, painel
+**FASES 0 a 8 concluídas.** Backend com catálogo, autenticação, painel
 administrativo e leads; site público com home, estoque filtrável, página da
 moto (galeria, ficha, similares, interesse, simulador), financiamento, venda
-sua moto, sobre, contato e privacidade.
+sua moto, sobre, contato e privacidade; fotos das motos com envio direto ao
+provedor. A FASE 8 aguarda o teste manual com uma conta Cloudinary real.
 
 **Testes de integração verificados contra MongoDB real** (a suíte inteira, com a
 imagem oficial `mongo:7`). Rodá-los pela primeira vez revelou dívidas das FASES
@@ -1065,6 +1093,5 @@ contra um MongoDB acessível para ter a verificação completa.
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 8** (upload e gestão de
-imagens). A decisão **E** (retenção de leads) continua pendente e é
+**Próximo passo:** sua autorização para a **FASE 9** (SEO e performance). A decisão **E** (retenção de leads) continua pendente e é
 pré-requisito da FASE 10.

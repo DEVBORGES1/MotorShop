@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/Badge.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { useStore } from '@/hooks/useStore.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
-import { imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
+import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
 import { caminhoDaMoto, urlDaMoto } from '@/utils/moto.js';
 import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
 
@@ -32,9 +32,10 @@ export function MotoCard({ moto }) {
       <div className="relative aspect-4/3 overflow-hidden bg-surface-2">
         {foto ? (
           <img
-            src={foto.url}
+            {...atributosDeImagem(foto, 'card')}
             alt={foto.alt}
             loading="lazy"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         ) : (

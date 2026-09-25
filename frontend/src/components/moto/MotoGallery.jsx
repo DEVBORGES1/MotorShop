@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Modal } from '@/components/ui/Modal.jsx';
 import { useArraste } from '@/hooks/useArraste.js';
 import { acaoDaTecla, indiceAposAcao, indiceVizinho } from '@/utils/galeria.js';
+import { atributosDeImagem } from '@/utils/imagem.js';
 
 /**
  * Galeria da página da moto: foto principal, miniaturas e foto ampliada em
@@ -56,13 +57,14 @@ export function MotoGallery({ imagens, nome }) {
           className="block h-full w-full cursor-zoom-in touch-pan-y select-none"
           {...arraste.handlers}
         >
+          {/* A foto principal é o LCP da página: sem `lazy` e com prioridade
+              alta — adiá-la pioraria a métrica em vez de melhorar (§10.5). */}
           <img
-            src={imagem.url}
+            {...atributosDeImagem(imagem, 'galeria')}
             alt={imagem.alt}
-            width={imagem.width}
-            height={imagem.height}
             draggable={false}
             fetchPriority="high"
+            decoding="async"
             className="h-full w-full object-cover"
           />
         </button>
@@ -98,11 +100,10 @@ export function MotoGallery({ imagens, nome }) {
                 }`}
               >
                 <img
-                  src={miniatura.url}
+                  {...atributosDeImagem(miniatura, 'miniatura')}
                   alt=""
                   loading="lazy"
-                  width={miniatura.width}
-                  height={miniatura.height}
+                  decoding="async"
                   className="h-full w-full object-cover"
                 />
               </button>
@@ -123,9 +124,10 @@ export function MotoGallery({ imagens, nome }) {
             {...arraste.handlers}
           >
             <img
-              src={imagem.url}
+              {...atributosDeImagem(imagem, 'ampliada')}
               alt={imagem.alt}
               draggable={false}
+              decoding="async"
               className="max-h-full max-w-full object-contain"
             />
           </div>

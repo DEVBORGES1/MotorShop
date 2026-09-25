@@ -96,6 +96,18 @@ export const MOTO_LIMITS = Object.freeze({
   MAX_DESCRIPTION: 5000,
 });
 
+/**
+ * Fotos das motos. Aplicado no navegador (antes de enviar) e conferido no
+ * servidor (antes de vincular). HEIC entra porque é o formato padrão do
+ * iPhone; o provedor o converte na entrega.
+ */
+export const MOTO_IMAGE_RULES = Object.freeze({
+  FORMATS: Object.freeze(['jpg', 'jpeg', 'png', 'webp', 'avif', 'heic']),
+  /** 10 MB: limite de imagem do plano gratuito do Cloudinary. */
+  MAX_BYTES: 10 * 1024 * 1024,
+  MAX_ALT: 200,
+});
+
 export const USER_ROLE = Object.freeze({
   ADMIN: 'ADMIN',
   SUPER_ADMIN: 'SUPER_ADMIN',

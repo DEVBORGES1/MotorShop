@@ -1241,6 +1241,25 @@ autenticado, com escopo de pasta, formatos e tamanho máximo — e o backend
 **revalida** o que o cliente afirma ter enviado. Não se confia no metadado
 vindo do navegador.
 
+Como ficou implementado (FASE 8):
+
+- **Assinados** (o Cloudinary recusa se alterados): `folder`
+  (`<STORAGE_FOLDER>/motos/<motoId>`), `allowed_formats` e uma transformação
+  de entrada que limita a foto a 2560 px no lado maior.
+- **Tamanho máximo** (10 MB) não é um parâmetro assinável no upload direto:
+  o navegador recusa antes de enviar, e o servidor confere `bytes` ao vincular.
+  O limite de imagem do próprio plano também se aplica.
+- **Prova do upload:** a resposta do Cloudinary traz `signature` =
+  SHA-1(`public_id` + `version` + segredo). O backend a confere (comparação
+  em tempo constante): o navegador não consegue vincular um arquivo que não
+  enviou.
+- **URL gravada é montada pelo servidor** a partir de `public_id`, `version` e
+  `format` — a URL que o navegador conhece nem é aceita.
+- **Limite de 20 fotos** conferido na própria escrita (`$push` condicionado a
+  `images.19` não existir): dois envios simultâneos não furam o limite.
+- As fotos **só** entram por `/api/admin/motos/:id/imagens`; o cadastro e a
+  edição da moto deixaram de aceitar `images` e `mainImageId`.
+
 ### 10.5 Entrega otimizada
 
 - `f_auto` (AVIF/WebP conforme suporte) e `q_auto` em toda URL de exibição.

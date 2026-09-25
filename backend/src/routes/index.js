@@ -12,6 +12,7 @@ import * as motoController from '../modules/motos/moto.controller.js';
 import { motoAdminRoutes, motoPublicRoutes } from '../modules/motos/moto.routes.js';
 import { listMotosQuerySchema } from '../modules/motos/moto.schema.js';
 import { storeAdminRoutes, storePublicRoutes } from '../modules/store/store.routes.js';
+import { uploadRoutes } from '../modules/uploads/upload.routes.js';
 import { userRoutes } from '../modules/users/user.routes.js';
 import { ok } from '../utils/apiResponse.js';
 
@@ -55,3 +56,4 @@ apiRoutes.use('/admin/marcas', brandAdminRoutes);
 apiRoutes.use('/admin/usuarios', userRoutes);
 apiRoutes.use('/admin/store', storeAdminRoutes);
 apiRoutes.use('/admin/leads', leadAdminRoutes);
+apiRoutes.use('/admin/uploads', uploadRoutes);
