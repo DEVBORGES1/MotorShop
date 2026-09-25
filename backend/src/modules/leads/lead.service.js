@@ -134,11 +134,23 @@ export async function update(id, { status, note }, user) {
 }
 
 /**
- * Exclusão definitiva — pedido do titular (LGPD). Diferente das motos, que
- * são desativadas, aqui manter o registro seria justamente o problema.
+ * Exclusão definitiva — pedido do titular ou limpeza feita pela loja (LGPD,
+ * decisão E: o lead fica guardado até a loja excluir). Diferente das motos,
+ * que são desativadas, aqui manter o registro seria justamente o problema.
  */
 export async function remove(id, user) {
   const removed = await repository.deleteById(id);
   if (!removed) throw ApiError.notFound('Lead não encontrado');
   logger.info({ leadId: id, userId: user.id }, 'Lead excluído a pedido (LGPD)');
+}
+
+/**
+ * Exclusão em lote, pelo painel. Ids que já não existem (outra aba excluiu
+ * antes) não são erro: o resultado desejado — o lead não existir — já vale.
+ * Devolve quantos foram de fato excluídos.
+ */
+export async function removeMany(ids, user) {
+  const deleted = await repository.deleteManyByIds(ids);
+  logger.info({ requested: ids.length, deleted, userId: user.id }, 'Leads excluídos em lote');
+  return deleted;
 }

@@ -65,3 +65,8 @@ export function update(id, { status, note }) {
 export function deleteById(id) {
   return Lead.findByIdAndDelete(id).lean();
 }
+
+export async function deleteManyByIds(ids) {
+  const { deletedCount } = await Lead.deleteMany({ _id: { $in: ids } });
+  return deletedCount;
+}

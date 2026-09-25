@@ -6,8 +6,7 @@ que registra as decisões de projeto; este documento registra o **estado
 verificado**.
 
 > **Pendências antes do go-live** (detalhe em [§9](#9-checklist-de-go-live)):
-> rotação de todos os segredos, decisão **E** (retenção de leads) e revisão
-> dos rate limits com tráfego real.
+> rotação de todos os segredos e revisão dos rate limits com tráfego real.
 
 ---
 
@@ -229,7 +228,6 @@ todos aparecem com o IP do proxy e se bloqueiam entre si. Coberto por
 - [ ] `NODE_ENV=production` (liga HSTS, cookie `Secure`, erros genéricos).
 - [ ] `FRONTEND_URL` com o domínio real.
 - [ ] `TRUST_PROXY_HOPS` conforme a hospedagem (§7).
-- [ ] Decisão **E** tomada e registrada na política de privacidade (§10.4).
 - [ ] Após 2–4 semanas: revisar rate limits com o tráfego real.
 
 ## 10. LGPD
@@ -272,22 +270,22 @@ versão — cada lead continua apontando para o texto que a pessoa leu.
   que foi guardado, incluindo origem e consentimento, para a loja responder.
 - Logs não guardam telefone nem e-mail (§8).
 
-### 10.4 Retenção — ⚠️ decisão **E** pendente
+### 10.4 Retenção — decisão **E**
 
-Quanto tempo um lead fica guardado é decisão do dono (ARCHITECTURE §15,
-decisão **E**). **Recomendação: 24 meses** a partir do último contato —
-cobre ciclos longos de troca de moto e é defensável como "necessário à
-finalidade".
+**Decidido pelo dono (25/09/2026):** o lead fica guardado **até a loja
+excluir** — sem prazo fixo e sem exclusão automática. Nenhum contato some
+sozinho, mesmo sem resposta.
 
-Até a decisão:
-
-- nenhum job de expurgo é criado (seria implementar um prazo não aprovado);
-- a política de privacidade **não promete prazo**;
-- a eliminação a pedido funciona normalmente.
-
-Decidido o prazo, entram: o texto na política de privacidade (com nova versão
-do consentimento, se o texto do aceite mudar) e a exclusão automática dos
-leads vencidos.
+- O `SUPER_ADMIN` exclui um lead no detalhe ou **vários de uma vez** na lista
+  (marcar e "Excluir selecionados", até 100 por vez —
+  `POST /api/admin/leads/exclusao`). `ADMIN` não exclui.
+- A política de privacidade diz que os dados ficam "enquanto forem úteis para
+  o atendimento" e que a loja revisa e exclui os que não precisa mais —
+  sem prometer um prazo que o sistema não aplica.
+- **Recomendação à loja:** revisar a lista periodicamente (por exemplo, a
+  cada 6 meses) e excluir o que já não tem uso. A LGPD pede que o dado seja
+  guardado só enquanto necessário à finalidade (art. 15 e 16); a
+  responsabilidade de fazer essa limpeza é da loja, como controladora.
 
 ### 10.5 Papel de cada um
 

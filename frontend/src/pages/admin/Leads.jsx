@@ -1,4 +1,10 @@
-import { LEAD_STATUS, LEAD_STATUS_LABEL, LEAD_TYPE, LEAD_TYPE_LABEL } from '@motorshop/shared';
+import {
+  LEAD_STATUS,
+  LEAD_STATUS_LABEL,
+  LEAD_TYPE,
+  LEAD_TYPE_LABEL,
+  USER_ROLE,
+} from '@motorshop/shared';
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
@@ -13,6 +19,7 @@ import { Modal } from '@/components/ui/Modal.jsx';
 import { Pagination } from '@/components/ui/Pagination.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
+import { useAuth } from '@/hooks/useAuth.js';
 import { leadsAdmin } from '@/services/adminService.js';
 import { formatarDataHora } from '@/utils/format.js';
 import { periodoParaApi } from '@/utils/periodo.js';
@@ -60,6 +67,12 @@ export function Leads() {
   const pagina = Number.parseInt(searchParams.get('page') ?? '1', 10) || 1;
 
   const [abertoId, setAbertoId] = useState(null);
+  const { user } = useAuth();
+  // Excluir é do SUPER_ADMIN (o dono): só ele vê a seleção.
+  const podeExcluir = user?.role === USER_ROLE.SUPER_ADMIN;
+  const [selecionados, setSelecionados] = useState(() => new Set());
+  const [excluindo, setExcluindo] = useState(false);
+  const [erroExclusao, setErroExclusao] = useState(null);
 
   const aplicar = (mudancas) => {
     const proximo = new URLSearchParams(searchParams);
@@ -69,9 +82,11 @@ export function Leads() {
     }
     if (!('page' in mudancas)) proximo.delete('page');
     setSearchParams(proximo, { replace: true });
+    // Trocar filtro ou página troca as linhas: a seleção antiga não vale mais.
+    setSelecionados(new Set());
   };
 
-  const { data, error, isLoading, setData } = useAsyncData(
+  const { data, error, isLoading, setData, refetch } = useAsyncData(
     () =>
       leadsAdmin.list({
         page: pagina,
@@ -98,12 +113,72 @@ export function Leads() {
 
   const remover = (id) => {
     setAbertoId(null);
+    setSelecionados((atual) => {
+      const proximo = new Set(atual);
+      proximo.delete(id);
+      return proximo;
+    });
     setData((atual) => ({
       ...atual,
       data: atual.data.filter((lead) => lead.id !== id),
       meta: { ...atual.meta, total: atual.meta.total - 1 },
     }));
   };
+
+  const todosMarcados = leads.length > 0 && leads.every((lead) => selecionados.has(lead.id));
+
+  const alternar = (id) =>
+    setSelecionados((atual) => {
+      const proximo = new Set(atual);
+      if (proximo.has(id)) proximo.delete(id);
+      else proximo.add(id);
+      return proximo;
+    });
+
+  const alternarTodos = () =>
+    setSelecionados(todosMarcados ? new Set() : new Set(leads.map((lead) => lead.id)));
+
+  const excluirSelecionados = async () => {
+    const quantos = selecionados.size;
+    const confirmado = window.confirm(
+      `Excluir definitivamente ${quantos} ${quantos === 1 ? 'lead' : 'leads'}?\n\n` +
+        'Os dados de contato somem do painel e não dá para desfazer.',
+    );
+    if (!confirmado) return;
+
+    setErroExclusao(null);
+    setExcluindo(true);
+    try {
+      await leadsAdmin.removeMany([...selecionados]);
+      setSelecionados(new Set());
+      setAbertoId(null);
+      // Recarrega: a página pode ter ficado vazia ou puxar leads da seguinte.
+      refetch();
+    } catch (causa) {
+      setErroExclusao(causa.message);
+    } finally {
+      setExcluindo(false);
+    }
+  };
+
+  const colunas = podeExcluir
+    ? [
+        {
+          chave: 'selecao',
+          className: 'w-10',
+          titulo: (
+            <input
+              type="checkbox"
+              aria-label="Selecionar todos os leads desta página"
+              checked={todosMarcados}
+              onChange={alternarTodos}
+              className="size-4 accent-brand-500"
+            />
+          ),
+        },
+        ...COLUNAS,
+      ]
+    : COLUNAS;
 
   return (
     <div>
@@ -172,13 +247,27 @@ export function Leads() {
         )}
       </div>
 
-      <Alert tone="error">{error?.message}</Alert>
+      <Alert tone="error">{error?.message ?? erroExclusao}</Alert>
+
+      {podeExcluir && selecionados.size > 0 && (
+        <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-ink-800 bg-surface-2 px-4 py-3 text-sm">
+          <span className="text-ink-200">
+            {selecionados.size} {selecionados.size === 1 ? 'selecionado' : 'selecionados'}
+          </span>
+          <Button variant="danger" size="sm" disabled={excluindo} onClick={excluirSelecionados}>
+            {excluindo ? 'Excluindo…' : 'Excluir selecionados'}
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setSelecionados(new Set())}>
+            Cancelar
+          </Button>
+        </div>
+      )}
 
       {isLoading ? (
         <Skeleton className="h-80" />
       ) : (
         <DataTable
-          colunas={COLUNAS}
+          colunas={colunas}
           vazio={
             filtrando
               ? 'Nenhum lead com esses filtros.'
@@ -187,6 +276,17 @@ export function Leads() {
         >
           {leads.map((lead) => (
             <tr key={lead.id} className="hover:bg-surface-2">
+              {podeExcluir && (
+                <td className={celulaClass}>
+                  <input
+                    type="checkbox"
+                    aria-label={`Selecionar lead de ${lead.name}`}
+                    checked={selecionados.has(lead.id)}
+                    onChange={() => alternar(lead.id)}
+                    className="size-4 accent-brand-500"
+                  />
+                </td>
+              )}
               <td className={`${celulaClass} whitespace-nowrap text-ink-400`}>
                 {formatarDataHora(lead.createdAt)}
               </td>

@@ -10,6 +10,17 @@ const objectId = z.string().regex(/^[0-9a-fA-F]{24}$/, 'Identificador inválido'
 
 export const leadIdParamSchema = z.object({ id: objectId }).strict();
 
+/** Exclusão em lote: os leads marcados na lista, sem repetição. */
+export const bulkDeleteLeadsSchema = z
+  .object({
+    ids: z
+      .array(objectId)
+      .min(1, 'Selecione ao menos um lead')
+      .max(LEAD_LIMITS.MAX_BULK_DELETE, `No máximo ${LEAD_LIMITS.MAX_BULK_DELETE} por vez`)
+      .transform((ids) => [...new Set(ids.map((id) => id.toLowerCase()))]),
+  })
+  .strict();
+
 /** Lista separada por vírgula (`?tipo=CONTACT,SELL_MOTO`) → array. */
 const csvOf = (schema) =>
   z

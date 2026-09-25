@@ -1062,8 +1062,8 @@ superfície clássica de IDOR é pequena; o risco real é **exposição de campo
 - Log de lead registra o `id`, **não** telefone e e-mail.
 - Leads contêm dado pessoal: acesso restrito a autenticados, exclusão restrita
   a `SUPER_ADMIN`, `consent` versionado registrado na criação, política de
-  retenção a definir (decisão **E**), exportação/eliminação a pedido do titular
-  suportadas pelo endpoint de exclusão.
+  retenção até a loja excluir (decisão **E**), eliminação a pedido do titular
+  ou em lote pelo painel.
 - Em produção, `stack` nunca vai para a resposta HTTP; vai para o log, atrelada
   ao `requestId`.
 
@@ -1733,7 +1733,7 @@ integração cobrindo o contrato de cada endpoint.
 | **B** | **Preço "sob consulta" é necessário?** | Não no MVP — preço visível converte melhor. Se sim, entra `priceOnRequest: Boolean` e a ordenação por preço precisa decidir onde esses itens ficam. | Modelo, filtros, ordenação |
 | **C** | **Plataforma de deploy** | Render (previsível, simples, health check nativo). Railway e Fly.io são equivalentes. | FASE 12 |
 | **D** | **Domínio para a loja de demonstração** | Necessário para configurar canonical, `siteUrl`, OG e CORS. Se não houver, uso o domínio provisório do provedor e ajusto depois. | SEO, CORS, cookie |
-| **E** | **Retenção de leads (LGPD)** | 24 meses, com eliminação por `SUPER_ADMIN` a pedido do titular. Define se haverá job de expurgo. | Modelo, FASE 6 |
+| **E** | **Retenção de leads (LGPD)** | ✅ **Decidido pelo dono:** o lead fica guardado até a loja excluir — sem prazo fixo nem expurgo automático; `SUPER_ADMIN` exclui um a um ou em lote ([SECURITY §10.4](./SECURITY.md#104-retenção--decisão-e)). *(A recomendação original era 24 meses.)* | Modelo, FASE 6 |
 | **F** | **Financiamento: parâmetros das taxas** | Taxa e prazos configuráveis em `StoreSettings` (cada loja tem acordo próprio com financeiras) + aviso claro "simulação, não é proposta de crédito". | FASE 7 |
 | **G** | **WhatsApp: link `wa.me` ou API oficial?** | `wa.me` com mensagem pré-preenchida no MVP: zero custo, zero aprovação, funciona hoje. API oficial só se houver necessidade de automação. | FASE 6 |
 | **H** | **Idioma do código** | Código, campos e commits em inglês; UI e rotas públicas em português. Já assumido neste documento. | Todo o código |
@@ -1755,7 +1755,7 @@ se você não sinalizar divergência, sigo com elas.
 | **R-05** | **Segredo fraco ou vazado** (`JWT_SECRET`, Atlas, Cloudinary) | Média | Crítico | Validação Zod no boot recusa segredo curto/ausente; `.env` ignorado no git; segredo distinto por ambiente; nada sensível em `VITE_*` |
 | **R-06** | **Rate limit e cache em memória** deixam de funcionar com múltiplas instâncias | Média (ao escalar) | Médio | Documentado; Redis na topologia de escala (§13.3); MVP roda instância única |
 | **R-07** | **Simulação de financiamento interpretada como oferta de crédito** | Média | Médio (jurídico) | Aviso explícito de que é estimativa e não proposta; taxas configuráveis; sem análise de crédito; sem coleta de CPF na simulação |
-| **R-08** | **LGPD** — dado pessoal em leads sem base legal, retenção ou controle de acesso | Média | Médio-alto | `consent` versionado, acesso somente autenticado, exclusão por `SUPER_ADMIN`, retenção definida (decisão **E**), redaction em log |
+| **R-08** | **LGPD** — dado pessoal em leads sem base legal, retenção ou controle de acesso | Média | Médio-alto | `consent` versionado, acesso somente autenticado, exclusão por `SUPER_ADMIN`, retenção definida (decisão **E**: até a loja excluir), redaction em log |
 | **R-09** | **Ausência de tipagem** gera divergência silenciosa frontend/backend | Média | Médio | Zod compartilhado em `shared/`, JSDoc, testes de contrato por endpoint |
 | **R-10** | **Enumeração/scraping do estoque** por concorrente | Média | Baixo-médio | Rate limit em rotas públicas, `limit` máximo de 48, sem `GET /motos/:id` público, Cloudflare à frente |
 | **R-11** | **Spam nos formulários públicos** de lead | Alta | Médio (polui a operação) | Rate limit de 5/hora por IP, honeypot, validação estrita; CAPTCHA só se o spam se confirmar (não adicionar atrito antes de haver problema) |

@@ -31,9 +31,11 @@ export function DataTable({ colunas, vazio, children }) {
           <tr className="border-b border-ink-800 bg-surface-2">
             {colunas.map((coluna, i) => (
               <th
-                key={coluna.titulo || `col-${i}`}
+                key={
+                  coluna.chave ?? (typeof coluna.titulo === 'string' ? coluna.titulo : `col-${i}`)
+                }
                 scope="col"
-                className={`label-caps px-4 py-3 text-[10px] text-ink-500 ${
+                className={`label-caps px-4 py-3 text-[10px] text-ink-500 ${coluna.className ?? ''} ${
                   coluna.alinhar === 'direita' ? 'text-right' : 'text-left'
                 }`}
               >

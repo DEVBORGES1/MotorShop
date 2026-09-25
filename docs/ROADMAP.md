@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 10 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live e decisão E pendentes). FASE 11 aguardando autorização.**
+> **Status atual: FASES 0 a 10 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live pendente). FASE 11 aguardando autorização.**
 
 ---
 
@@ -520,7 +520,7 @@ e ausência de telefone, nome e e-mail no log.
 - **`/privacidade`** criada, porque o consentimento precisa apontar para uma
   política. Gerada da configuração da loja; o documento completo de
   conformidade continua na FASE 10. **Não promete prazo de retenção**: a
-  decisão **E** segue pendente.
+  decisão **E** estava pendente (depois decidida: até a loja excluir).
 - **"Venda sua moto"** some (página, menu e chamada da home) quando o módulo
   está desligado nas Configurações.
 - Painel inicial mostra quantos leads novos aguardam resposta.
@@ -829,7 +829,7 @@ Axios, −13 kB).
 
 ---
 
-# FASE 10 — Segurança ✅ concluída (rotação de segredos no go-live e decisão E pendentes)
+# FASE 10 — Segurança ✅ concluída (rotação de segredos no go-live pendente)
 
 ### Objetivo
 Auditar e endurecer o que foi construído. Não é a introdução de segurança — é a
@@ -919,9 +919,9 @@ Nenhuma nova. Ferramentas de auditoria são de linha de comando.
 - **Rotação dos segredos** (`JWT_SECRET`, usuário do MongoDB, chave do
   Cloudinary, senha do primeiro `SUPER_ADMIN`): só faz sentido no ambiente de
   produção — checklist em [SECURITY §9](./SECURITY.md#9-checklist-de-go-live).
-- **Decisão E (retenção de leads):** a política LGPD está escrita com a
-  retenção marcada como pendente; recomendação de 24 meses. Sem decisão, não
-  há expurgo automático e a política de privacidade não promete prazo.
+- ~~**Decisão E (retenção de leads)**~~ — **decidida** depois da fase: o lead
+  fica guardado até a loja excluir, com exclusão em lote no painel
+  ([SECURITY §10.4](./SECURITY.md#104-retenção--decisão-e)).
 - **Rate limits com tráfego real:** os números são do uso esperado; revisar
   depois das primeiras semanas no ar.
 
@@ -1190,6 +1190,6 @@ contra um MongoDB acessível para ter a verificação completa.
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 11** (testes). A decisão
-**E** (retenção de leads) continua pendente — recomendação de 24 meses; sem
-ela, não há expurgo automático e a política de privacidade não promete prazo.
+**Próximo passo:** **FASE 11** (testes), autorizada. A decisão **E** foi
+tomada: o lead fica guardado até a loja excluir, com exclusão em lote no
+painel.

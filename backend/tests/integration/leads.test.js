@@ -293,5 +293,65 @@ describe.skipIf(skipWithoutDb)('API de leads', () => {
       expect(excluido.status).toBe(204);
       expect(await Lead.countDocuments()).toBe(0);
     });
+
+    describe('exclusão em lote (decisão E: o lead fica até a loja excluir)', () => {
+      async function criarLeads(n) {
+        const leads = await Lead.insertMany(
+          Array.from({ length: n }, (_, i) => ({
+            type: 'CONTACT',
+            name: `Pessoa ${i}`,
+            phone: `+55499999${String(i).padStart(5, '0')}`,
+            message: 'Olá',
+            consent: { accepted: true, at: new Date(), textVersion: CONSENT_TEXT_VERSION },
+          })),
+        );
+        return leads.map((lead) => String(lead._id));
+      }
+      const excluir = (token, corpo) =>
+        comToken(request(app).post('/api/admin/leads/exclusao'), token).send(corpo);
+
+      it('SUPER_ADMIN exclui os selecionados e só eles', async () => {
+        const ids = await criarLeads(5);
+        const superAdmin = await tokenDe(USER_ROLE.SUPER_ADMIN);
+
+        const res = await excluir(superAdmin, { ids: ids.slice(0, 3) });
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.deleted).toBe(3);
+        const restantes = (await Lead.find().lean()).map((lead) => String(lead._id));
+        expect(restantes.sort()).toEqual(ids.slice(3).sort());
+      });
+
+      it('ADMIN recebe 403 e nada é excluído', async () => {
+        const ids = await criarLeads(2);
+        const admin = await tokenDe(USER_ROLE.ADMIN);
+
+        expect((await excluir(admin, { ids })).status).toBe(403);
+        expect(await Lead.countDocuments()).toBe(2);
+      });
+
+      it('id repetido ou já excluído não é erro — conta só o que existia', async () => {
+        const ids = await criarLeads(2);
+        await Lead.deleteOne({ _id: ids[1] });
+        const superAdmin = await tokenDe(USER_ROLE.SUPER_ADMIN);
+
+        const res = await excluir(superAdmin, { ids: [ids[0], ids[0], ids[1]] });
+
+        expect(res.status).toBe(200);
+        expect(res.body.data.deleted).toBe(1);
+        expect(await Lead.countDocuments()).toBe(0);
+      });
+
+      it('recusa lista vazia, id inválido, lote grande demais e campo extra', async () => {
+        const superAdmin = await tokenDe(USER_ROLE.SUPER_ADMIN);
+        const muitos = Array.from({ length: 101 }, () => '507f1f77bcf86cd799439011');
+
+        expect((await excluir(superAdmin, { ids: [] })).status).toBe(422);
+        expect((await excluir(superAdmin, { ids: ['abc'] })).status).toBe(422);
+        expect((await excluir(superAdmin, { ids: muitos })).status).toBe(422);
+        expect((await excluir(superAdmin, { ids: { $ne: null } })).status).toBe(422);
+        expect((await excluir(superAdmin, {})).status).toBe(422);
+      });
+    });
   });
 });

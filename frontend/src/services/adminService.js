@@ -38,6 +38,7 @@ export const leadsAdmin = {
   get: (id) => api.get(`/admin/leads/${id}`).then((e) => e.data),
   update: (id, data) => api.patch(`/admin/leads/${id}`, data).then((e) => e.data),
   remove: (id) => api.delete(`/admin/leads/${id}`),
+  removeMany: (ids) => api.post('/admin/leads/exclusao', { ids }).then((e) => e.data),
 };
 
 /** Fotos da moto. O arquivo vai direto ao provedor (`uploadService`); aqui, só metadados. */

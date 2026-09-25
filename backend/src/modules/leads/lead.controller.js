@@ -22,6 +22,16 @@ export async function update(req, res) {
   res.json(ok(lead, { message: 'Lead atualizado' }));
 }
 
+export async function removeMany(req, res) {
+  const deleted = await service.removeMany(req.validated.body.ids, req.user);
+  res.json(
+    ok(
+      { deleted },
+      { message: `${deleted} ${deleted === 1 ? 'lead excluído' : 'leads excluídos'}` },
+    ),
+  );
+}
+
 export async function remove(req, res) {
   await service.remove(req.validated.params.id, req.user);
   res.status(204).send();

@@ -9,8 +9,7 @@ import { textoDoConsentimento } from '@/utils/lead.js';
  * Política de privacidade dos formulários (LGPD).
  *
  * Gerada da configuração da loja — o controlador dos dados é a loja, não o
- * produto. Descreve só o que o sistema realmente faz; o documento jurídico
- * completo de conformidade é da FASE 10.
+ * produto. Descreve só o que o sistema realmente faz (docs/SECURITY.md §10).
  */
 export function Privacidade() {
   const { store } = useStore();
@@ -62,6 +61,14 @@ export function Privacidade() {
           <p>
             Somente a equipe da loja, com login no painel administrativo. Os dados ficam em
             servidores de provedores de hospedagem contratados pela loja.
+          </p>
+        </Secao>
+
+        <Secao titulo="Por quanto tempo guardamos">
+          <p>
+            Enquanto forem úteis para o atendimento. A loja revisa os contatos recebidos e exclui os
+            que não precisa mais; e você pode pedir a exclusão a qualquer momento, como explicado
+            abaixo.
           </p>
         </Secao>
 

@@ -174,6 +174,8 @@ export const LEAD_LIMITS = Object.freeze({
   MAX_NAME: 80,
   MAX_MESSAGE: 2000,
   MAX_NOTE: 1000,
+  /** Quantos leads o painel exclui de uma vez (a página maior da lista). */
+  MAX_BULK_DELETE: 100,
   MIN_INSTALLMENTS: 6,
   MAX_INSTALLMENTS: 72,
   /** Janela em que um envio igual é tratado como repetição (clique duplo, reenvio). */
