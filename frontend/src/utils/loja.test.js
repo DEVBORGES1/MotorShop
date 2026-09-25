@@ -11,6 +11,17 @@ describe('enderecoLinha', () => {
     );
   });
 
+  it('inclui o complemento depois do número', () => {
+    expect(
+      enderecoLinha({
+        street: 'Rua Exemplo',
+        number: '1200',
+        complement: 'Sala 2',
+        district: 'Centro',
+      }),
+    ).toBe('Rua Exemplo, 1200, Sala 2 · Centro');
+  });
+
   it('pula o que a loja não preencheu', () => {
     expect(enderecoLinha({ street: 'Rua Exemplo' })).toBe('Rua Exemplo');
     expect(enderecoLinha({})).toBeNull();

@@ -11,9 +11,9 @@ const DIAS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 /** Semana começando na segunda, como se lê numa porta de loja. */
 const ORDEM = [1, 2, 3, 4, 5, 6, 0];
 
-/** "Rua Exemplo, 1200 · Centro" — pula o que a loja não preencheu. */
+/** "Rua Exemplo, 1200, Sala 2 · Centro" — pula o que a loja não preencheu. */
 export function enderecoLinha(address = {}) {
-  const rua = [address.street, address.number].filter(Boolean).join(', ');
+  const rua = [address.street, address.number, address.complement].filter(Boolean).join(', ');
   return [rua, address.district].filter(Boolean).join(' · ') || null;
 }
 
