@@ -7,7 +7,7 @@ import { ApiError } from '../utils/ApiError.js';
  * @param {...string} roles
  */
 export function authorize(...roles) {
-  return (req, res, next) => {
+  const middleware = (req, res, next) => {
     if (!req.user) return next(new ApiError(401, 'Autenticação necessária'));
 
     if (!roles.includes(req.user.role)) {
@@ -16,4 +16,8 @@ export function authorize(...roles) {
 
     return next();
   };
+  // Metadado lido pela matriz de permissões (tests/integration/permissions):
+  // o teste descobre sozinho quais rotas exigem qual papel.
+  middleware.roles = roles;
+  return middleware;
 }

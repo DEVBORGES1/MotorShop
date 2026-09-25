@@ -90,3 +90,25 @@ describe('ROBOTS_POLICY', () => {
     expect(parseEnv({ ROBOTS_POLICY: 'talvez' }).success).toBe(false);
   });
 });
+
+describe('FRONTEND_URL (CORS)', () => {
+  it('aceita uma ou mais origens explícitas', () => {
+    expect(parseEnv({ FRONTEND_URL: 'https://loja.com.br,https://www.loja.com.br' }).success).toBe(
+      true,
+    );
+  });
+
+  it('recusa curinga, caminho e texto que não é origem', () => {
+    for (const valor of ['*', 'https://*.loja.com', 'https://loja.com/admin', 'loja.com']) {
+      expect(parseEnv({ FRONTEND_URL: valor }).success, valor).toBe(false);
+    }
+  });
+});
+
+describe('TRUST_PROXY_HOPS', () => {
+  it('padrão 1; aceita 0 a 5', () => {
+    expect(parseEnv({}).data.TRUST_PROXY_HOPS).toBe(1);
+    expect(parseEnv({ TRUST_PROXY_HOPS: '2' }).data.TRUST_PROXY_HOPS).toBe(2);
+    expect(parseEnv({ TRUST_PROXY_HOPS: 'true' }).success).toBe(false);
+  });
+});

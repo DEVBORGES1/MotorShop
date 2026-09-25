@@ -11,9 +11,10 @@ import pinoHttp from 'pino-http';
 
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
-import { contentSecurityPolicy } from './config/security.js';
+import { helmetOptions, permissionsPolicy } from './config/security.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import { notFound } from './middlewares/notFound.js';
+import { pageLimiter } from './middlewares/rateLimiters.js';
 import { requestId } from './middlewares/requestId.js';
 import { apiRoutes } from './routes/index.js';
 import { createHtmlHandler, robots, sitemap } from './seo/seo.controller.js';
@@ -38,13 +39,17 @@ export function createApp({
 } = {}) {
   const app = express();
 
-  // Necessário para que o IP real chegue atrás de proxy/CDN — base correta
-  // para o rate limiting que entra na FASE 3.
-  app.set('trust proxy', 1);
+  // Quantos proxies à frente deste processo acrescentam `X-Forwarded-For`.
+  // É o que dá o IP real do visitante — base de todo limite por IP. Precisa
+  // bater com o deploy: a mais, o cliente forja o próprio IP e contorna os
+  // limites; a menos, todos aparecem com o IP do proxy e se bloqueiam entre
+  // si (docs/SECURITY.md).
+  app.set('trust proxy', env.TRUST_PROXY_HOPS);
   app.disable('x-powered-by');
 
   app.use(requestId);
-  app.use(helmet({ contentSecurityPolicy: contentSecurityPolicy() }));
+  app.use(helmet(helmetOptions()));
+  app.use(permissionsPolicy);
 
   const corsOptions = {
     credentials: true,
@@ -83,8 +88,8 @@ export function createApp({
   app.use('/api', apiRoutes);
 
   // SEO: dinâmicos, da base atual (§11.4).
-  app.get('/robots.txt', robots);
-  app.get('/sitemap.xml', sitemap);
+  app.get('/robots.txt', pageLimiter, robots);
+  app.get('/sitemap.xml', pageLimiter, sitemap);
 
   mountFrontend(app, frontendDir);
 
@@ -131,6 +136,6 @@ function mountFrontend(app, frontendDir) {
       req.path !== '/api' &&
       // Arquivo inexistente (/assets/x.js) é 404 comum, não página do SPA.
       !/\.[a-z0-9]+$/i.test(req.path);
-    return isPage ? servePage(req, res, next) : next();
+    return isPage ? pageLimiter(req, res, () => servePage(req, res, next)) : next();
   });
 }

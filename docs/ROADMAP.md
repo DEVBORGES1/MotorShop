@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 9 concluídas (FASES 8 e 9 com verificações manuais pendentes). FASE 10 aguardando autorização.**
+> **Status atual: FASES 0 a 10 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live e decisão E pendentes). FASE 11 aguardando autorização.**
 
 ---
 
@@ -829,7 +829,7 @@ Axios, −13 kB).
 
 ---
 
-# FASE 10 — Segurança
+# FASE 10 — Segurança ✅ concluída (rotação de segredos no go-live e decisão E pendentes)
 
 ### Objetivo
 Auditar e endurecer o que foi construído. Não é a introdução de segurança — é a
@@ -854,33 +854,76 @@ verificação de que tudo previsto em §8 está de fato em pé.
 
 ### Arquivos envolvidos
 ```
-backend/src/app.js                     helmet/CSP definitivos
-backend/src/config/{env,logger}.js
-backend/src/middlewares/rateLimiters.js
-backend/src/modules/**/*.repository.js revisão das projeções
-docs/SECURITY.md                       checklist + política LGPD (novo)
-.env.example                           revisão final
+backend/src/app.js                        trust proxy configurável, Permissions-Policy, limite nas páginas
+backend/src/config/security.js            CSP, HSTS, frame, referrer e Permissions-Policy
+backend/src/config/env.js                 FRONTEND_URL validado, TRUST_PROXY_HOPS
+backend/src/config/logger.js              redaction ampliada (tabela exportada e testada)
+backend/src/middlewares/rateLimiters.js   tabela única RATE_LIMITS
+backend/src/middlewares/authorize.js      papéis expostos para a matriz de testes
+backend/src/routes/index.js               ADMIN_ROUTERS (fonte da matriz de permissões)
+backend/src/modules/auth/auth.routes.js   limite de login por IP
+backend/tests/**                          8 arquivos de teste de segurança
+docs/SECURITY.md                          estado verificado, OWASP, LGPD, go-live (novo)
+.env.example · docs/SETUP.md              TRUST_PROXY_HOPS
 ```
 
 ### Dependências
 Nenhuma nova. Ferramentas de auditoria são de linha de comando.
 
 ### Critérios de conclusão
-- [ ] CSP ativa e sem `unsafe-inline` em `script-src`; site funciona com ela
-- [ ] HSTS ativo em produção
-- [ ] CORS restrito às origens reais; `*` ausente
-- [ ] Nenhuma resposta pública contém `licensePlate`, `passwordHash`, `_id` cru
+- [x] CSP ativa e sem `unsafe-inline` em `script-src`; site funciona com ela
+- [x] HSTS ativo em produção
+- [x] CORS restrito às origens reais; `*` ausente *(o boot recusa `*`; o
+      domínio real entra em `FRONTEND_URL` no deploy)*
+- [x] Nenhuma resposta pública contém `licensePlate`, `passwordHash`, `_id` cru
       ou `__v` (teste automatizado)
-- [ ] Matriz de permissões verificada: toda rota admin recusa anônimo e papel
+- [x] Matriz de permissões verificada: toda rota admin recusa anônimo e papel
       insuficiente
-- [ ] `npm audit` sem vulnerabilidade alta ou crítica
-- [ ] Nenhum segredo no histórico do git (varredura executada)
-- [ ] Produção: sem stack trace, sem nome de coleção, sem versão de dependência
+- [x] `npm audit` sem vulnerabilidade alta ou crítica *(zero, de qualquer
+      nível)*
+- [x] Nenhum segredo no histórico do git (varredura executada)
+- [x] Produção: sem stack trace, sem nome de coleção, sem versão de dependência
       nas respostas
-- [ ] Logs sem senha, token, cookie ou PII de lead
-- [ ] Segredos rotacionados antes do go-live
-- [ ] `docs/SECURITY.md` publicado
-- [ ] Checklist OWASP Top 10 revisado item a item
+- [x] Logs sem senha, token, cookie ou PII de lead
+- [ ] Segredos rotacionados antes do go-live *(depende do ambiente de
+      produção — checklist em SECURITY §9, executado na FASE 12)*
+- [x] `docs/SECURITY.md` publicado
+- [x] Checklist OWASP Top 10 revisado item a item
+
+### O que a auditoria encontrou e corrigiu
+- **Credential stuffing no login:** o limite era por IP + e-mail, então um IP
+  podia testar a mesma senha em e-mails ilimitados. Novo limite só por IP
+  (20 / 15 min), somado ao anterior.
+- **`trust proxy` fixo em 1:** atrás de Cloudflare + Render todos os
+  visitantes ficariam com o IP do Cloudflare (e se bloqueariam entre si); sem
+  proxy, qualquer um forjaria o `X-Forwarded-For` e escaparia dos limites.
+  Agora é `TRUST_PROXY_HOPS`, por ambiente.
+- **Páginas HTML sem limite:** cada página de moto consulta o banco; pedir
+  slugs aleatórios em massa era uma sobrecarga barata. Limite de 600 / 15 min
+  nas páginas, sitemap e robots.
+- **API pública em 300 / 15 min** bloquearia clientes de operadora móvel
+  atrás do mesmo IP (CGNAT) antes de robôs: subiu para 900.
+- **`FRONTEND_URL` aceitava qualquer texto**, inclusive `*`: agora o boot
+  recusa o que não for origem.
+- **Cabeçalhos:** faltava `Permissions-Policy`; `X-Frame-Options` passou de
+  `SAMEORIGIN` a `DENY`; HSTS passou de 1 a 2 anos e só é enviado em produção
+  (em desenvolvimento prendia o `localhost` em HTTPS).
+- **Redaction dos logs** estava correta, mas sem teste: agora a tabela é
+  exportada e um teste confere, com um logger real, que senha, token, cookie,
+  telefone e e-mail somem.
+- Conferido e **sem problema**: enumeração de usuário por tempo de resposta no
+  login (29 × 28 ms), cookie de sessão, CORS com origem não listada, XSS
+  armazenado (site e painel), injeção NoSQL, escopo e revalidação do upload.
+
+### Pendências
+- **Rotação dos segredos** (`JWT_SECRET`, usuário do MongoDB, chave do
+  Cloudinary, senha do primeiro `SUPER_ADMIN`): só faz sentido no ambiente de
+  produção — checklist em [SECURITY §9](./SECURITY.md#9-checklist-de-go-live).
+- **Decisão E (retenção de leads):** a política LGPD está escrita com a
+  retenção marcada como pendente; recomendação de 24 meses. Sem decisão, não
+  há expurgo automático e a política de privacidade não promete prazo.
+- **Rate limits com tráfego real:** os números são do uso esperado; revisar
+  depois das primeiras semanas no ar.
 
 ### Testes necessários
 | Tipo | O que |
@@ -1121,13 +1164,18 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 9 concluídas.** Backend com catálogo, autenticação, painel
+**FASES 0 a 10 concluídas.** Backend com catálogo, autenticação, painel
 administrativo e leads; site público com home, estoque filtrável, página da
 moto (galeria, ficha, similares, interesse, simulador), financiamento, venda
 sua moto, sobre, contato e privacidade; fotos das motos com envio direto ao
 provedor; SEO com meta, dados estruturados e sitemap no HTML inicial. A FASE 8
 aguarda o teste manual com uma conta Cloudinary real; a FASE 9, a validação de
 preview com endereço público e a decisão sobre o LCP da página da moto.
+
+A FASE 10 auditou e endureceu a segurança: estado verificado, checklist
+OWASP Top 10, política LGPD e checklist de go-live em
+[`SECURITY.md`](./SECURITY.md). A rotação dos segredos acontece no deploy
+(FASE 12).
 
 **Testes de integração verificados contra MongoDB real** (a suíte inteira, com a
 imagem oficial `mongo:7`). Rodá-los pela primeira vez revelou dívidas das FASES
@@ -1142,5 +1190,6 @@ contra um MongoDB acessível para ter a verificação completa.
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 10** (segurança). A decisão **E** (retenção de leads) continua pendente e é
-pré-requisito da FASE 10.
+**Próximo passo:** sua autorização para a **FASE 11** (testes). A decisão
+**E** (retenção de leads) continua pendente — recomendação de 24 meses; sem
+ela, não há expurgo automático e a política de privacidade não promete prazo.

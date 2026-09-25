@@ -80,6 +80,7 @@ site em `http://localhost:5173`, sem nenhum ajuste.
 | `STORAGE_FOLDER` | não | `motorshop` | Pasta-raiz no provedor, uma por loja e ambiente (ex.: `loja-x/prod`) |
 | `LOG_LEVEL` | não | `info` | Nível do log |
 | `BODY_LIMIT` | não | `100kb` | Limite do corpo JSON |
+| `TRUST_PROXY_HOPS` | não | `1` | Quantos proxies à frente do servidor: `0` direto, `1` Render, `2` Cloudflare → Render. Errado, os limites por IP falham ([SECURITY §7](./SECURITY.md#7-limites-de-requisição)) |
 | `ROBOTS_POLICY` | não | `allow` | `disallow` em staging/demonstração: `robots.txt` bloqueia tudo |
 | `FRONTEND_DIST_DIR` | não | `frontend/dist` | Build do site servido pela API em produção |
 

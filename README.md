@@ -191,6 +191,7 @@ MotorShop/
 │  ├─ ARCHITECTURE.md          arquitetura, decisões e riscos
 │  ├─ ROADMAP.md               fases 0 a 13
 │  ├─ SETUP.md                 configuração do ambiente local
+│  ├─ SECURITY.md              segurança verificada, OWASP e LGPD
 │  ├─ PHASE-1-REPORT.md        relatório da FASE 1
 │  ├─ PHASE-2-REPORT.md        relatório da FASE 2
 │  └─ PHASE-3-REPORT.md        relatório da FASE 3
@@ -217,8 +218,9 @@ centralizados sem stack em produção e logs com *redaction* de campos sensívei
 A FASE 3 acrescentou: senhas com **argon2id**, access token curto guardado
 apenas em memória (nunca `localStorage`), refresh token opaco em cookie
 `httpOnly` com rotação e detecção de reuso, controle de acesso por papel e
-rate limiting. A auditoria completa é a FASE 10.
-Ver [`ARCHITECTURE.md` §8](./docs/ARCHITECTURE.md#8-segurança).
+rate limiting. A FASE 10 auditou e endureceu tudo isso — estado verificado,
+checklist OWASP Top 10, política LGPD e checklist de go-live em
+[`docs/SECURITY.md`](./docs/SECURITY.md).
 
 ## Licença
 

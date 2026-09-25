@@ -960,13 +960,15 @@ verificada no backend independentemente do que o cliente exiba.
 
 ## 8. Segurança
 
+> Estado verificado, checklist OWASP e política LGPD: [`SECURITY.md`](./SECURITY.md).
+
 Segurança entra desde a FASE 1, não como fase final. A FASE 10 do roadmap é
 auditoria e endurecimento — não a primeira aparição do tema.
 
 ### 8.1 Middlewares globais (ordem importa)
 
 ```js
-app.set('trust proxy', 1);          // IP real atrás do proxy → rate limit correto
+app.set('trust proxy', env.TRUST_PROXY_HOPS); // IP real atrás do(s) proxy(s)
 app.use(requestId);                 // correlação de logs
 app.use(helmet({ ... }));           // CSP, HSTS, noSniff, frameguard, referrer
 app.use(cors(corsOptions));         // origens por env, credentials: true
@@ -986,7 +988,7 @@ direta contra exaustão de memória.
 
 ### 8.2 CORS
 
-Origens permitidas vêm de `CORS_ORIGINS` (lista separada por vírgula), nunca
+Origens permitidas vêm de `FRONTEND_URL` (lista separada por vírgula), nunca
 `*` — incompatível com `credentials: true` e inaceitável para um painel
 administrativo. Métodos e cabeçalhos são whitelistados.
 
@@ -999,6 +1001,10 @@ administrativo. Métodos e cabeçalhos são whitelistados.
 | `POST /api/leads` | 5 / hora por IP | spam de formulário |
 | `GET /api/*` público | 300 / 15 min por IP | scraping abusivo |
 | `/api/admin/*` | 600 / 15 min por usuário | operação normal folgada |
+
+Revisado na FASE 10 (limite só por IP no login, API pública em 900 e
+limite nas páginas HTML): a tabela vigente e a justificativa de cada número
+estão em [`SECURITY.md` §7](./SECURITY.md#7-limites-de-requisição).
 
 Armazenamento em memória no MVP (instância única). Com múltiplas instâncias, o
 contador precisa ser compartilhado (Redis) — registrado como R-06.

@@ -51,9 +51,18 @@ apiRoutes.get(
 // por módulo, onde o papel exigido difere (usuários e configurações são de
 // SUPER_ADMIN). Isto substitui a trava provisória da FASE 2.
 apiRoutes.use('/admin', requireDatabase, authenticate, adminApiLimiter);
-apiRoutes.use('/admin/motos', motoAdminRoutes);
-apiRoutes.use('/admin/marcas', brandAdminRoutes);
-apiRoutes.use('/admin/usuarios', userRoutes);
-apiRoutes.use('/admin/store', storeAdminRoutes);
-apiRoutes.use('/admin/leads', leadAdminRoutes);
-apiRoutes.use('/admin/uploads', uploadRoutes);
+
+/**
+ * Roteadores do painel, por prefixo. Exportado para a matriz de permissões:
+ * o teste percorre cada rota daqui, e uma rota nova já nasce testada.
+ */
+export const ADMIN_ROUTERS = Object.freeze([
+  ['/motos', motoAdminRoutes],
+  ['/marcas', brandAdminRoutes],
+  ['/usuarios', userRoutes],
+  ['/store', storeAdminRoutes],
+  ['/leads', leadAdminRoutes],
+  ['/uploads', uploadRoutes],
+]);
+
+for (const [prefix, router] of ADMIN_ROUTERS) apiRoutes.use(`/admin${prefix}`, router);

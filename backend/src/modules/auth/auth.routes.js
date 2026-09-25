@@ -1,7 +1,7 @@
 import { Router } from 'express';
 
 import { authenticate } from '../../middlewares/authenticate.js';
-import { loginLimiter, refreshLimiter } from '../../middlewares/rateLimiters.js';
+import { loginIpLimiter, loginLimiter, refreshLimiter } from '../../middlewares/rateLimiters.js';
 import { requireDatabase } from '../../middlewares/requireDatabase.js';
 import { validate } from '../../middlewares/validate.js';
 import * as controller from './auth.controller.js';
@@ -18,6 +18,7 @@ export const authRoutes = Router();
 authRoutes.post(
   '/login',
   requireDatabase,
+  loginIpLimiter,
   loginLimiter,
   validate({ body: loginSchema }),
   controller.login,

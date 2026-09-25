@@ -42,6 +42,10 @@ const envSchema = z
       .regex(/^[a-z0-9][a-z0-9_/-]*[a-z0-9]$/i, 'use letras, números, "-", "_" e "/"')
       .default('motorshop'),
 
+    // Proxies à frente do processo (CDN, balanceador). 0 = acesso direto.
+    // Render sozinho: 1. Cloudflare → Render: 2. Ver docs/SECURITY.md.
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(1),
+
     // robots.txt: `disallow` em staging e demonstração (ARCHITECTURE §11.4).
     ROBOTS_POLICY: z.enum(['allow', 'disallow']).default('allow'),
     // Build do site público servido por este processo (§13.2). Padrão:
@@ -52,6 +56,20 @@ const envSchema = z
     BODY_LIMIT: z.string().trim().default('100kb'),
   })
   .superRefine((value, ctx) => {
+    // CORS: só origens explícitas. "*" com credenciais liberaria qualquer site
+    // a chamar a API autenticada em nome do usuário do painel.
+    for (const origin of value.FRONTEND_URL.split(',')
+      .map((o) => o.trim())
+      .filter(Boolean)) {
+      if (!/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(origin)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['FRONTEND_URL'],
+          message: `origem inválida "${origin}" — use protocolo e domínio, sem caminho e sem "*"`,
+        });
+      }
+    }
+
     if (value.MONGODB_URI && !/^mongodb(\+srv)?:\/\/.+/.test(value.MONGODB_URI)) {
       ctx.addIssue({
         code: 'custom',
