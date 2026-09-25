@@ -23,8 +23,8 @@ import { Button, buttonClass } from '@/components/ui/Button.jsx';
 import { Modal } from '@/components/ui/Modal.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
-import { baseDoSite, useSeo } from '@/hooks/useSeo.js';
-import { consumirMotoInicial } from '@/utils/dadosIniciais.js';
+import { useBaseDoSite, useMotoInicial } from '@/contexts/DadosIniciaisContext.jsx';
+import { useSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import * as publicService from '@/services/publicService.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
@@ -47,6 +47,8 @@ const FinancingSimulator = lazy(() =>
   })),
 );
 
+const MOTO_INEXISTENTE = Object.freeze({ status: 404, message: 'Moto não encontrada' });
+
 /**
  * Página da moto — a que efetivamente vende.
  *
@@ -58,15 +60,20 @@ const FinancingSimulator = lazy(() =>
  */
 export function MotoDetalhe() {
   const { slug } = useParams();
+  // Vinda do servidor: a moto, ou a informação de que ela não existe (o HTML
+  // já saiu com a página de 404 e o status certo).
+  const inicial = useMotoInicial(slug);
   const {
     data: moto,
     error,
     isLoading,
     refetch,
   } = useAsyncData(() => publicService.motos.getBySlug(slug), [slug], {
-    inicial: consumirMotoInicial(slug),
+    inicial: inicial?.moto,
+    erroInicial: inicial?.naoEncontrada ? MOTO_INEXISTENTE : undefined,
   });
   const { store } = useStore();
+  const base = useBaseDoSite(store);
 
   // Enquanto carrega, o <head> fica como está (o da página anterior, ou o que
   // o servidor já mandou certo no HTML inicial).
@@ -76,7 +83,7 @@ export function MotoDetalhe() {
       : error?.status === 404
         ? pageSeo('not-found', store)
         : moto
-          ? seoDaMoto(moto, store)
+          ? seoDaMoto(moto, store, base)
           : null,
   );
 
@@ -99,8 +106,7 @@ export function MotoDetalhe() {
 }
 
 /** Os mesmos metadados que o servidor injeta no HTML inicial desta rota. */
-function seoDaMoto(moto, store) {
-  const base = baseDoSite(store);
+function seoDaMoto(moto, store, base) {
   const url = `${base}/motos/${moto.slug}`;
   return {
     ...motoSeo(moto, store),
@@ -125,7 +131,7 @@ function Detalhe({ moto }) {
   const vendida = moto.status === MOTO_STATUS.SOLD;
   const emOferta = !vendida && moto.onSale && moto.previousPrice > moto.price;
 
-  const url = urlDaMoto(moto.slug, store.seo?.siteUrl || window.location.origin);
+  const url = urlDaMoto(moto.slug, useBaseDoSite(store));
   const whatsapp = linkWhatsApp(store.contact?.whatsapp, mensagemInteresse(moto, url));
   const rotuloCta = vendida ? 'Avise-me de uma similar' : 'Tenho interesse';
   // Simulador só onde faz sentido: módulo ligado, taxa configurada e moto à

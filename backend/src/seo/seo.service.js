@@ -49,20 +49,22 @@ export async function buildPageSeo(route, { path, origin }) {
   // (`initialData`) e poupam uma ida à API antes da primeira pintura.
   const initialData = { store };
 
-  const notFound = () => ({
+  const notFound = (data = initialData) => ({
     status: 404,
-    initialData,
+    initialData: data,
     seo: { ...pageSeo('not-found', store), canonical: absoluteUrl(base, path), siteName },
   });
 
   if (route.page === 'moto') {
     const moto = await loadMoto(route.slug);
-    if (!moto) return notFound();
+    // `moto: null` diz ao site que esta moto não existe: a página de "moto não
+    // encontrada" sai renderizada, sem o navegador perguntar de novo à API.
+    if (!moto) return notFound({ store, moto: null, motoSlug: route.slug });
 
     const canonical = absoluteUrl(base, `/motos/${moto.slug}`);
     return {
       status: 200,
-      initialData: { store, moto },
+      initialData: { store, moto, motoSlug: moto.slug },
       // A capa é o maior elemento da página: pedida já pelo HTML, em paralelo
       // com o JS, com o mesmo srcset que a galeria vai usar.
       imagePreload: imageAttributes(coverImage(moto), 'gallery'),

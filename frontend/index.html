@@ -17,7 +17,11 @@
     <!-- Fontes: servidas pelo próprio site, importadas em src/main.jsx. -->
   </head>
   <body>
-    <div id="root"></div>
+    <!--
+      Nas páginas públicas, o servidor troca o marcador abaixo pela página já
+      renderizada (src/entry-server.jsx); o React hidrata em vez de desenhar.
+    -->
+    <div id="root"><!--app--></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

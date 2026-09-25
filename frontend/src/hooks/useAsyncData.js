@@ -9,14 +9,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  *
  * @param {() => Promise<unknown>} fetcher
  * @param {Array<unknown>} deps
+ * @param {{ inicial?: unknown, erroInicial?: { status: number, message: string } }} [opcoes]
  */
-export function useAsyncData(fetcher, deps = [], { inicial } = {}) {
+export function useAsyncData(fetcher, deps = [], { inicial, erroInicial } = {}) {
   const [data, setData] = useState(inicial ?? null);
-  const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(inicial === undefined);
+  const [error, setError] = useState(erroInicial ?? null);
+  const [isLoading, setIsLoading] = useState(inicial === undefined && !erroInicial);
   const [tentativa, setTentativa] = useState(0);
-  // Com dado inicial (vindo no HTML), a primeira busca é dispensável.
-  const pularPrimeira = useRef(inicial !== undefined);
+  // Com dado (ou erro) inicial vindo do servidor, a primeira busca é
+  // dispensável — e o primeiro render sai igual ao HTML que o servidor montou.
+  const pularPrimeira = useRef(inicial !== undefined || Boolean(erroInicial));
 
   const refetch = useCallback(() => setTentativa((n) => n + 1), []);
 

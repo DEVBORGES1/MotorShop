@@ -1,5 +1,4 @@
 import { lazy, Suspense } from 'react';
-import { createBrowserRouter } from 'react-router-dom';
 
 import { RequireAuth } from '@/components/admin/RequireAuth.jsx';
 import { RootLayout } from '@/layouts/RootLayout.jsx';
@@ -60,7 +59,12 @@ const Configuracoes = lazy(() =>
 const carregando = <div className="min-h-dvh p-8 text-ink-400">Carregando…</div>;
 const comSuspense = (elemento) => <Suspense fallback={carregando}>{elemento}</Suspense>;
 
-export const router = createBrowserRouter([
+/**
+ * Rotas da aplicação. Só a definição: o navegador monta com
+ * `createBrowserRouter` (main.jsx) e o servidor com `createStaticRouter`
+ * (entry-server.jsx) — criar o roteador aqui exigiria `window` ao importar.
+ */
+export const rotas = [
   {
     path: '/',
     element: <RootLayout />,
@@ -103,4 +107,4 @@ export const router = createBrowserRouter([
       },
     ],
   },
-]);
+];

@@ -9,7 +9,8 @@ import { Button } from '@/components/ui/Button.jsx';
 import { inputClass } from '@/components/ui/Field.jsx';
 import { Pagination } from '@/components/ui/Pagination.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
-import { baseDoSite, usePaginaSeo } from '@/hooks/useSeo.js';
+import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import { useFiltrosCatalogo } from '@/hooks/useFiltrosCatalogo.js';
 import * as publicService from '@/services/publicService.js';
@@ -27,6 +28,7 @@ export function Estoque() {
   const { filtros, aplicar, alternarNaLista, limpar } = useFiltrosCatalogo();
   const { store } = useStore();
   const { search } = useLocation();
+  const base = useBaseDoSite(store);
   // Catálogo filtrado: fora do índice, canonical na lista sem filtro — como o
   // servidor já responde no HTML inicial.
   usePaginaSeo('estoque', {
@@ -34,8 +36,8 @@ export function Estoque() {
     canonicalPath: '/estoque',
     jsonLd: [
       breadcrumbJsonLd([
-        { name: 'Home', url: `${baseDoSite(store)}/` },
-        { name: 'Estoque', url: `${baseDoSite(store)}/estoque` },
+        { name: 'Home', url: `${base}/` },
+        { name: 'Estoque', url: `${base}/estoque` },
       ]),
     ],
   });

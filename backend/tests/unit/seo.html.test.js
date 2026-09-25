@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { escapeHtml, injectHead, renderHead } from '../../src/seo/html.js';
+import { escapeHtml, injectApp, injectHead, renderHead } from '../../src/seo/html.js';
 import { resolveRoute } from '../../src/seo/routes.js';
 
 const seo = {
@@ -100,5 +100,35 @@ describe('dados de partida no HTML', () => {
     const head = renderHead(seo, { store: { name: '</script><script>alert(1)</script>' } });
     expect(head).toContain('<script type="application/json" id="dados-iniciais">');
     expect(head).not.toContain('<script>alert(1)');
+  });
+});
+
+describe('renderização no servidor no HTML', () => {
+  const template = '<body><div id="root"><!--app--></div></body>';
+
+  it('injectApp troca o marcador pela página renderizada', () => {
+    expect(injectApp(template, '<main>oi</main>')).toBe(
+      '<body><div id="root"><main>oi</main></div></body>',
+    );
+  });
+
+  it('sem HTML (painel, falha) o template fica intacto', () => {
+    expect(injectApp(template, '')).toBe(template);
+  });
+
+  it('"$&" no conteúdo não vira padrão de substituição', () => {
+    expect(injectApp(template, '<p>R$& 10</p>')).toContain('<p>R$& 10</p>');
+  });
+
+  it('cores da loja entram num <style>; "<" é removido — nada fecha a tag', () => {
+    const head = renderHead(seo, null, [], null, ':root{--x:#fff}</style><script>');
+    expect(head).toContain('<style id="tema">:root{--x:#fff}/style>script></style>');
+    expect(renderHead(seo, null)).not.toContain('<style');
+  });
+
+  it('código da página com prioridade baixa: a página já vem pronta', () => {
+    expect(renderHead(seo, null, ['/assets/a.js'])).toContain(
+      '<link rel="modulepreload" href="/assets/a.js" fetchpriority="low">',
+    );
   });
 });

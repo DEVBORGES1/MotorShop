@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/Badge.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
+import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
 import { useStore } from '@/hooks/useStore.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
 import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
@@ -25,7 +26,7 @@ export function MotoCard({ moto }) {
   const reservada = moto.status === MOTO_STATUS.RESERVED;
   const emOferta = moto.onSale && moto.previousPrice > moto.price;
 
-  const url = urlDaMoto(moto.slug, store.seo?.siteUrl || window.location.origin);
+  const url = urlDaMoto(moto.slug, useBaseDoSite(store));
   const whatsapp = linkWhatsApp(store.contact?.whatsapp, mensagemInteresse(moto, url));
 
   return (

@@ -22,7 +22,7 @@ Configurados em `backend/src/config/security.js` e verificados em
 | `X-Content-Type-Options` | `nosniff` | O navegador não "adivinha" tipo de arquivo |
 | `X-Frame-Options` | `DENY` | Nenhum site embute o painel num iframe (clickjacking) |
 | `Referrer-Policy` | `no-referrer` | Endereços do painel não vazam para sites externos |
-| `Permissions-Policy` | câmera, microfone, geolocalização, pagamento, USB, serial, Bluetooth, sensores e `browsing-topics` desligados | O site não usa nenhum; um script injetado também não |
+| `Permissions-Policy` | câmera, microfone, geolocalização, pagamento, USB, serial, sensores e `browsing-topics` desligados | O site não usa nenhum; um script injetado também não |
 | `Cross-Origin-Opener-Policy` | `same-origin` | Isola a janela de popups de outros domínios |
 | `X-Powered-By` | removido | Não anuncia Express nem versão |
 

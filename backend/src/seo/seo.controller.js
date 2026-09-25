@@ -3,29 +3,51 @@ import { join } from 'node:path';
 
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
-import { escapeHtml, injectHead, renderHead } from './html.js';
+import { escapeHtml, injectApp, injectHead, renderHead } from './html.js';
 import { createPreloader } from './preload.js';
 import { resolveRoute } from './routes.js';
 import { buildPageSeo, sitemapBase, sitemapEntries } from './seo.service.js';
+import { createRenderer } from './ssr.js';
 
 /** Origem da requisição (respeita o proxy: `trust proxy` está ligado). */
 const originOf = (req) => `${req.protocol}://${req.get('host')}`;
 
 /**
- * Serve o index.html do SPA com os metadados da rota já no `<head>`
- * (ARCHITECTURE §11.3). O React assume a navegação normalmente depois.
+ * Serve o index.html com os metadados da rota no `<head>` e, nas páginas
+ * públicas, a própria página já renderizada dentro de `#root`
+ * (ARCHITECTURE §11.3). O React hidrata e assume a navegação depois.
  */
-export function createHtmlHandler(frontendDir) {
+export function createHtmlHandler(frontendDir, { renderer = createRenderer(frontendDir) } = {}) {
   const template = readFileSync(join(frontendDir, 'index.html'), 'utf8');
   const preloadsFor = createPreloader(frontendDir);
 
   return async function servePage(req, res, next) {
     try {
       const route = resolveRoute(req.path, new URLSearchParams(req.query));
+      const origin = originOf(req);
       const { status, seo, initialData, imagePreload } = await buildPageSeo(route, {
         path: req.path,
-        origin: originOf(req),
+        origin,
       });
+      // A origem vai junto: sem `window` no servidor, é dela que saem as URLs
+      // absolutas (link do WhatsApp) — e o navegador precisa da mesma.
+      const data = { ...initialData, origem: origin };
+
+      // O painel não é renderizado no servidor: é privado e não tem o que
+      // ganhar em SEO. Falha na renderização não derruba a página — ela sai
+      // como antes, desenhada no navegador.
+      let app = '';
+      let theme = '';
+      if (renderer && route.page !== 'admin') {
+        try {
+          ({ html: app, tema: theme } = await renderer({
+            url: `${origin}${req.originalUrl}`,
+            dados: data,
+          }));
+        } catch (error) {
+          logger.warn({ err: error, path: req.path }, 'Renderização no servidor falhou');
+        }
+      }
 
       // Sem cache: o HTML carrega a meta do momento e aponta para os assets do
       // deploy atual (§12.4). Os assets, esses sim, são imutáveis.
@@ -34,14 +56,18 @@ export function createHtmlHandler(frontendDir) {
         .status(status)
         .type('html')
         .send(
-          injectHead(
-            template,
-            renderHead(
-              seo,
-              initialData,
-              status === 200 ? preloadsFor(route.page) : [],
-              imagePreload,
+          injectApp(
+            injectHead(
+              template,
+              renderHead(
+                seo,
+                data,
+                status === 200 ? preloadsFor(route.page) : [],
+                imagePreload,
+                theme,
+              ),
             ),
+            app,
           ),
         );
     } catch (error) {

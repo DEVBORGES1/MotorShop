@@ -3,7 +3,7 @@ import { createContext, useEffect, useMemo, useState } from 'react';
 import { storeFallback } from '@/config/storeFallback.js';
 import * as publicService from '@/services/publicService.js';
 import { variaveisDoTema } from '@/utils/cor.js';
-import { storeInicial } from '@/utils/dadosIniciais.js';
+import { useStoreInicial } from '@/contexts/DadosIniciaisContext.jsx';
 
 export const StoreContext = createContext(null);
 
@@ -16,16 +16,16 @@ export const StoreContext = createContext(null);
  * configuração — genérico, nunca com dados de outra loja.
  */
 export function StoreProvider({ children }) {
-  // Em produção, a loja já vem no HTML (o servidor a embute): o primeiro
-  // render sai com nome, cores e contato certos, sem esperar a API.
-  const [store, setStore] = useState(() => {
-    const inicial = storeInicial();
-    return inicial ? { ...storeFallback, ...inicial } : storeFallback;
-  });
-  const [isLoading, setIsLoading] = useState(() => !storeInicial());
+  // Em produção, a loja já vem do servidor: o HTML renderizado e o primeiro
+  // render do navegador saem com nome, cores e contato certos, sem esperar a API.
+  const inicial = useStoreInicial();
+  const [store, setStore] = useState(() =>
+    inicial ? { ...storeFallback, ...inicial } : storeFallback,
+  );
+  const [isLoading, setIsLoading] = useState(!inicial);
 
   useEffect(() => {
-    if (storeInicial()) return undefined;
+    if (inicial) return undefined;
     let ativo = true;
 
     publicService.store
@@ -40,7 +40,7 @@ export function StoreProvider({ children }) {
     return () => {
       ativo = false;
     };
-  }, []);
+  }, [inicial]);
 
   // O tema vira variável CSS no elemento raiz: trocar a cor da loja repinta
   // a interface inteira sem rebuild e sem componente que saiba a cor.

@@ -706,7 +706,7 @@ rede o formato entregue (AVIF/WebP).
 
 ---
 
-# FASE 9 — SEO + performance ✅ concluída (verificações manuais e LCP da página da moto pendentes)
+# FASE 9 — SEO + performance ✅ concluída (verificações manuais pendentes)
 
 ### Objetivo
 Resolver **R-01** (preview de link) e atingir o orçamento de performance de
@@ -765,9 +765,9 @@ preferindo o hook próprio se for suficiente.
 - [x] Catálogo filtrado com `noindex`; canonical correto em todas as páginas
 - [x] Lighthouse mobile ≥ 90 em Performance, e 100 em SEO e Best Practices
       *(ver medições; a moto com foto pesada sem otimização fica em 84)*
-- [ ] LCP < 2,5 s · CLS < 0,1 · INP < 200 ms (4G simulado) — **parcial**: CLS
-      ≈ 0 e TBT < 90 ms em todas; LCP ok na home, no limite no estoque e
-      **2,65 s na página da moto**
+- [x] LCP < 2,5 s · CLS < 0,1 · INP < 200 ms (4G) — resolvido depois da
+      fase com **renderização no servidor**: LCP 1,5–1,6 s nas três páginas
+      com o 4G aplicado de verdade (era 2,4–3,4 s); ver "Depois da fase" abaixo
 - [x] JS inicial do site público < 180 kB gzip (**138 kB**)
 - [x] `/admin` ausente do bundle inicial público
 - [x] Meta correta após navegação SPA (não só no carregamento inicial)
@@ -788,12 +788,29 @@ baixaria a versão de 640 px em AVIF/WebP (~50 kB), e o LCP tende ao da linha
 sem foto. INP não é medido pelo Lighthouse de navegação; TBT é o indicador
 disponível.
 
-**O que falta para o LCP < 2,5 s na página da moto:** o piso é o próprio SPA
-— nada aparece antes de ~140 kB de JS (React, React Router, Axios) baixar e
-executar. Os caminhos são estruturais e ficam para sua decisão:
-renderizar a página no servidor (`renderToString`, a escalada prevista em
-ARCHITECTURE §11.3) ou reduzir o JS base (por exemplo, `fetch` no lugar do
-Axios, −13 kB).
+**Depois da fase — renderização no servidor** (decisão do dono: "quanto menos
+tempo melhor"). O piso do SPA era o próprio JS: nada aparecia antes de ~140 kB
+baixarem e executarem. Agora o servidor manda a página pronta (ARCHITECTURE
+§11.3) e o JS só liga a interatividade.
+
+Medido com o Lighthouse aplicando o 4G e a CPU lenta de verdade
+(`--throttling-method=devtools`), mesmo banco, sem foto; duas rodadas:
+
+| Página | LCP antes (SPA) | LCP depois (servidor) | TTI antes → depois |
+|---|---|---|---|
+| `/` | 2,4 s | **1,6 s** | 2,4 → 2,4 s |
+| `/motos/…` | 2,7–3,4 s | **1,5–1,6 s** | 2,5 → 3,0 s |
+| `/estoque` | 2,7 s | **1,5 s** | 2,4 → 2,9 s |
+
+O custo aparece no TTI: com o JS em prioridade baixa, os botões passam a
+responder ~0,5 s mais tarde nas páginas pesadas — mas o conteúdo aparece
+~1 s antes, e os links funcionam desde o primeiro instante.
+
+No modo **simulado** do Lighthouse (o padrão, usado na tabela acima desta
+seção), o ganho quase não aparece: LCP 2,3–2,5 s, Performance 97–98. O
+simulador parte da execução local, onde o JS termina de baixar antes da
+primeira pintura, e o conta como se bloqueasse a tela — o que não acontece
+num celular de verdade, onde o HTML chega muito antes do JS.
 
 ### Como ficou (diferenças em relação ao planejado)
 - **Fonte única de metadados** (`shared/src/seo.js`) para servidor e cliente;
@@ -1170,7 +1187,8 @@ moto (galeria, ficha, similares, interesse, simulador), financiamento, venda
 sua moto, sobre, contato e privacidade; fotos das motos com envio direto ao
 provedor; SEO com meta, dados estruturados e sitemap no HTML inicial. A FASE 8
 aguarda o teste manual com uma conta Cloudinary real; a FASE 9, a validação de
-preview com endereço público e a decisão sobre o LCP da página da moto.
+preview com endereço público. As páginas públicas são renderizadas no
+servidor (LCP 1,5–1,6 s em 4G).
 
 A FASE 10 auditou e endureceu a segurança: estado verificado, checklist
 OWASP Top 10, política LGPD e checklist de go-live em

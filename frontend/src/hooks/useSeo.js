@@ -2,6 +2,7 @@ import { pageSeo, serializeJsonLd } from '@motorshop/shared';
 import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 
+import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
 import { useStore } from '@/hooks/useStore.js';
 
 /**
@@ -20,12 +21,12 @@ import { useStore } from '@/hooks/useStore.js';
 export function useSeo(seo) {
   const { store } = useStore();
   const { pathname } = useLocation();
+  const base = useBaseDoSite(store);
   const chave = seo ? JSON.stringify(seo) : null;
 
   useEffect(() => {
     if (!chave) return;
     const dados = JSON.parse(chave);
-    const base = (store.seo?.siteUrl || window.location.origin).replace(/\/+$/, '');
     const canonical = `${base}${dados.canonicalPath ?? pathname}`;
 
     document.title = dados.title;
@@ -55,7 +56,7 @@ export function useSeo(seo) {
       script.textContent = serializeJsonLd(item);
       document.head.append(script);
     }
-  }, [chave, pathname, store.name, store.seo?.siteUrl]);
+  }, [chave, pathname, store.name, base]);
 }
 
 /** Cria, atualiza ou remove (valor vazio) uma `<meta data-seo>`. */
@@ -84,10 +85,6 @@ function definirLink(rel, href) {
   }
   tag.href = href;
 }
-
-/** Base das URLs absolutas: a configurada pela loja ou a origem atual. */
-export const baseDoSite = (store) =>
-  (store.seo?.siteUrl || window.location.origin).replace(/\/+$/, '');
 
 /**
  * Atalho para páginas estáticas: os metadados de `pageSeo` (os mesmos do

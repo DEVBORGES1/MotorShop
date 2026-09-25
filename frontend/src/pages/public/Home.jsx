@@ -5,7 +5,8 @@ import { MotoGrid } from '@/components/catalogo/MotoGrid.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { selectClass } from '@/components/ui/Field.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
-import { baseDoSite, usePaginaSeo } from '@/hooks/useSeo.js';
+import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
+import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import * as publicService from '@/services/publicService.js';
 import { formatarPreco } from '@/utils/format.js';
@@ -35,10 +36,11 @@ function Secao({ titulo, descricao, verMais, children }) {
 
 export function Home() {
   const { store } = useStore();
+  const base = useBaseDoSite(store);
   usePaginaSeo('home', {
     canonicalPath: '/',
     image: shareImageUrl(store.ogImage?.url || store.logo?.url),
-    jsonLd: [dealerJsonLd(store, `${baseDoSite(store)}/`)],
+    jsonLd: [dealerJsonLd(store, `${base}/`)],
   });
 
   const destaques = useAsyncData(

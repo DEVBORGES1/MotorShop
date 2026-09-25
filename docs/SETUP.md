@@ -182,13 +182,14 @@ descrição, preview de link e dados estruturados já no HTML inicial
 (ARCHITECTURE §11.3 e §13.2). Para ver assim localmente:
 
 ```bash
-npm run build           # gera frontend/dist
+npm run build           # gera frontend/dist (site) e frontend/dist-ssr (renderização no servidor)
 npm start               # http://localhost:3000 — site e API na mesma origem
 curl -s http://localhost:3000/ | grep '<title'   # meta injetada, sem JS
 ```
 
-No modo `npm run dev` (Vite na 5173) a meta **não** é injetada: é o
-HTML do Vite. Isso é esperado.
+No modo `npm run dev` (Vite na 5173) a meta **não** é injetada e a página
+não vem renderizada do servidor: é o HTML do Vite, e o React desenha tudo
+no navegador. Isso é esperado.
 
 ---
 

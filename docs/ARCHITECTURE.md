@@ -1382,6 +1382,43 @@ Como ficou implementado (FASE 9, `backend/src/seo/`):
   `swap`): sem CSS de terceiro bloqueando a pintura e sem enviar o IP do
   visitante ao Google.
 
+**Escalada para renderização no servidor** (feita depois da FASE 10, a
+pedido do dono: "quanto menos tempo melhor"). A mesma camada agora põe a
+página inteira no HTML, não só a meta:
+
+```
+GET /motos/honda-cb-500f-2024
+        │
+  seo.service: rota, loja e moto (cache 5 min)          ← como antes
+        │
+  seo/ssr.js → frontend/dist-ssr/entry-server.js
+    render({ url, dados: { store, moto, motoSlug, origem } })
+    = as mesmas rotas e componentes do navegador, com StaticRouter
+        │
+  index.html: <head> com meta + <style id="tema"> (cores da loja)
+              <div id="root">…página pronta…</div>
+              #dados-iniciais com os MESMOS dados
+        │
+  navegador pinta o HTML; um quadro depois, hydrateRoot liga os eventos
+```
+
+- **`entry-server.jsx`** (frontend) renderiza com `prerenderToNodeStream`,
+  que espera as páginas `lazy`, e `progressiveChunkSize: Infinity` — sem
+  isso, o React 19.2 manda trechos grandes escondidos com um `<script>` que
+  os revela, bloqueado pela CSP. Qualquer `<script>` no resultado é tratado
+  como falha.
+- **Dados por requisição** (`DadosIniciaisContext`), nunca em variável de
+  módulo: no servidor o módulo é compartilhado entre visitantes. `origem`
+  substitui `window.location` nas URLs absolutas (link do WhatsApp).
+- **Falha não derruba a página:** sem o build `dist-ssr/`, com erro ou
+  acima de 2 s, o HTML sai como antes e o React desenha no navegador.
+- **Painel fora:** privado, sem ganho de SEO — continua só no navegador.
+- **JS com prioridade baixa** (`fetchpriority="low"`): a página já chega
+  pronta, e o JS não disputa a conexão com CSS, fontes e a foto.
+- **Custo:** o build gera dois pacotes (`dist/` e `dist-ssr/`), e o servidor
+  de produção precisa das dependências do frontend instaladas (o
+  `entry-server.js` importa React e React Router de `node_modules`).
+
 ### 11.4 Demais itens de SEO
 
 - **URLs amigáveis** — `/motos/honda-cb-500f-2024`, slug imutável (§5.1.2),

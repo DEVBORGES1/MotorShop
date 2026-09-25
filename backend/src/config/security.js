@@ -60,6 +60,8 @@ export function helmetOptions() {
  * desligados — inclusive para qualquer conteúdo de terceiros que um dia
  * venha a ser incorporado. Câmera, microfone e localização nunca são pedidos.
  */
+// Só recursos que o Chrome reconhece: nome desconhecido (como `bluetooth`) vira
+// erro no console de todo visitante — e o Lighthouse desconta.
 const PERMISSIONS_POLICY = [
   'camera=()',
   'microphone=()',
@@ -67,7 +69,6 @@ const PERMISSIONS_POLICY = [
   'payment=()',
   'usb=()',
   'serial=()',
-  'bluetooth=()',
   'magnetometer=()',
   'gyroscope=()',
   'accelerometer=()',

@@ -1,7 +1,9 @@
 import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
+import { createRoot, hydrateRoot } from 'react-dom/client';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { App } from '@/App.jsx';
+import { lerDadosIniciais } from '@/contexts/DadosIniciaisContext.jsx';
 /*
  * Fontes servidas pelo próprio site (pacotes @fontsource), só o subconjunto
  * latino — cobre todo o português — e só os pesos usados. Antes vinham do
@@ -21,6 +23,7 @@ import '@fontsource/barlow/latin-500.css';
 import '@fontsource/barlow/latin-600.css';
 import '@fontsource/barlow/latin-700.css';
 import '@/styles/index.css';
+import { rotas } from '@/routes/index.jsx';
 import { registrarChegada } from '@/utils/origem.js';
 import { config as configurarZod } from 'zod';
 
@@ -32,8 +35,23 @@ configurarZod({ jitless: true });
 // Antes de qualquer navegação interna: referrer e UTM só valem na chegada.
 registrarChegada();
 
-createRoot(document.getElementById('root')).render(
+const aplicacao = (
   <StrictMode>
-    <App />
-  </StrictMode>,
+    <App dados={lerDadosIniciais()}>
+      <RouterProvider router={createBrowserRouter(rotas)} />
+    </App>
+  </StrictMode>
 );
+
+// Página pública: o servidor já mandou o HTML pronto (entry-server.jsx) e o
+// React só "hidrata" — liga os eventos ao que já está na tela, sem redesenhar.
+// Painel (e o Vite em desenvolvimento): a raiz vem vazia e o React monta tudo.
+// A hidratação é uma tarefa longa: começa depois do próximo quadro, para o
+// navegador pintar primeiro o HTML que já recebeu. Sem isso, a página pronta
+// esperava o JS rodar para aparecer — o que anula a renderização no servidor.
+const raiz = document.getElementById('root');
+if (raiz.firstElementChild) {
+  requestAnimationFrame(() => setTimeout(() => hydrateRoot(raiz, aplicacao), 0));
+} else {
+  createRoot(raiz).render(aplicacao);
+}
