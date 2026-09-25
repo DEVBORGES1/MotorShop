@@ -6,7 +6,7 @@ import { buildMeta, buildPagination } from '../../utils/pagination.js';
 import { buildSlug, resolveUniqueSlug } from '../../utils/slug.js';
 import * as brandRepository from '../brands/brand.repository.js';
 import * as repository from './moto.repository.js';
-import { serializeMoto, serializeMotoList } from './moto.serializer.js';
+import { serializeMoto, serializeMotoList, serializePublicMotoDetail } from './moto.serializer.js';
 
 /**
  * Regra de negócio de motos. Não conhece Express nem Mongoose.
@@ -45,7 +45,7 @@ export async function listPublic(query) {
 export async function getBySlug(slug) {
   const moto = await repository.findBySlug(slug, PUBLIC_DETAIL_STATUSES);
   if (!moto) throw ApiError.notFound('Moto não encontrada');
-  return serializeMoto(moto);
+  return serializePublicMotoDetail(moto);
 }
 
 export async function listSimilar(slug) {

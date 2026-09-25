@@ -1,19 +1,21 @@
 import { MOTO_STATUS } from '@motorshop/shared';
+import { Link } from 'react-router-dom';
 
 import { Badge } from '@/components/ui/Badge.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { useStore } from '@/hooks/useStore.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
 import { imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
+import { caminhoDaMoto, urlDaMoto } from '@/utils/moto.js';
 import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
 
 /**
  * Card da moto no catálogo.
  *
- * Sem link para a página da moto: ela é a FASE 5 e a rota ainda não existe —
- * card que leva a 404 é pior que card sem link. O contato por WhatsApp já
- * funciona hoje, então é ele que fecha o card; o "ver detalhes" entra junto
- * com a página.
+ * O card inteiro leva à página da moto: o link fica no título (é o que o leitor
+ * de tela anuncia) e um `::after` o estica sobre o card. O botão de WhatsApp
+ * fica acima dessa camada (`relative z-10`) e continua clicável — sem aninhar
+ * um link dentro do outro, que é HTML inválido.
  */
 export function MotoCard({ moto }) {
   const { store } = useStore();
@@ -22,10 +24,11 @@ export function MotoCard({ moto }) {
   const reservada = moto.status === MOTO_STATUS.RESERVED;
   const emOferta = moto.onSale && moto.previousPrice > moto.price;
 
-  const whatsapp = linkWhatsApp(store.contact?.whatsapp, mensagemInteresse(moto));
+  const url = urlDaMoto(moto.slug, store.seo?.siteUrl || window.location.origin);
+  const whatsapp = linkWhatsApp(store.contact?.whatsapp, mensagemInteresse(moto, url));
 
   return (
-    <article className="flex flex-col overflow-hidden rounded-lg border border-ink-800 bg-surface transition hover:border-ink-600">
+    <article className="relative flex flex-col overflow-hidden rounded-lg border border-ink-800 bg-surface transition hover:border-ink-600">
       <div className="relative aspect-4/3 overflow-hidden bg-surface-2">
         {foto ? (
           <img
@@ -50,7 +53,14 @@ export function MotoCard({ moto }) {
       </div>
 
       <div className="flex flex-1 flex-col p-4">
-        <h3 className="text-base font-bold text-ink-50">{nome}</h3>
+        <h3 className="text-base font-bold text-ink-50">
+          <Link
+            to={caminhoDaMoto(moto.slug)}
+            className="after:absolute after:inset-0 after:content-[''] hover:text-brand-500"
+          >
+            {nome}
+          </Link>
+        </h3>
         {moto.version && <p className="mt-0.5 text-sm text-ink-400">{moto.version}</p>}
 
         <p className="mt-3 text-xs text-ink-400">
@@ -75,7 +85,7 @@ export function MotoCard({ moto }) {
             href={whatsapp}
             target="_blank"
             rel="noreferrer noopener"
-            className={buttonClass({ size: 'sm', className: 'mt-4 w-full' })}
+            className={buttonClass({ size: 'sm', className: 'relative z-10 mt-4 w-full' })}
           >
             <span className="sr-only">{nome} — </span>Tenho interesse
           </a>

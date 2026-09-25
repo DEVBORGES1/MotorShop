@@ -1,3 +1,5 @@
+import { MOTO_STATUS } from '@motorshop/shared';
+
 /**
  * Monta o link de conversa do WhatsApp.
  *
@@ -34,10 +36,26 @@ export function linkWhatsApp(numero, mensagem) {
   return `https://wa.me/${destino}${texto ? `?text=${encodeURIComponent(texto)}` : ''}`;
 }
 
-/** Mensagem padrão de interesse em uma moto, com o link da página. */
+/**
+ * Mensagem de interesse em uma moto, com o link da página.
+ *
+ * Muda com o status: perguntar "ainda está disponível?" sobre uma moto que o
+ * site mostra como vendida faz o visitante parecer desatento e obriga a loja a
+ * explicar o óbvio. Na vendida, o pedido vira "me avise de uma parecida" — é o
+ * lead que a decisão A quer capturar.
+ */
 export function mensagemInteresse(moto, url) {
   const nome = [moto?.brand?.name, moto?.model, moto?.year].filter(Boolean).join(' ');
   if (!nome) return 'Olá! Vi o site e gostaria de mais informações.';
 
-  return `Olá! Tenho interesse na ${nome}${url ? ` (${url})` : ''}. Ela ainda está disponível?`;
+  const link = url ? ` (${url})` : '';
+
+  if (moto.status === MOTO_STATUS.SOLD) {
+    return `Olá! Vi no site que a ${nome}${link} já foi vendida. Quando chegar uma parecida, pode me avisar?`;
+  }
+  if (moto.status === MOTO_STATUS.RESERVED) {
+    return `Olá! Tenho interesse na ${nome}${link}, que aparece como reservada. Se ela voltar a ficar disponível, pode me avisar?`;
+  }
+
+  return `Olá! Tenho interesse na ${nome}${link}. Ela ainda está disponível?`;
 }

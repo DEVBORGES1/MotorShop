@@ -34,7 +34,10 @@ export function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink-800 bg-ink-900/95 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-6 px-4 py-3 sm:px-6">
+      {/* Altura mínima fixa: o botão de WhatsApp e o logo só existem depois que
+          a configuração da loja chega, e sem ela o cabeçalho cresceria nesse
+          instante, empurrando a página inteira (salto de layout). */}
+      <div className="mx-auto flex min-h-16 max-w-7xl items-center gap-6 px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-3">
           {store.logo?.url ? (
             <img src={store.logo.url} alt={store.name} className="h-11 w-auto" />

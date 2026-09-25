@@ -9,15 +9,24 @@ import { MotoCard } from '@/components/catalogo/MotoCard.jsx';
  * erro e vazio. Concentrá-los aqui evita que a home e o estoque tratem cada
  * um do seu jeito.
  */
-export function MotoGrid({ motos, isLoading, error, onLimparFiltros, quantidadeEsqueleto = 6 }) {
+const GRADE = {
+  3: 'grid gap-5 sm:grid-cols-2 lg:grid-cols-3',
+  4: 'grid gap-5 sm:grid-cols-2 lg:grid-cols-4',
+};
+
+export function MotoGrid({
+  motos,
+  isLoading,
+  error,
+  onLimparFiltros,
+  quantidadeEsqueleto = 6,
+  colunas = 3,
+}) {
+  const grade = GRADE[colunas] ?? GRADE[3];
+
   if (isLoading) {
     return (
-      <div
-        role="status"
-        aria-busy="true"
-        aria-label="Carregando motos"
-        className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3"
-      >
+      <div role="status" aria-busy="true" aria-label="Carregando motos" className={grade}>
         {Array.from({ length: quantidadeEsqueleto }, (_, i) => (
           <MotoCardSkeleton key={i} />
         ))}
@@ -48,7 +57,7 @@ export function MotoGrid({ motos, isLoading, error, onLimparFiltros, quantidadeE
   }
 
   return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+    <div className={grade}>
       {motos.map((moto) => (
         <MotoCard key={moto.id} moto={moto} />
       ))}

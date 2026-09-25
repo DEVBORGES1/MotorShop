@@ -1,8 +1,11 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, ScrollRestoration } from 'react-router-dom';
 
 import { Footer } from '@/components/layout/Footer.jsx';
 import { Header } from '@/components/layout/Header.jsx';
 import { WhatsAppFloatingButton } from '@/components/layout/WhatsAppFloatingButton.jsx';
+
+const chaveDeRolagem = (location) =>
+  location.pathname === '/estoque' ? location.pathname : location.key;
 
 /** Casca das páginas públicas. */
 export function RootLayout() {
@@ -25,6 +28,13 @@ export function RootLayout() {
 
       <Footer />
       <WhatsAppFloatingButton />
+
+      {/* Sem isto, abrir uma moto a partir do fim do estoque mantém a rolagem
+          lá embaixo, e o visitante cai no rodapé da página da moto. No estoque
+          a chave é o caminho: trocar filtro muda só a query e não pode jogar a
+          lista de volta ao topo. Nas demais páginas, cada entrada do histórico
+          tem a sua posição — "voltar" restaura, link novo começa do topo. */}
+      <ScrollRestoration getKey={chaveDeRolagem} />
     </div>
   );
 }

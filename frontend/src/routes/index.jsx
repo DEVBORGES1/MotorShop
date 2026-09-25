@@ -10,6 +10,9 @@ import { Home } from '@/pages/public/Home.jsx';
 const Estoque = lazy(() =>
   import('@/pages/public/Estoque.jsx').then((m) => ({ default: m.Estoque })),
 );
+const MotoDetalhe = lazy(() =>
+  import('@/pages/public/MotoDetalhe.jsx').then((m) => ({ default: m.MotoDetalhe })),
+);
 const Sobre = lazy(() => import('@/pages/public/Sobre.jsx').then((m) => ({ default: m.Sobre })));
 const Contato = lazy(() =>
   import('@/pages/public/Contato.jsx').then((m) => ({ default: m.Contato })),
@@ -42,7 +45,9 @@ const Configuracoes = lazy(() =>
   import('@/pages/admin/Configuracoes.jsx').then((m) => ({ default: m.Configuracoes })),
 );
 
-const carregando = <div className="p-8 text-ink-400">Carregando…</div>;
+// Ocupa a tela enquanto o código da página chega: com uma linha só, o rodapé
+// subiria até o meio da tela e despencaria em seguida (salto de layout).
+const carregando = <div className="min-h-dvh p-8 text-ink-400">Carregando…</div>;
 const comSuspense = (elemento) => <Suspense fallback={carregando}>{elemento}</Suspense>;
 
 export const router = createBrowserRouter([
@@ -52,6 +57,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <Home /> },
       { path: 'estoque', element: comSuspense(<Estoque />) },
+      { path: 'motos/:slug', element: comSuspense(<MotoDetalhe />) },
       { path: 'sobre', element: comSuspense(<Sobre />) },
       { path: 'contato', element: comSuspense(<Contato />) },
       { path: '*', element: <NotFound /> },

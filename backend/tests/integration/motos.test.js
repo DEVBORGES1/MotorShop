@@ -198,6 +198,33 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
       expect(detalhe.body.data.status).toBe(MOTO_STATUS.SOLD);
     });
 
+    it('oculta o preço da moto SOLD no detalhe público (decisão A)', async () => {
+      await criarMoto(honda._id, {
+        slug: 'moto-vendida',
+        status: MOTO_STATUS.SOLD,
+        price: 3_000_000,
+        previousPrice: 3_200_000,
+        onSale: true,
+      });
+
+      const { body } = await request(app).get('/api/motos/slug/moto-vendida');
+
+      expect(body.data.price).toBeNull();
+      expect(body.data.previousPrice).toBeNull();
+    });
+
+    it('404 para slug inexistente, também nos similares', async () => {
+      expect((await request(app).get('/api/motos/slug/nao-existe')).status).toBe(404);
+      expect((await request(app).get('/api/motos/slug/nao-existe/similares')).status).toBe(404);
+    });
+
+    it('404 nos similares de moto INACTIVE', async () => {
+      await criarMoto(honda._id, { slug: 'moto-inativa', status: MOTO_STATUS.INACTIVE });
+
+      const response = await request(app).get('/api/motos/slug/moto-inativa/similares');
+      expect(response.status).toBe(404);
+    });
+
     it('mostra ao admin todos os status, inclusive INACTIVE', async () => {
       await criarMoto(honda._id, { status: MOTO_STATUS.INACTIVE });
       await criarMoto(honda._id, { status: MOTO_STATUS.AVAILABLE });
@@ -365,6 +392,15 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
 
       expect(body.data).toHaveLength(1);
       expect(body.data.some((m) => m.slug === 'moto-alvo')).toBe(false);
+    });
+
+    it('não sugere moto vendida como similar', async () => {
+      await criarMoto(honda._id, { slug: 'moto-alvo', price: 3_000_000 });
+      await criarMoto(honda._id, { price: 3_100_000, status: MOTO_STATUS.SOLD });
+
+      const { body } = await request(app).get('/api/motos/slug/moto-alvo/similares');
+
+      expect(body.data).toHaveLength(0);
     });
   });
 

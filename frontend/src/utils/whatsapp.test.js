@@ -49,6 +49,20 @@ describe('mensagemInteresse', () => {
     );
   });
 
+  it('na moto vendida, pede aviso de uma parecida em vez de perguntar se está disponível', () => {
+    const moto = { brand: { name: 'Honda' }, model: 'CB 500F', year: 2023, status: 'SOLD' };
+    const mensagem = mensagemInteresse(moto, 'https://loja.com/motos/cb');
+
+    expect(mensagem).toContain('já foi vendida');
+    expect(mensagem).toContain('https://loja.com/motos/cb');
+    expect(mensagem).not.toContain('ainda está disponível');
+  });
+
+  it('na moto reservada, pede aviso se ela liberar', () => {
+    const moto = { brand: { name: 'Honda' }, model: 'CB 500F', year: 2023, status: 'RESERVED' };
+    expect(mensagemInteresse(moto)).toContain('reservada');
+  });
+
   it('cai numa mensagem genérica quando não há moto', () => {
     expect(mensagemInteresse(null)).toBe('Olá! Vi o site e gostaria de mais informações.');
   });

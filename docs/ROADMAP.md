@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 4 concluídas. FASE 5 aguardando autorização.**
+> **Status atual: FASES 0 a 5 concluídas. FASE 6 aguardando autorização.**
 
 ---
 
@@ -376,7 +376,7 @@ acessibilidade no painel de filtros — a decidir aqui, não antes.)
 
 ---
 
-# FASE 5 — Página da moto
+# FASE 5 — Página da moto ✅ concluída (verificação de banco pendente)
 
 ### Objetivo
 Página de detalhe completa em `/motos/:slug` — a página que efetivamente vende.
@@ -409,17 +409,36 @@ backend/src/modules/motos/*          endpoint /similares
 Nenhuma nova.
 
 ### Critérios de conclusão
-- [ ] `/motos/honda-cb-500f-2024` carrega a moto correta
-- [ ] Slug inexistente → página 404 própria (não tela branca)
-- [ ] Moto `INACTIVE` não é acessível publicamente nem por URL direta
-- [ ] Galeria: miniaturas trocam a principal; modal abre, navega por teclado e
+- [x] `/motos/honda-cb-500f-2024` carrega a moto correta
+- [x] Slug inexistente → página 404 própria (não tela branca)
+- [x] Moto `INACTIVE` não é acessível publicamente nem por URL direta
+- [x] Galeria: miniaturas trocam a principal; modal abre, navega por teclado e
       fecha com `Esc`
-- [ ] Todos os campos especificados exibidos; ausentes são omitidos sem
+- [x] Todos os campos especificados exibidos; ausentes são omitidos sem
       "undefined"
-- [ ] CTA de WhatsApp inclui modelo, ano e URL da moto na mensagem
-- [ ] Similares excluem a própria moto e respeitam o filtro de status público
-- [ ] Sem salto de layout no carregamento das imagens (CLS ≈ 0)
-- [ ] Barra fixa de preço e CTA funcional no mobile
+- [x] CTA de WhatsApp inclui modelo, ano e URL da moto na mensagem
+- [x] Similares excluem a própria moto e respeitam o filtro de status público
+- [x] Sem salto de layout no carregamento das imagens (CLS ≈ 0) — medido
+      0,0006 no desktop com API simulada
+- [x] Barra fixa de preço e CTA funcional no mobile
+
+### Como ficou (diferenças em relação ao planejado)
+- **"Tenho interesse" abre o WhatsApp**, não um formulário: o formulário só
+  teria para onde enviar na FASE 6. Um formulário que não envia é pior que
+  nenhum.
+- **Simulador de financiamento** fica para a FASE 7, como previsto — nenhum
+  espaço reservado na página até lá.
+- **Moto vendida (decisão A):** selo "Vendida", CTA "Avise-me de uma similar"
+  e **preço removido na API** (`serializePublicMotoDetail`), não só na tela.
+- **`Tabs.jsx` não foi criado:** ficha, descrição e opcionais cabem em seções
+  corridas, que no celular leem melhor que abas.
+- Componentes em `components/moto/`, seguindo a organização que o projeto já
+  usa (`components/catalogo/`), em vez de `features/motos/`.
+- Testes de componente com `react-dom/server` (sem dependência nova); teclado
+  e arraste testados como funções puras em `utils/galeria.js`.
+- De brinde, dois saltos de layout do site todo corrigidos: cabeçalho que
+  crescia quando o botão de WhatsApp chegava e fallback de carregamento que
+  puxava o rodapé para o meio da tela.
 
 ### Testes necessários
 | Tipo | O que |
@@ -981,16 +1000,17 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 4 concluídas.** Backend com catálogo, autenticação e painel
-administrativo; site público com home, estoque filtrável, sobre e contato.
+**FASES 0 a 5 concluídas.** Backend com catálogo, autenticação e painel
+administrativo; site público com home, estoque filtrável, página da moto
+(galeria, ficha, similares), sobre e contato.
 
 A verificação contra um banco real continua pendente: o ambiente de
 desenvolvimento usado até aqui não consegue baixar o binário do MongoDB em
-memória, então os testes de integração ficam pulados (126 dos 244). Rodar
+memória, então os testes de integração ficam pulados (130 dos 263). Rodar
 `npm test` com um Atlas configurado é o que fecha essa lacuna.
 
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 5** (página da moto), que é
-também o que destrava o link "ver detalhes" nos cards do catálogo.
+**Próximo passo:** sua autorização para a **FASE 6** (leads + WhatsApp), que
+troca o "Tenho interesse" da página da moto pelo formulário de verdade.
