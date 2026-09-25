@@ -38,7 +38,7 @@ describe.skipIf(skipWithoutDb)('gestão de usuários', () => {
       ).send({
         name: 'Novo Admin',
         email: 'novo@teste.com',
-        password: 'outra-senha-bem-forte-2026',
+        password: 'outra-chave-bem-forte-2026',
       });
 
       expect(response.status).toBe(201);
@@ -49,7 +49,7 @@ describe.skipIf(skipWithoutDb)('gestão de usuários', () => {
 
     it('armazena a senha como hash, nunca em texto puro', async () => {
       const { accessToken } = await comoSuperAdmin();
-      const senha = 'senha-que-nao-pode-vazar-2026';
+      const senha = 'chave-que-nao-pode-vazar-2026';
 
       await autenticado(request(app).post('/api/admin/usuarios'), accessToken).send({
         name: 'X',
@@ -72,7 +72,7 @@ describe.skipIf(skipWithoutDb)('gestão de usuários', () => {
       ).send({
         name: 'X',
         email: 'ja@existe.com',
-        password: 'senha-bem-forte-do-teste',
+        password: 'chave-bem-forte-do-teste',
       });
 
       expect(response.status).toBe(409);
@@ -106,7 +106,7 @@ describe.skipIf(skipWithoutDb)('gestão de usuários', () => {
       ).send({
         name: 'X',
         email: 'x@teste.com',
-        password: 'senha-bem-forte-do-teste',
+        password: 'chave-bem-forte-do-teste',
         passwordHash: '$argon2id$forjado',
       });
 
@@ -235,7 +235,7 @@ describe.skipIf(skipWithoutDb)('gestão de usuários', () => {
       const alvoId = (await User.findOne({ email: 'alvo@teste.com' }))._id;
 
       await autenticado(request(app).patch(`/api/admin/usuarios/${alvoId}`), accessToken).send({
-        password: 'uma-senha-nova-bem-forte-2026',
+        password: 'uma-chave-nova-bem-forte-2026',
       });
 
       expect(await RefreshToken.countDocuments({ user: alvoId, revokedAt: null })).toBe(0);
@@ -245,7 +245,7 @@ describe.skipIf(skipWithoutDb)('gestão de usuários', () => {
       const { accessToken } = await comoSuperAdmin();
       await criarUsuario({ email: 'alvo@teste.com' });
       const alvoId = (await User.findOne({ email: 'alvo@teste.com' }))._id;
-      const novaSenha = 'uma-senha-nova-bem-forte-2026';
+      const novaSenha = 'uma-chave-nova-bem-forte-2026';
 
       await autenticado(request(app).patch(`/api/admin/usuarios/${alvoId}`), accessToken).send({
         password: novaSenha,

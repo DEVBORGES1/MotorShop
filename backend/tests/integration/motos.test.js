@@ -3,11 +3,23 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { createApp } from '../../src/app.js';
+import { User } from '../../src/modules/users/user.model.js';
+import { clienteAdmin, loginDeAdmin } from '../helpers/auth.js';
 import { Brand } from '../../src/modules/brands/brand.model.js';
 import { Moto } from '../../src/modules/motos/moto.model.js';
 import { clear, connect, disconnect, skipWithoutDb } from '../helpers/db.js';
 
 const app = createApp();
+
+// Rotas do painel exigem autenticação desde a FASE 3.
+let token;
+const admin = clienteAdmin(app, () => token);
+
+async function conectarComoAdmin() {
+  await connect();
+  await User.deleteMany({});
+  token = await loginDeAdmin(app);
+}
 
 /** Cria uma moto direto no banco (preço em CENTAVOS, como no modelo). */
 async function criarMoto(brandId, overrides = {}) {
@@ -30,7 +42,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
   let honda;
   let yamaha;
 
-  beforeAll(connect);
+  beforeAll(conectarComoAdmin);
   afterAll(disconnect);
 
   beforeEach(async () => {
@@ -57,7 +69,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     });
 
     it('cria a moto, gera o slug e devolve o preço em reais', async () => {
-      const response = await request(app).post('/api/admin/motos').send(payload());
+      const response = await admin.post('/api/admin/motos').send(payload());
 
       expect(response.status).toBe(201);
       expect(response.body.data.slug).toBe('honda-cb-500f-2024');
@@ -66,15 +78,15 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     });
 
     it('armazena o preço em centavos no banco', async () => {
-      await request(app).post('/api/admin/motos').send(payload());
+      await admin.post('/api/admin/motos').send(payload());
       const doc = await Moto.findOne({ slug: 'honda-cb-500f-2024' }).lean();
 
       expect(doc.price).toBe(3_890_000);
     });
 
     it('resolve colisão de slug com sufixo', async () => {
-      await request(app).post('/api/admin/motos').send(payload());
-      const segunda = await request(app).post('/api/admin/motos').send(payload());
+      await admin.post('/api/admin/motos').send(payload());
+      const segunda = await admin.post('/api/admin/motos').send(payload());
 
       expect(segunda.status).toBe(201);
       expect(segunda.body.data.slug).not.toBe('honda-cb-500f-2024');
@@ -82,7 +94,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     });
 
     it('rejeita campo desconhecido com 422 (sem mass assignment)', async () => {
-      const response = await request(app)
+      const response = await admin
         .post('/api/admin/motos')
         .send({ ...payload(), slug: 'slug-forjado' });
 
@@ -91,7 +103,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     });
 
     it('rejeita marca inexistente com 400', async () => {
-      const response = await request(app)
+      const response = await admin
         .post('/api/admin/motos')
         .send({ ...payload(), brand: '507f1f77bcf86cd799439011' });
 
@@ -100,7 +112,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
 
     it('rejeita marca inativa', async () => {
       const inativa = await Brand.create({ name: 'Extinta', slug: 'extinta', active: false });
-      const response = await request(app)
+      const response = await admin
         .post('/api/admin/motos')
         .send({ ...payload(), brand: String(inativa._id) });
 
@@ -113,7 +125,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     it('atualiza campos sem alterar o slug', async () => {
       const moto = await criarMoto(honda._id, { slug: 'honda-cb-500f-2024' });
 
-      const { body } = await request(app)
+      const { body } = await admin
         .patch(`/api/admin/motos/${moto._id}`)
         .send({ color: 'Preta', mileage: 5000 });
 
@@ -124,7 +136,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     it('altera o status pela rota dedicada', async () => {
       const moto = await criarMoto(honda._id);
 
-      const { body } = await request(app)
+      const { body } = await admin
         .patch(`/api/admin/motos/${moto._id}/status`)
         .send({ status: MOTO_STATUS.RESERVED });
 
@@ -134,7 +146,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     it('DELETE desativa em vez de apagar (soft delete)', async () => {
       const moto = await criarMoto(honda._id);
 
-      const response = await request(app).delete(`/api/admin/motos/${moto._id}`);
+      const response = await admin.delete(`/api/admin/motos/${moto._id}`);
 
       expect(response.status).toBe(200);
       expect(response.body.data.status).toBe(MOTO_STATUS.INACTIVE);
@@ -166,7 +178,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
     it('devolve licensePlate ao admin, que precisa dela', async () => {
       const moto = await criarMoto(honda._id, { licensePlate: 'ABC1D23' });
 
-      const { body } = await request(app).get(`/api/admin/motos/${moto._id}`);
+      const { body } = await admin.get(`/api/admin/motos/${moto._id}`);
 
       expect(body.data.licensePlate).toBe('ABC1D23');
     });
@@ -229,7 +241,7 @@ describe.skipIf(skipWithoutDb)('API de motos', () => {
       await criarMoto(honda._id, { status: MOTO_STATUS.INACTIVE });
       await criarMoto(honda._id, { status: MOTO_STATUS.AVAILABLE });
 
-      const { body } = await request(app).get('/api/admin/motos');
+      const { body } = await admin.get('/api/admin/motos');
 
       expect(body.data).toHaveLength(2);
     });

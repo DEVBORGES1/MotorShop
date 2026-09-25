@@ -4,7 +4,9 @@ import request from 'supertest';
 import { hashPassword } from '../../src/modules/auth/password.js';
 import { User } from '../../src/modules/users/user.model.js';
 
-export const SENHA_VALIDA = 'senha-de-teste-forte-2026';
+// Sem as palavras da lista de senhas fracas (`user.schema.js`): a mesma senha
+// serve para criar usuário pela API, que aplica essa regra.
+export const SENHA_VALIDA = 'chave-de-teste-forte-2026';
 
 export async function criarUsuario({
   name = 'Admin Teste',
@@ -33,3 +35,24 @@ export function extrairCookie(response) {
 }
 
 export const comToken = (req, token) => req.set('Authorization', `Bearer ${token}`);
+
+/**
+ * Cliente de teste já autenticado como administrador, para os testes das rotas
+ * do painel. O token é lido na hora da chamada, porque só existe depois do
+ * `beforeAll` que conecta ao banco e faz o login.
+ */
+export async function loginDeAdmin(app, role = USER_ROLE.ADMIN) {
+  const email = `${role.toLowerCase()}-${Date.now()}@teste.com`;
+  await criarUsuario({ email, role });
+  return (await autenticar(app, { email })).accessToken;
+}
+
+export function clienteAdmin(app, obterToken) {
+  const comAuth = (req) => req.set('Authorization', `Bearer ${obterToken()}`);
+  return {
+    get: (url) => comAuth(request(app).get(url)),
+    post: (url) => comAuth(request(app).post(url)),
+    patch: (url) => comAuth(request(app).patch(url)),
+    delete: (url) => comAuth(request(app).delete(url)),
+  };
+}

@@ -26,10 +26,16 @@ mongoose.connection.on('error', (error) => logger.error({ err: error }, 'Erro no
  * @returns {{ status: string, configured: boolean }}
  */
 export function getDatabaseStatus() {
+  const state = READY_STATE[mongoose.connection.readyState] ?? 'unknown';
+
+  // Conexão ativa é a prova de que há banco, venha a URI de onde vier. Sem
+  // isto, uma conexão aberta por outro caminho que não `MONGODB_URI` (os testes
+  // de integração conectam direto ao banco de teste) era dada como "não
+  // configurada", e toda rota com banco respondia 503.
+  if (state === 'connected') return { status: state, configured: true };
+
   return {
-    status: env.MONGODB_URI
-      ? (READY_STATE[mongoose.connection.readyState] ?? 'unknown')
-      : 'not_configured',
+    status: env.MONGODB_URI ? state : 'not_configured',
     configured: Boolean(env.MONGODB_URI),
   };
 }
