@@ -1389,7 +1389,7 @@ página inteira no HTML, não só a meta:
 ```
 GET /motos/honda-cb-500f-2024
         │
-  seo.service: rota, loja e moto (cache 5 min)          ← como antes
+  seo.service: rota, loja e moto (cache 5 min, apagado a cada mudança no painel)
         │
   seo/ssr.js → frontend/dist-ssr/entry-server.js
     render({ url, dados: { store, moto, motoSlug, origem } })
@@ -1399,7 +1399,7 @@ GET /motos/honda-cb-500f-2024
               <div id="root">…página pronta…</div>
               #dados-iniciais com os MESMOS dados
         │
-  navegador pinta o HTML; um quadro depois, hydrateRoot liga os eventos
+  navegador pinta o HTML; quando o JS roda, hydrateRoot liga os eventos
 ```
 
 - **`entry-server.jsx`** (frontend) renderiza com `prerenderToNodeStream`,
@@ -1415,6 +1415,11 @@ GET /motos/honda-cb-500f-2024
 - **Painel fora:** privado, sem ganho de SEO — continua só no navegador.
 - **JS com prioridade baixa** (`fetchpriority="low"`): a página já chega
   pronta, e o JS não disputa a conexão com CSS, fontes e a foto.
+- **Antes do JS, a página é só leitura:** links funcionam (são `<a>` de
+  verdade), mas filtros, botões e formulários só respondem depois da
+  hidratação — em 4G, ~1 s depois de o conteúdo aparecer. Cliques numa parte
+  que já está hidratando o React guarda e repete. `<html data-pronto>` marca
+  o fim da hidratação da página; o E2E espera por ele antes de interagir.
 - **Custo:** o build gera dois pacotes (`dist/` e `dist-ssr/`), e o servidor
   de produção precisa das dependências do frontend instaladas (o
   `entry-server.js` importa React e React Router de `node_modules`).
@@ -1500,7 +1505,7 @@ FASE 9 no roadmap.
 | CDN | `index.html` | sem cache | precisa refletir deploy e meta injetada |
 | HTTP | `GET /api/store` | 5 min (`Cache-Control`) | muda raramente |
 | HTTP | `GET /api/filtros` | 5 min | agregação mais caro do sistema |
-| Memória (servidor) | dados do `metaInjector` | 5 min | evita ir ao banco por crawler |
+| Memória (servidor) | loja e moto das páginas (meta e renderização no servidor) | 5 min, **apagado a cada alteração no painel** | evita ir ao banco por crawler; a mudança do lojista aparece na hora |
 | Cliente | React Query | 1–5 min por chave | evita requisição repetida |
 
 Sem Redis no MVP: cache em memória de processo único basta, e introduzir Redis

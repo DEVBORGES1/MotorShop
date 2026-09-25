@@ -4,8 +4,11 @@ import { env } from '../config/env.js';
  * Cache em memória de processo, com validade (ARCHITECTURE §12.4).
  *
  * Robôs de busca e de preview visitam muito; sem isto, cada visita de robô
- * seria uma ida ao banco. Cinco minutos é o atraso aceito para uma mudança no
- * painel aparecer no preview. Em teste, desligado: cada caso vê o banco atual.
+ * seria uma ida ao banco. Uma mudança feita no painel apaga o cache na hora
+ * (`clearCache`, chamado por `invalidateSiteCache`): com a página inteira
+ * renderizada a partir dele, esperar cinco minutos mostraria moto vendida
+ * como disponível, com preço antigo. Em teste, desligado: cada caso vê o
+ * banco atual.
  */
 const TTL_MS = env.isTest ? 0 : 5 * 60 * 1000;
 const MAX_ENTRIES = 1000;
@@ -22,4 +25,9 @@ export async function cached(key, load) {
     entries.set(key, { value, expires: Date.now() + TTL_MS });
   }
   return value;
+}
+
+/** Esvazia o cache: a próxima visita busca tudo no banco. */
+export function clearCache() {
+  entries.clear();
 }

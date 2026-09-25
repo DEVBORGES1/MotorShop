@@ -15,6 +15,33 @@ a outras lojas **por configuração, sem alteração de código**.
 |---|---|
 | **FASE 0** — Arquitetura | ✅ concluída |
 | **FASE 1** — Fundação do projeto | ✅ concluída |
+| **FASE 2** — Banco + API | ✅ concluída |
+| **FASE 3** — Autenticação + Admin | ✅ concluída |
+| **FASE 4** — Catálogo público | ✅ concluída |
+| **FASE 5** — Página da moto | ✅ concluída |
+| **FASE 6** — Leads + WhatsApp | ✅ concluída |
+| **FASE 7** — Financiamento | ✅ concluída |
+| **FASE 8** — Upload e gestão de imagens | ✅ concluída — falta o teste com conta Cloudinary real |
+| **FASE 9** — SEO + performance | ✅ concluída — falta validar o preview com endereço público |
+| **FASE 10** — Segurança | ✅ concluída — segredos são rotacionados no deploy |
+| **FASE 11** — Testes | ✅ concluída |
+| **FASE 12** — Deploy | ⏳ aguardando autorização |
+| **FASE 13** — Auditoria final | — |
+
+O que existe hoje: site público renderizado no servidor (home, estoque com
+filtros, página da moto com galeria e simulador, financiamento, venda sua
+moto, sobre, contato, privacidade), SEO com meta, dados estruturados e
+sitemap, painel administrativo (motos com fotos, marcas, leads, usuários e
+configurações da loja), autenticação com sessões revogáveis, segurança
+auditada ([`docs/SECURITY.md`](./docs/SECURITY.md)) e ~950 testes — unitários,
+integração, componentes, segurança e E2E — rodando na CI.
+
+O que falta: publicar (FASE 12) e a auditoria final para revenda (FASE 13)
+([`docs/ROADMAP.md`](./docs/ROADMAP.md)).
+
+---|---|
+| **FASE 0** — Arquitetura | ✅ concluída |
+| **FASE 1** — Fundação do projeto | ✅ concluída |
 | **FASE 2** — Banco + API | ✅ concluída — falta executar os testes com banco |
 | **FASE 3** — Autenticação + Admin | ✅ concluída — falta executar os testes com banco |
 | **FASE 4** — Catálogo público | ⏳ aguardando autorização |
@@ -110,13 +137,15 @@ está falando com o backend.
 ## Testes
 
 ```bash
-npm test                                  # os dois workspaces
-npm test --workspace @motorshop/backend   # apenas a API
+npm test                          # shared, backend e frontend (~1 min)
+npm run test:coverage             # idem, com limites de cobertura
+npm run build && npm run test:e2e # 5 fluxos no navegador (Playwright)
 ```
 
-Os testes de integração sobem um MongoDB em memória automaticamente. Onde isso
-não for possível, eles se marcam como **pulados** com aviso — não passam em
-falso.
+Os testes de integração usam um MongoDB em memória ou, com
+`TEST_MONGODB_URI`, um MongoDB seu. Sem banco disponível, eles se marcam
+como **pulados** com aviso — não passam em falso (e na CI, falham). Detalhes
+em [`docs/SETUP.md`](./docs/SETUP.md#testes).
 
 ## Primeiro acesso ao painel
 
@@ -169,7 +198,7 @@ MotorShop/
 │  │  ├─ utils/                ApiError, envelope, money, slug, pagination
 │  │  ├─ app.js                monta o Express (sem listen — testável)
 │  │  └─ server.js             conecta o banco e sobe o servidor
-│  └─ tests/                   integração e unitários
+│  └─ tests/                   unitários, integração e fábricas de dados
 │
 ├─ shared/                     enums do domínio, usados pelos dois lados
 │  └─ src/enums.js
@@ -185,6 +214,9 @@ MotorShop/
 │     ├─ routes/               mapa de rotas
 │     ├─ services/             única camada que conhece Axios
 │     └─ styles/               tokens de design (variáveis CSS)
+│
+├─ e2e/                       fluxos de ponta a ponta (Playwright)
+├─ .github/workflows/ci.yml   CI: lint, formato, testes com cobertura, build e E2E
 │
 ├─ docs/
 │  ├─ design/                  protótipo visual de referência

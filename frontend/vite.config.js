@@ -50,5 +50,21 @@ export default defineConfig(({ isSsrBuild }) => ({
   test: {
     environment: 'node',
     include: ['src/**/*.test.{js,jsx}'],
+    setupFiles: ['src/test/setup.js'],
+    coverage: {
+      provider: 'v8',
+      include: ['src/**'],
+      // main.jsx só liga o React ao documento; o E2E o exercita.
+      exclude: ['src/main.jsx', 'src/**/*.test.{js,jsx}', 'src/test/**'],
+      reporter: ['text-summary', 'json-summary', 'html'],
+      thresholds: {
+        lines: 70,
+        statements: 70,
+        functions: 70,
+        branches: 70,
+        // O simulador mostra a parcela ao visitante e a envia no lead.
+        'src/utils/simulador.js': { lines: 90, statements: 90, functions: 90, branches: 90 },
+      },
+    },
   },
 }));

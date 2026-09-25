@@ -1,6 +1,7 @@
 import { Router } from 'express';
 
 import { authenticate } from '../middlewares/authenticate.js';
+import { invalidateSiteCache } from '../middlewares/invalidateSiteCache.js';
 import { adminApiLimiter, publicApiLimiter } from '../middlewares/rateLimiters.js';
 import { requireDatabase } from '../middlewares/requireDatabase.js';
 import { validate } from '../middlewares/validate.js';
@@ -50,7 +51,7 @@ apiRoutes.get(
 // Toda rota abaixo exige token válido de um usuário ATIVO. `authorize` entra
 // por módulo, onde o papel exigido difere (usuários e configurações são de
 // SUPER_ADMIN). Isto substitui a trava provisória da FASE 2.
-apiRoutes.use('/admin', requireDatabase, authenticate, adminApiLimiter);
+apiRoutes.use('/admin', requireDatabase, authenticate, adminApiLimiter, invalidateSiteCache);
 
 /**
  * Roteadores do painel, por prefixo. Exportado para a matriz de permissões:

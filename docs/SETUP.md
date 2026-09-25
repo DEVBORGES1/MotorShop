@@ -203,10 +203,41 @@ Todos rodam a partir da **raiz**:
 | `npm run dev:backend` / `dev:frontend` | Sobe um deles |
 | `npm start` | Sobe a API em modo produção |
 | `npm run build` | Build do frontend + verificação de módulos do backend |
-| `npm test` | Testes dos dois workspaces |
+| `npm test` | Testes dos três workspaces (shared, backend, frontend) |
+| `npm run test:coverage` | Os mesmos testes com cobertura e limites (70% global, 90% em serviços e no financiamento) |
+| `npm run test:e2e` | Os 5 fluxos de ponta a ponta no navegador (exige `npm run build` antes) |
 | `npm run lint` / `lint:fix` | ESLint |
 | `npm run format` / `format:check` | Prettier |
 | `npm run verify` | **lint + format + testes + build** — rode antes de commitar |
+
+### Testes
+
+```bash
+npm test               # unitários, integração, componentes e segurança (~1 min)
+npm run test:coverage  # idem, com os limites de cobertura
+npm run build && npm run test:e2e   # E2E: sobe o servidor de produção sozinho
+```
+
+**Banco nos testes.** Sem configuração, os testes de integração sobem um
+MongoDB em memória (`mongodb-memory-server`, que baixa o binário na primeira
+vez). Onde o download não é possível, eles aparecem como **pulados** — nunca
+como aprovados. Para usar um MongoDB seu (mais rápido, e o que a CI faz):
+
+```bash
+docker run -d --name mongo-teste -p 27017:27017 mongo:7
+TEST_MONGODB_URI=mongodb://127.0.0.1:27017 npm test
+E2E_MONGODB_URI=mongodb://127.0.0.1:27017 npm run test:e2e
+```
+
+Cada arquivo de teste cria e apaga o próprio banco; o E2E usa o banco
+`motorshop_e2e`, apagado a cada execução. Nenhum dos dois toca no banco de
+desenvolvimento.
+
+**E2E.** Roda contra o build de produção, servido pelo backend na porta
+3100, com dados conhecidos (`e2e/dados.mjs`). O navegador é o Chromium do
+Playwright (`npx playwright install chromium` na primeira vez). O envio de
+fotos usa um Cloudinary falso dentro do navegador, que confere a assinatura
+emitida pelo servidor e responde assinado — sem conta nem rede.
 
 ---
 

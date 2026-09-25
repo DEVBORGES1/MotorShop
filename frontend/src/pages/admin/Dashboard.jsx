@@ -128,6 +128,9 @@ export function Dashboard() {
                   <Link to="/admin/motos" className={buttonClass({ variant: 'secondary' })}>
                     {total} moto{total === 1 ? '' : 's'} no total
                   </Link>
+                  <Link to="/admin/leads" className={buttonClass({ variant: 'secondary' })}>
+                    Leads
+                  </Link>
                   <Link to="/admin/marcas" className={buttonClass({ variant: 'secondary' })}>
                     {data.marcas} marca{data.marcas === 1 ? '' : 's'}
                   </Link>
@@ -138,10 +141,6 @@ export function Dashboard() {
                     Ver o site
                   </Link>
                 </div>
-
-                <p className="mt-5 text-xs text-ink-500">
-                  O envio de fotos e o acompanhamento de leads entram nas próximas fases.
-                </p>
               </Card>
             </div>
           </div>

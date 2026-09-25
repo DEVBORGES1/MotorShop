@@ -46,12 +46,8 @@ const aplicacao = (
 // Página pública: o servidor já mandou o HTML pronto (entry-server.jsx) e o
 // React só "hidrata" — liga os eventos ao que já está na tela, sem redesenhar.
 // Painel (e o Vite em desenvolvimento): a raiz vem vazia e o React monta tudo.
-// A hidratação é uma tarefa longa: começa depois do próximo quadro, para o
-// navegador pintar primeiro o HTML que já recebeu. Sem isso, a página pronta
-// esperava o JS rodar para aparecer — o que anula a renderização no servidor.
+// Hidrata assim que o JS roda: é o que liga os eventos. Clique numa parte da
+// página que ainda está hidratando é guardado e repetido pelo React depois.
 const raiz = document.getElementById('root');
-if (raiz.firstElementChild) {
-  requestAnimationFrame(() => setTimeout(() => hydrateRoot(raiz, aplicacao), 0));
-} else {
-  createRoot(raiz).render(aplicacao);
-}
+if (raiz.firstElementChild) hydrateRoot(raiz, aplicacao);
+else createRoot(raiz).render(aplicacao);

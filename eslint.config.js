@@ -9,7 +9,15 @@ import globals from 'globals';
  */
 export default [
   {
-    ignores: ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**'],
+    ignores: [
+      '**/node_modules/**',
+      '**/dist/**',
+      '**/dist-ssr/**',
+      '**/build/**',
+      '**/coverage/**',
+      'playwright-report/**',
+      'test-results/**',
+    ],
   },
 
   js.configs.recommended,
@@ -64,6 +72,20 @@ export default [
     languageOptions: {
       globals: { ...globals.node },
     },
+  },
+
+  // E2E: as especificações rodam em Node e passam funções ao navegador.
+  {
+    files: ['e2e/**/*.{js,mjs}'],
+    languageOptions: {
+      globals: { ...globals.node, ...globals.browser },
+    },
+  },
+
+  // O servidor do E2E informa no terminal o que está fazendo.
+  {
+    files: ['e2e/servidor.mjs'],
+    rules: { 'no-console': 'off' },
   },
 
   // Arquivos de configuração rodam em Node.

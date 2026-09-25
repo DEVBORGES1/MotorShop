@@ -9,6 +9,7 @@
     "start": "node --env-file-if-exists=../.env src/server.js",
     "build": "node --env-file-if-exists=../.env --input-type=module -e \"await import('./src/app.js'); console.log('backend: verificação de build OK');\"",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "seed": "node --env-file-if-exists=../.env src/scripts/seed.js",
     "db:indexes": "node --env-file-if-exists=../.env src/scripts/createIndexes.js",

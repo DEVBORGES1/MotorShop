@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 10 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live pendente). FASE 11 aguardando autorização.**
+> **Status atual: FASES 0 a 11 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live; FASE 11 com o bloqueio de merge a ativar no GitHub). FASE 12 aguardando autorização.**
 
 ---
 
@@ -807,7 +807,7 @@ responder ~0,5 s mais tarde nas páginas pesadas — mas o conteúdo aparece
 ~1 s antes, e os links funcionam desde o primeiro instante.
 
 No modo **simulado** do Lighthouse (o padrão, usado na tabela acima desta
-seção), o ganho quase não aparece: LCP 2,3–2,5 s, Performance 97–98. O
+seção), o ganho quase não aparece: LCP 2,3–2,6 s, Performance 97–98. O
 simulador parte da execução local, onde o JS termina de baixar antes da
 primeira pintura, e o conta como se bloqueasse a tela — o que não acontece
 num celular de verdade, onde o HTML chega muito antes do JS.
@@ -952,7 +952,7 @@ Nenhuma nova. Ferramentas de auditoria são de linha de comando.
 
 ---
 
-# FASE 11 — Testes
+# FASE 11 — Testes ✅ concluída (bloqueio de merge depende de configuração no GitHub)
 
 ### Objetivo
 Rede de segurança que permita evoluir o produto e personalizá-lo por cliente
@@ -981,29 +981,86 @@ sem medo de regressão. É o que diferencia um produto base de um projeto único
 
 ### Arquivos envolvidos
 ```
-backend/tests/{unit,integration}/**
-backend/tests/{setup.js,factories/*.js}
-frontend/src/**/*.test.jsx
-e2e/**                                 especificações E2E
-vitest.config.js                       por workspace
+shared/{vitest.config.js,tests/**}          testes do pacote compartilhado (movidos do backend)
+backend/tests/{unit,integration}/**          + endpoints.test.js, invalidateSiteCache.test.js
+backend/tests/factories/index.js             fábricas: marca, moto, lead, loja, usuário
+backend/tests/globalSetup.js                 TEST_MONGODB_URI; na CI, sem banco = falha
+frontend/src/**/*.test.jsx                   componentes e telas (Testing Library + jsdom)
+frontend/src/test/{setup.js,renderizar.jsx}  provedores da aplicação para os testes
+e2e/**                                       5 fluxos, servidor e dados do E2E
+playwright.config.js
 .github/workflows/ci.yml
+*/vitest.config.js, frontend/vite.config.js  cobertura com limites
 ```
 
 ### Dependências
-`vitest`, `supertest`, `mongodb-memory-server`, `@testing-library/react`,
-`@testing-library/user-event`, `@vitest/coverage-v8`; E2E: `@playwright/test`
-(Chromium já disponível no ambiente, sem download extra)
+`@vitest/coverage-v8`, `@testing-library/react`, `@testing-library/user-event`,
+`jsdom` (o ambiente de navegador dos testes de componente — sem ele não há
+DOM no Node) e `@playwright/test` fixado em 1.56.1, a versão do Chromium já
+instalado no ambiente. `vitest` passou a ser dependência também do `shared`.
+`npm audit`: zero vulnerabilidades.
 
 ### Critérios de conclusão
-- [ ] `npm test` na raiz roda tudo e passa
-- [ ] Cobertura ≥ 70% global e ≥ 90% em serviços e no simulador
-- [ ] Todo endpoint tem teste de caminho feliz e de falha
-- [ ] Toda rota admin tem teste de autorização
-- [ ] Os 5 fluxos E2E passam
-- [ ] Testes de regressão de segurança no conjunto principal
-- [ ] CI verde, com bloqueio de merge em caso de falha
-- [ ] Suíte completa em menos de 5 min (senão ninguém a executa)
-- [ ] Nenhum teste depende do Atlas nem de rede externa
+- [x] `npm test` na raiz roda tudo e passa *(unitários, integração,
+      componentes e segurança dos três workspaces; o E2E é
+      `npm run test:e2e`, porque exige o build e um navegador)*
+- [x] Cobertura ≥ 70% global e ≥ 90% em serviços e no simulador *(limites
+      configurados — a suíte falha abaixo deles)*
+- [x] Todo endpoint tem teste de caminho feliz e de falha *(os 41, conferidos
+      um a um)*
+- [x] Toda rota admin tem teste de autorização *(matriz descoberta das
+      próprias rotas, desde a FASE 10)*
+- [x] Os 5 fluxos E2E passam
+- [x] Testes de regressão de segurança no conjunto principal
+- [ ] CI verde, com bloqueio de merge em caso de falha — **o workflow está
+      pronto; a primeira execução acontece no GitHub com este push, e o
+      bloqueio de merge é uma regra do repositório que só o dono ativa**
+      (Settings → Branches → regra para `main` exigindo os checks
+      "Lint, formato, testes com cobertura e build" e "E2E (Playwright)")
+- [x] Suíte completa em menos de 5 min *(~1 min os testes; ~15 s o E2E)*
+- [x] Nenhum teste depende do Atlas nem de rede externa *(MongoDB local ou
+      em memória; Cloudinary simulado)*
+
+### Resultados
+
+| Pacote | Testes | Linhas | Funções | Ramos |
+|---|---|---|---|---|
+| shared | 54 | 92,7% | 88,9% | 76,7% |
+| backend | 564 | 96,5% | 96,9% | 84,0% |
+| frontend | 324 | 91,2% | 82,5% | 81,8% |
+| E2E | 5 fluxos | — | — | — |
+
+Serviços do backend ≥ 90% (linhas, funções e comandos) e ≥ 80% em ramos;
+`shared/src/financing.js` e `frontend/src/utils/simulador.js` ≥ 90% em tudo.
+
+**E2E** (`e2e/`), contra o build de produção servido pelo backend, num banco
+só dele:
+1. Visitante filtra o estoque → abre a moto → envia interesse (conferido no
+   painel: vinculado à moto, com a página de origem).
+2. Admin entra → cadastra moto → envia duas fotos → a moto aparece no
+   estoque e na página, com as fotos. O "Cloudinary" é simulado no navegador
+   e confere a assinatura emitida pelo servidor.
+3. Admin marca a moto como vendida → ela sai do estoque; a página segue no
+   ar como vendida, sem preço.
+4. Visitante simula o financiamento → envia → a parcela recalculada pelo
+   servidor bate com a da tela.
+5. Visitante envia "venda sua moto" → o lead aparece no painel com os dados
+   da moto.
+
+### O que os testes encontraram e foi corrigido
+- **Página pública desatualizada por até 5 minutos** depois de uma mudança
+  no painel (a moto vendida aparecia disponível, com preço). Com a página
+  renderizada no servidor a partir do cache, o efeito ficou visível. Toda
+  alteração bem-sucedida no painel agora apaga o cache do site.
+- **Clique antes da hidratação se perdia** num filtro do estoque. A
+  hidratação agora começa assim que o JS roda (o atraso de um quadro não
+  melhorava nenhuma medida), e `<html data-pronto>` marca a página
+  interativa.
+- **Painel inicial dizia que fotos e leads "entram nas próximas fases"** —
+  existiam desde as FASES 6 e 8. Virou um atalho para os leads.
+- Quatro endpoints só tinham teste de acesso, não de comportamento (loja no
+  painel, leitura de marca, usuário e lead por id): cobertos.
+- Na CI, testes de banco sem banco agora **falham** em vez de serem pulados.
 
 ### Testes necessários
 Esta fase **é** os testes. A verificação é a própria suíte verde, com a
@@ -1181,33 +1238,29 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 10 concluídas.** Backend com catálogo, autenticação, painel
+**FASES 0 a 11 concluídas.** Backend com catálogo, autenticação, painel
 administrativo e leads; site público com home, estoque filtrável, página da
 moto (galeria, ficha, similares, interesse, simulador), financiamento, venda
 sua moto, sobre, contato e privacidade; fotos das motos com envio direto ao
 provedor; SEO com meta, dados estruturados e sitemap no HTML inicial. A FASE 8
 aguarda o teste manual com uma conta Cloudinary real; a FASE 9, a validação de
 preview com endereço público. As páginas públicas são renderizadas no
-servidor (LCP 1,5–1,6 s em 4G).
+servidor (LCP 1,5–1,7 s em 4G).
 
 A FASE 10 auditou e endureceu a segurança: estado verificado, checklist
 OWASP Top 10, política LGPD e checklist de go-live em
 [`SECURITY.md`](./SECURITY.md). A rotação dos segredos acontece no deploy
 (FASE 12).
 
-**Testes de integração verificados contra MongoDB real** (a suíte inteira, com a
-imagem oficial `mongo:7`). Rodá-los pela primeira vez revelou dívidas das FASES
-2 e 3, corrigidas no commit `fix: testes de integração nunca rodavam de
-verdade`.
-
-Atenção: `npm test` usa o MongoDB **em memória**, que baixa o binário na
-primeira execução. Onde esse download é bloqueado, os testes de integração
-aparecem como **pulados** (os que dependem de banco), não como aprovados, e é preciso rodar
-contra um MongoDB acessível para ter a verificação completa.
+A FASE 11 fechou a rede de testes: ~950 testes (unitários, integração,
+componentes, segurança e 5 fluxos E2E), cobertura com limites e CI no
+GitHub Actions a cada push. Sem MongoDB disponível, os testes de banco
+aparecem como **pulados** — nunca aprovados — e na CI falham. Como rodar:
+[`SETUP.md`](./SETUP.md#testes).
 
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** **FASE 11** (testes), autorizada. A decisão **E** foi
-tomada: o lead fica guardado até a loja excluir, com exclusão em lote no
-painel.
+**Próximo passo:** sua autorização para a **FASE 12** (deploy). Antes dela,
+vale ativar no GitHub o bloqueio de merge com os checks da CI (Settings →
+Branches).

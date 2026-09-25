@@ -21,5 +21,21 @@ export default defineConfig({
     fileParallelism: false,
     testTimeout: 20_000,
     hookTimeout: 60_000,
+    coverage: {
+      provider: 'v8',
+      include: ['src/**'],
+      // Pontos de entrada de processo (subir o servidor, scripts de linha de
+      // comando): exercitados pelo E2E e pelo uso, não por teste unitário.
+      exclude: ['src/server.js', 'src/scripts/**'],
+      reporter: ['text-summary', 'json-summary', 'html'],
+      thresholds: {
+        lines: 70,
+        statements: 70,
+        functions: 70,
+        branches: 70,
+        // Serviços: é onde mora a regra de negócio (ARCHITECTURE §4).
+        'src/**/*.service.js': { lines: 90, statements: 90, functions: 90, branches: 80 },
+      },
+    },
   },
 });

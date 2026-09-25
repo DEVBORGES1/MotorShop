@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 
 import { RequireAuth } from '@/components/admin/RequireAuth.jsx';
 import { RootLayout } from '@/layouts/RootLayout.jsx';
@@ -57,7 +57,25 @@ const Configuracoes = lazy(() =>
 // Ocupa a tela enquanto o código da página chega: com uma linha só, o rodapé
 // subiria até o meio da tela e despencaria em seguida (salto de layout).
 const carregando = <div className="min-h-dvh p-8 text-ink-400">Carregando…</div>;
-const comSuspense = (elemento) => <Suspense fallback={carregando}>{elemento}</Suspense>;
+const comSuspense = (elemento) => (
+  <Suspense fallback={carregando}>
+    <SinalDePronto />
+    {elemento}
+  </Suspense>
+);
+
+/**
+ * Marca `<html data-pronto>` quando a página ficou interativa. Fica dentro do
+ * mesmo Suspense da página: numa página renderizada no servidor, o efeito só
+ * roda depois que o React hidratou aquele trecho — antes disso, o HTML está
+ * na tela mas os botões ainda não respondem. O E2E espera por ele.
+ */
+function SinalDePronto() {
+  useEffect(() => {
+    document.documentElement.dataset.pronto = '';
+  }, []);
+  return null;
+}
 
 /**
  * Rotas da aplicação. Só a definição: o navegador monta com
@@ -69,7 +87,15 @@ export const rotas = [
     path: '/',
     element: <RootLayout />,
     children: [
-      { index: true, element: <Home /> },
+      {
+        index: true,
+        element: (
+          <>
+            <SinalDePronto />
+            <Home />
+          </>
+        ),
+      },
       { path: 'estoque', element: comSuspense(<Estoque />) },
       { path: 'motos/:slug', element: comSuspense(<MotoDetalhe />) },
       { path: 'financiamento', element: comSuspense(<Financiamento />) },
@@ -77,7 +103,15 @@ export const rotas = [
       { path: 'privacidade', element: comSuspense(<Privacidade />) },
       { path: 'sobre', element: comSuspense(<Sobre />) },
       { path: 'contato', element: comSuspense(<Contato />) },
-      { path: '*', element: <NotFound /> },
+      {
+        path: '*',
+        element: (
+          <>
+            <SinalDePronto />
+            <NotFound />
+          </>
+        ),
+      },
     ],
   },
 

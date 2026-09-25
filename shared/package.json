@@ -7,8 +7,16 @@
   "exports": {
     ".": "./src/index.js"
   },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
   "dependencies": {
     "zod": "^4.6.5"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "devDependencies": {
+    "vitest": "^5.0.0"
+  }
 }
