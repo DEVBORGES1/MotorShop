@@ -21,6 +21,10 @@ aparecer no GitHub com um único perfil: o do dono do projeto.
 
 **Branch:** commitar direto na `main`, salvo instrução em contrário.
 
+**Ao concluir cada fase:** rodar `npm run verify`, commitar na `main` e fazer
+`git push` — sem esperar pedido. Antes do push, conferir que o commit tem só a
+conta do dono como autor e committer, sem nenhuma linha de coautoria.
+
 **Mensagens:** em português, no formato `tipo: descrição` (`feat:`, `fix:`,
 `docs:`, `refactor:`, `test:`, `chore:`). O corpo explica *o que* mudou e
 *por quê*, incluindo problemas encontrados e corrigidos.
