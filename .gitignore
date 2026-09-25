@@ -55,6 +55,8 @@ dump/
 *.bson
 *.dump
 
-# Uploads locais temporários (imagens vão para o provedor externo)
-uploads/
-tmp/
+# Uploads locais temporários (imagens vão para o provedor externo).
+# Ancorados na raiz com "/": sem isso, `uploads/` também casava com
+# backend/src/modules/uploads/ — o módulo de upload ficou fora do git.
+/uploads/
+/tmp/
