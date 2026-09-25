@@ -1,3 +1,4 @@
+import { ContactForm } from '@/components/leads/ContactForm.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { Card, CardTitle } from '@/components/ui/Card.jsx';
 import { useStore } from '@/hooks/useStore.js';
@@ -5,11 +6,8 @@ import { cidadeLinha, enderecoLinha, horariosAgrupados } from '@/utils/loja.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
 
 /**
- * Canais de contato da loja.
- *
- * Sem formulário: o envio de mensagem gera lead e é a FASE 6. Um formulário
- * que não entrega a mensagem a ninguém seria pior que os canais diretos que
- * já funcionam.
+ * Contato: formulário (vira lead na tela de Leads do painel) e os canais
+ * diretos da loja, para quem prefere ligar ou chamar no WhatsApp.
  */
 export function Contato() {
   const { store } = useStore();
@@ -27,12 +25,17 @@ export function Contato() {
       <h1 className="text-3xl font-extrabold tracking-tight">Contato</h1>
       <p className="mt-2 text-sm text-ink-400">Fale com a {store.name} pelo canal que preferir.</p>
 
-      {semCanais ? (
-        <p className="mt-10 text-sm text-ink-500">
-          Os canais de contato ainda não foram configurados.
-        </p>
-      ) : (
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+      <Card as="section" className="mt-10" aria-labelledby="contato-form-titulo">
+        <h2 id="contato-form-titulo" className="label-caps text-[11px] text-ink-400">
+          Envie uma mensagem
+        </h2>
+        <div className="mt-5">
+          <ContactForm />
+        </div>
+      </Card>
+
+      {!semCanais && (
+        <div className="mt-5 grid gap-5 sm:grid-cols-2">
           {whatsapp && (
             <Card>
               <CardTitle>WhatsApp</CardTitle>

@@ -32,3 +32,10 @@ export const storeAdmin = {
   get: () => api.get('/admin/store').then((e) => e.data),
   update: (data) => api.patch('/admin/store', data).then((e) => e.data),
 };
+
+export const leadsAdmin = {
+  list: (params) => api.get('/admin/leads', { params }),
+  get: (id) => api.get(`/admin/leads/${id}`).then((e) => e.data),
+  update: (id, data) => api.patch(`/admin/leads/${id}`, data).then((e) => e.data),
+  remove: (id) => api.delete(`/admin/leads/${id}`),
+};

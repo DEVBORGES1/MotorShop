@@ -20,6 +20,12 @@ export const logger = pino({
       'token',
       'accessToken',
       'refreshToken',
+      // Dado pessoal de lead (R-08). O serviço já não o loga; isto cobre o
+      // log acidental de um objeto inteiro no futuro.
+      'phone',
+      'email',
+      '*.phone',
+      '*.email',
       '*.password',
       '*.passwordHash',
       '*.token',

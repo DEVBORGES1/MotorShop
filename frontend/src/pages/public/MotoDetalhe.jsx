@@ -1,7 +1,9 @@
 import { MOTO_STATUS } from '@motorshop/shared';
+import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { Breadcrumbs } from '@/components/layout/Breadcrumbs.jsx';
+import { InterestForm } from '@/components/leads/InterestForm.jsx';
 import { MotoFeatures } from '@/components/moto/MotoFeatures.jsx';
 import { MotoGallery } from '@/components/moto/MotoGallery.jsx';
 import { MotoSpecs } from '@/components/moto/MotoSpecs.jsx';
@@ -10,6 +12,7 @@ import { StatusBadge } from '@/components/moto/StatusBadge.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
 import { Badge } from '@/components/ui/Badge.jsx';
 import { Button, buttonClass } from '@/components/ui/Button.jsx';
+import { Modal } from '@/components/ui/Modal.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { useStore } from '@/hooks/useStore.js';
@@ -24,6 +27,9 @@ import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
  *
  * Moto vendida continua acessível (decisão A): selo "Vendida", sem preço (a
  * API já não o envia) e o convite muda para "me avise de uma parecida".
+ *
+ * "Tenho interesse" abre o formulário que vira lead vinculado à moto; o
+ * WhatsApp fica ao lado, para quem prefere conversar na hora.
  */
 export function MotoDetalhe() {
   const { slug } = useParams();
@@ -54,6 +60,7 @@ export function MotoDetalhe() {
 
 function Detalhe({ moto }) {
   const { store } = useStore();
+  const [interesseAberto, setInteresseAberto] = useState(false);
 
   const nome = nomeDaMoto(moto);
   const vendida = moto.status === MOTO_STATUS.SOLD;
@@ -67,24 +74,16 @@ function Detalhe({ moto }) {
     .filter((parte) => parte != null && parte !== '—')
     .join(' · ');
 
-  const cta = (className = '') =>
-    whatsapp ? (
-      <a
-        href={whatsapp}
-        target="_blank"
-        rel="noreferrer noopener"
-        className={buttonClass({ size: 'lg', className })}
-      >
-        {rotuloCta}
-        <span className="sr-only"> — {nome} pelo WhatsApp</span>
-      </a>
-    ) : (
-      // Loja sem WhatsApp configurado: o caminho é a página de contato, nunca
-      // um botão morto.
-      <Link to="/contato" className={buttonClass({ size: 'lg', className })}>
-        Fale com a loja
-      </Link>
-    );
+  const cta = (className = '') => (
+    <Button
+      size="lg"
+      className={className}
+      onClick={() => setInteresseAberto(true)}
+      aria-haspopup="dialog"
+    >
+      {rotuloCta}
+    </Button>
+  );
 
   return (
     // Folga embaixo no celular: a barra fixa de preço cobriria o fim da página.
@@ -142,6 +141,17 @@ function Detalhe({ moto }) {
 
             {cta('mt-5 w-full')}
 
+            {whatsapp && (
+              <a
+                href={whatsapp}
+                target="_blank"
+                rel="noreferrer noopener"
+                className={buttonClass({ variant: 'secondary', className: 'mt-3 w-full' })}
+              >
+                Conversar no WhatsApp
+              </a>
+            )}
+
             {vendida && (
               <Link
                 to="/estoque"
@@ -189,6 +199,35 @@ function Detalhe({ moto }) {
           {cta('shrink-0')}
         </div>
       </div>
+
+      <Modal
+        aberto={interesseAberto}
+        onClose={() => setInteresseAberto(false)}
+        rotulo={`${rotuloCta} — ${nome}`}
+        className="m-auto max-h-[calc(100dvh-2rem)] w-[min(32rem,calc(100vw-2rem))] overflow-y-auto rounded-lg border border-ink-800 bg-surface p-0 text-ink-200"
+      >
+        <div className="flex items-start justify-between gap-4 border-b border-ink-800 px-5 py-4">
+          <div>
+            <p className="label-caps text-[10px] text-ink-500">{rotuloCta}</p>
+            <p className="mt-1 font-display text-lg font-extrabold text-ink-50">
+              {[nome, moto.year].filter(Boolean).join(' ')}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setInteresseAberto(false)}
+            aria-label="Fechar"
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ink-400 hover:bg-ink-800 hover:text-ink-50"
+          >
+            <svg viewBox="0 0 16 16" aria-hidden="true" className="h-4 w-4 stroke-current stroke-2">
+              <path d="m3 3 10 10M13 3 3 13" />
+            </svg>
+          </button>
+        </div>
+        <div className="p-5">
+          <InterestForm moto={moto} nome={nome} whatsapp={whatsapp} />
+        </div>
+      </Modal>
     </div>
   );
 }

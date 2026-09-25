@@ -54,7 +54,8 @@ const MODULOS = [
   {
     chave: 'sellMotoEnabled',
     rotulo: 'Sua moto na entrada',
-    descricao: 'Mostra na página inicial a chamada para avaliar a moto do cliente.',
+    descricao:
+      'Página “Venda sua moto” (formulário de avaliação), item no menu e chamada na página inicial.',
   },
   {
     chave: 'financingEnabled',

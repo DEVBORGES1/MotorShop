@@ -7,7 +7,7 @@ import { buttonClass } from '@/components/ui/Button.jsx';
 import { Card, CardTitle } from '@/components/ui/Card.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
-import { marcasAdmin, motosAdmin } from '@/services/adminService.js';
+import { leadsAdmin, marcasAdmin, motosAdmin } from '@/services/adminService.js';
 
 const STATUS_EXIBIDOS = [
   ['AVAILABLE', 'Disponíveis', 'bg-ok'],
@@ -26,9 +26,15 @@ export function Dashboard() {
       ),
     );
 
+    const [marcas, leadsNovos] = await Promise.all([
+      marcasAdmin.list(),
+      leadsAdmin.list({ status: 'NEW', limit: 1 }).then((envelope) => envelope.meta.total),
+    ]);
+
     return {
       porStatus: Object.fromEntries(STATUS_EXIBIDOS.map(([status], i) => [status, contagens[i]])),
-      marcas: (await marcasAdmin.list()).length,
+      marcas: marcas.length,
+      leadsNovos,
     };
   });
 
@@ -56,6 +62,22 @@ export function Dashboard() {
       ) : (
         data && (
           <div className="space-y-4">
+            {/* Lead parado é venda perdida: quando há novos, é a primeira coisa
+                que o painel mostra. */}
+            {data.leadsNovos > 0 && (
+              <Link
+                to="/admin/leads?status=NEW"
+                className="flex items-center justify-between gap-4 rounded-lg border border-brand-500/40 bg-brand-500/10 px-5 py-4 transition hover:border-brand-500"
+              >
+                <span className="text-sm text-ink-50">
+                  <strong className="font-display text-lg">{data.leadsNovos}</strong>{' '}
+                  {data.leadsNovos === 1 ? 'lead novo aguardando' : 'leads novos aguardando'}{' '}
+                  resposta
+                </span>
+                <span className="label-caps text-[11px] text-brand-500">Ver leads →</span>
+              </Link>
+            )}
+
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               {STATUS_EXIBIDOS.map(([status, rotulo]) => (
                 <StatCard

@@ -8,13 +8,14 @@ import { linkWhatsApp } from '@/utils/whatsapp.js';
 /**
  * Cabeçalho do site público.
  *
- * O menu lista apenas rotas que existem. As entradas de financiamento e de
- * venda da moto entram junto com as páginas delas (FASES 6 e 7) — menu que
- * leva a lugar nenhum é pior que menu curto.
+ * O menu lista apenas rotas que existem — e, entre as de módulo, só as que a
+ * loja ligou. Financiamento entra com a página dele (FASE 7): menu que leva a
+ * lugar nenhum é pior que menu curto.
  */
 
 const LINKS = [
   { to: '/estoque', label: 'Estoque' },
+  { to: '/venda-sua-moto', label: 'Venda sua moto', modulo: 'sellMotoEnabled' },
   { to: '/sobre', label: 'Sobre' },
   { to: '/contato', label: 'Contato' },
 ];
@@ -22,6 +23,7 @@ const LINKS = [
 export function Header() {
   const { store } = useStore();
   const [aberto, setAberto] = useState(false);
+  const links = LINKS.filter((link) => !link.modulo || store.features?.[link.modulo]);
   const { pathname } = useLocation();
 
   // Navegar fecha o menu: no celular ele cobre a tela, e ficar aberto sobre a
@@ -49,7 +51,7 @@ export function Header() {
         </Link>
 
         <nav className="ml-auto hidden items-center gap-7 md:flex">
-          {LINKS.map((link) => (
+          {links.map((link) => (
             <NavLink key={link.to} to={link.to} className={classeLink}>
               {link.label}
             </NavLink>
@@ -100,7 +102,7 @@ export function Header() {
       {aberto && (
         <nav id="menu-principal" className="border-t border-ink-800 px-4 py-3 md:hidden">
           <ul className="flex flex-col">
-            {LINKS.map((link) => (
+            {links.map((link) => (
               <li key={link.to}>
                 <NavLink
                   to={link.to}

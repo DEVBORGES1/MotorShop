@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 5 concluídas. FASE 6 aguardando autorização.**
+> **Status atual: FASES 0 a 6 concluídas. FASE 7 aguardando autorização.**
 
 ---
 
@@ -450,7 +450,7 @@ Nenhuma nova.
 
 ---
 
-# FASE 6 — Leads + WhatsApp
+# FASE 6 — Leads + WhatsApp ✅ concluída
 
 ### Objetivo
 Converter visita em contato e dar à loja uma tela onde o lead não se perde.
@@ -490,18 +490,43 @@ frontend/src/pages/admin/Leads.jsx
 Nenhuma nova (Zod e react-hook-form já presentes).
 
 ### Critérios de conclusão
-- [ ] Os 4 tipos de lead são criados e persistidos corretamente
-- [ ] Lead de interesse referencia a moto certa
-- [ ] Tipo inválido ou `data` incompatível com o tipo → `422`
-- [ ] 6º envio na mesma hora → `429`
-- [ ] Honeypot preenchido → descartado silenciosamente
-- [ ] `consent` gravado com data e versão do texto
-- [ ] `GET /api/admin/leads` exige autenticação (`401` sem token)
-- [ ] Exclusão de lead só por `SUPER_ADMIN`
-- [ ] Log de criação de lead **não** contém telefone nem e-mail (R-08)
-- [ ] Atalho de WhatsApp do painel abre a conversa com o lead
-- [ ] Clique duplo no envio não cria dois leads
-- [ ] Origem (`page`/`referrer`/`utm`) registrada
+- [x] Os 4 tipos de lead são criados e persistidos corretamente
+- [x] Lead de interesse referencia a moto certa
+- [x] Tipo inválido ou `data` incompatível com o tipo → `422`
+- [x] 6º envio na mesma hora → `429`
+- [x] Honeypot preenchido → descartado silenciosamente
+- [x] `consent` gravado com data e versão do texto
+- [x] `GET /api/admin/leads` exige autenticação (`401` sem token)
+- [x] Exclusão de lead só por `SUPER_ADMIN`
+- [x] Log de criação de lead **não** contém telefone nem e-mail (R-08)
+- [x] Atalho de WhatsApp do painel abre a conversa com o lead
+- [x] Clique duplo no envio não cria dois leads
+- [x] Origem (`page`/`referrer`/`utm`) registrada
+
+Verificado contra MongoDB real (imagem `mongo:7`) e, ponta a ponta, no
+navegador com backend e banco reais: formulários, painel, `429` no 6º envio
+e ausência de telefone, nome e e-mail no log.
+
+### Como ficou (diferenças em relação ao planejado)
+- **Formulário de financiamento** é da FASE 7, junto com o simulador. A API já
+  aceita o tipo `FINANCING`.
+- **Moto do financiamento** vai no campo `moto` do lead, não em `data.motoId`:
+  uma referência só, populável na listagem (ARCHITECTURE §5.3 atualizada).
+- **Envio repetido:** além da trava no formulário, o servidor devolve o lead
+  existente quando o mesmo telefone manda o mesmo tipo (e a mesma moto) em
+  até 2 minutos.
+- **Moto vendida:** "Avise-me de uma similar" abre o mesmo formulário de
+  interesse, vinculado à moto vendida (decisão A).
+- **`/privacidade`** criada, porque o consentimento precisa apontar para uma
+  política. Gerada da configuração da loja; o documento completo de
+  conformidade continua na FASE 10. **Não promete prazo de retenção**: a
+  decisão **E** segue pendente.
+- **"Venda sua moto"** some (página, menu e chamada da home) quando o módulo
+  está desligado nas Configurações.
+- Painel inicial mostra quantos leads novos aguardam resposta.
+- Componentes em `components/leads/`, seguindo a organização do projeto.
+- Testes de componente: schemas dos formulários e a trava de clique duplo como
+  funções puras; o comportamento na tela foi verificado no navegador.
 
 ### Testes necessários
 | Tipo | O que |
@@ -1000,17 +1025,23 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 5 concluídas.** Backend com catálogo, autenticação e painel
-administrativo; site público com home, estoque filtrável, página da moto
-(galeria, ficha, similares), sobre e contato.
+**FASES 0 a 6 concluídas.** Backend com catálogo, autenticação, painel
+administrativo e leads; site público com home, estoque filtrável, página da
+moto (galeria, ficha, similares, interesse), venda sua moto, sobre, contato e
+privacidade.
 
-A verificação contra um banco real continua pendente: o ambiente de
-desenvolvimento usado até aqui não consegue baixar o binário do MongoDB em
-memória, então os testes de integração ficam pulados (130 dos 263). Rodar
-`npm test` com um Atlas configurado é o que fecha essa lacuna.
+**Testes de integração verificados contra MongoDB real** (310 de 310, com a
+imagem oficial `mongo:7`). Rodá-los pela primeira vez revelou dívidas das FASES
+2 e 3, corrigidas no commit `fix: testes de integração nunca rodavam de
+verdade`.
+
+Atenção: `npm test` usa o MongoDB **em memória**, que baixa o binário na
+primeira execução. Onde esse download é bloqueado, os testes de integração
+aparecem como **pulados** (152 dos 310), não como aprovados, e é preciso rodar
+contra um MongoDB acessível para ter a verificação completa.
 
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 6** (leads + WhatsApp), que
-troca o "Tenho interesse" da página da moto pelo formulário de verdade.
+**Próximo passo:** sua autorização para a **FASE 7** (financiamento). A
+decisão **E** (retenção de leads) continua pendente e é pré-requisito da FASE 10.

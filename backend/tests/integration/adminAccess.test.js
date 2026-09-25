@@ -33,6 +33,10 @@ const ROTAS_ADMIN = [
   ['DELETE', '/api/admin/usuarios/507f1f77bcf86cd799439011'],
   ['GET', '/api/admin/store'],
   ['PATCH', '/api/admin/store'],
+  ['GET', '/api/admin/leads'],
+  ['GET', '/api/admin/leads/507f1f77bcf86cd799439011'],
+  ['PATCH', '/api/admin/leads/507f1f77bcf86cd799439011'],
+  ['DELETE', '/api/admin/leads/507f1f77bcf86cd799439011'],
 ];
 
 /** Rotas que exigem SUPER_ADMIN — um ADMIN comum deve receber 403. */
@@ -42,6 +46,7 @@ const ROTAS_SUPER_ADMIN = [
   ['PATCH', '/api/admin/usuarios/507f1f77bcf86cd799439011'],
   ['DELETE', '/api/admin/usuarios/507f1f77bcf86cd799439011'],
   ['PATCH', '/api/admin/store'],
+  ['DELETE', '/api/admin/leads/507f1f77bcf86cd799439011'],
 ];
 
 const chamar = (metodo, rota, token) => {

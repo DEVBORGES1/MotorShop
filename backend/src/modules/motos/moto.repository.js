@@ -114,6 +114,11 @@ export function findBySlug(slug, statuses) {
     .lean();
 }
 
+/** A moto existe e está visível ao público? Usado para vincular um lead a ela. */
+export function existsPublic(id, statuses) {
+  return Moto.exists({ _id: id, status: { $in: statuses } }).then(Boolean);
+}
+
 /**
  * Motos relacionadas: mesma marca ou faixa de preço próxima, excluindo a
  * própria. Sem ordenação aleatória — `$sample` impediria o uso de índice.

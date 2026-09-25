@@ -30,3 +30,18 @@ export function iniciais(nome) {
 
   return (primeira + ultima).toUpperCase();
 }
+
+/** "+5549999998888" → "(49) 99999-8888". O que não reconhece, devolve como veio. */
+export function formatarTelefone(telefone) {
+  const digitos = String(telefone ?? '').replace(/\D/g, '');
+  const nacional = digitos.startsWith('55') && digitos.length >= 12 ? digitos.slice(2) : digitos;
+
+  if (nacional.length === 11)
+    return `(${nacional.slice(0, 2)}) ${nacional.slice(2, 7)}-${nacional.slice(7)}`;
+  if (nacional.length === 10)
+    return `(${nacional.slice(0, 2)}) ${nacional.slice(2, 6)}-${nacional.slice(6)}`;
+  return telefone ?? '—';
+}
+
+export const formatarDataHora = (iso) =>
+  iso ? new Date(iso).toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) : '—';

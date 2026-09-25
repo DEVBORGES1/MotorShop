@@ -25,3 +25,8 @@ export const store = {
 export const filtros = {
   get: (params) => api.get('/filtros', { params }).then((e) => e.data),
 };
+
+/** Formulários de contato, interesse e venda. Devolve só a confirmação. */
+export const leads = {
+  create: (data) => api.post('/leads', data).then((e) => e.data),
+};

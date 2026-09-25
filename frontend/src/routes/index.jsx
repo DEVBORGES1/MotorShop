@@ -13,6 +13,12 @@ const Estoque = lazy(() =>
 const MotoDetalhe = lazy(() =>
   import('@/pages/public/MotoDetalhe.jsx').then((m) => ({ default: m.MotoDetalhe })),
 );
+const VendaSuaMoto = lazy(() =>
+  import('@/pages/public/VendaSuaMoto.jsx').then((m) => ({ default: m.VendaSuaMoto })),
+);
+const Privacidade = lazy(() =>
+  import('@/pages/public/Privacidade.jsx').then((m) => ({ default: m.Privacidade })),
+);
 const Sobre = lazy(() => import('@/pages/public/Sobre.jsx').then((m) => ({ default: m.Sobre })));
 const Contato = lazy(() =>
   import('@/pages/public/Contato.jsx').then((m) => ({ default: m.Contato })),
@@ -41,6 +47,7 @@ const Marcas = lazy(() => import('@/pages/admin/Marcas.jsx').then((m) => ({ defa
 const Usuarios = lazy(() =>
   import('@/pages/admin/Usuarios.jsx').then((m) => ({ default: m.Usuarios })),
 );
+const Leads = lazy(() => import('@/pages/admin/Leads.jsx').then((m) => ({ default: m.Leads })));
 const Configuracoes = lazy(() =>
   import('@/pages/admin/Configuracoes.jsx').then((m) => ({ default: m.Configuracoes })),
 );
@@ -58,6 +65,8 @@ export const router = createBrowserRouter([
       { index: true, element: <Home /> },
       { path: 'estoque', element: comSuspense(<Estoque />) },
       { path: 'motos/:slug', element: comSuspense(<MotoDetalhe />) },
+      { path: 'venda-sua-moto', element: comSuspense(<VendaSuaMoto />) },
+      { path: 'privacidade', element: comSuspense(<Privacidade />) },
       { path: 'sobre', element: comSuspense(<Sobre />) },
       { path: 'contato', element: comSuspense(<Contato />) },
       { path: '*', element: <NotFound /> },
@@ -78,6 +87,7 @@ export const router = createBrowserRouter([
           { path: 'motos', element: comSuspense(<MotosList />) },
           { path: 'motos/nova', element: comSuspense(<MotoForm />) },
           { path: 'motos/:id/editar', element: comSuspense(<MotoForm />) },
+          { path: 'leads', element: comSuspense(<Leads />) },
           { path: 'marcas', element: comSuspense(<Marcas />) },
           { path: 'configuracoes', element: comSuspense(<Configuracoes />) },
           {

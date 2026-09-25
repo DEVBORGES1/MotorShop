@@ -109,4 +109,70 @@ export const USER_ROLE_LABEL = Object.freeze({
 /** Senha administrativa: comprimento mínimo exigido no cadastro e no login. */
 export const PASSWORD_MIN_LENGTH = 12;
 
+// --- Leads --------------------------------------------------------------------
+
+/**
+ * Tipos de lead. Coleção única com discriminador (decisão D-05): a loja
+ * trabalha numa lista só, "todos os contatos", ordenada por data.
+ */
+export const LEAD_TYPE = Object.freeze({
+  MOTO_INTEREST: 'MOTO_INTEREST',
+  SELL_MOTO: 'SELL_MOTO',
+  CONTACT: 'CONTACT',
+  FINANCING: 'FINANCING',
+});
+
+export const LEAD_TYPE_LABEL = Object.freeze({
+  MOTO_INTEREST: 'Interesse em moto',
+  SELL_MOTO: 'Quer vender a moto',
+  CONTACT: 'Contato',
+  FINANCING: 'Financiamento',
+});
+
+export const LEAD_STATUS = Object.freeze({
+  NEW: 'NEW',
+  IN_PROGRESS: 'IN_PROGRESS',
+  WON: 'WON',
+  LOST: 'LOST',
+});
+
+export const LEAD_STATUS_LABEL = Object.freeze({
+  NEW: 'Novo',
+  IN_PROGRESS: 'Em atendimento',
+  WON: 'Convertido',
+  LOST: 'Perdido',
+});
+
+/** Estado da moto que o cliente quer vender (formulário "Venda sua moto"). */
+export const MOTO_CONDITION = Object.freeze({
+  EXCELLENT: 'EXCELLENT',
+  GOOD: 'GOOD',
+  FAIR: 'FAIR',
+  NEEDS_REPAIR: 'NEEDS_REPAIR',
+});
+
+export const MOTO_CONDITION_LABEL = Object.freeze({
+  EXCELLENT: 'Ótimo — sem detalhes',
+  GOOD: 'Bom — detalhes de uso',
+  FAIR: 'Regular — precisa de cuidados',
+  NEEDS_REPAIR: 'Precisa de reparo',
+});
+
+export const LEAD_LIMITS = Object.freeze({
+  MAX_NAME: 80,
+  MAX_MESSAGE: 2000,
+  MAX_NOTE: 1000,
+  MIN_INSTALLMENTS: 6,
+  MAX_INSTALLMENTS: 72,
+  /** Janela em que um envio igual é tratado como repetição (clique duplo, reenvio). */
+  DUPLICATE_WINDOW_MS: 2 * 60 * 1000,
+});
+
+/**
+ * Versão do texto de consentimento (LGPD). O lead grava a versão que a pessoa
+ * aceitou; mudar o texto exige mudar a versão, senão o registro deixa de
+ * provar o que foi aceito.
+ */
+export const CONSENT_TEXT_VERSION = '2026-09-v1';
+
 export const values = (enumObject) => Object.values(enumObject);

@@ -47,9 +47,6 @@ export function Home() {
   const total = recentes.data?.meta?.total;
   const whatsapp = (mensagem) => linkWhatsApp(store.contact?.whatsapp, mensagem);
 
-  const linkVenda = whatsapp(
-    `Olá! Quero vender ou trocar minha moto. Podem avaliar? (via site da ${store.name})`,
-  );
   const linkFinanciamento = whatsapp(
     `Olá! Gostaria de simular um financiamento. (via site da ${store.name})`,
   );
@@ -103,15 +100,14 @@ export function Home() {
 
       <Beneficios />
 
-      {/* As páginas de venda e de financiamento são as FASES 6 e 7. Até lá a
-          chamada leva ao WhatsApp, que já funciona — e some por completo se a
-          loja desligou o módulo nas configurações. */}
+      {/* Venda leva ao formulário (vira lead). Financiamento é a FASE 7: até
+          lá, WhatsApp. Cada chamada some se a loja desligou o módulo. */}
       <div className="mx-auto grid max-w-7xl gap-5 px-4 pb-4 sm:px-6 md:grid-cols-2">
-        {store.features?.sellMotoEnabled && linkVenda && (
+        {store.features?.sellMotoEnabled && (
           <Chamada
             titulo="Sua moto na entrada"
-            texto="Avaliamos a sua e abatemos no valor da próxima. Mande marca, modelo, ano e quilometragem."
-            acao={{ href: linkVenda, label: 'Quero avaliar' }}
+            texto="Avaliamos a sua e abatemos no valor da próxima. Conte marca, modelo, ano e quilometragem."
+            acao={{ to: '/venda-sua-moto', label: 'Quero avaliar' }}
           />
         )}
         {store.features?.financingEnabled && linkFinanciamento && (
@@ -250,14 +246,20 @@ function Chamada({ titulo, texto, acao }) {
     <section className="rounded-lg border border-ink-800 bg-surface p-8">
       <h2 className="text-xl font-extrabold tracking-tight">{titulo}</h2>
       <p className="mt-2 text-sm text-ink-400">{texto}</p>
-      <a
-        href={acao.href}
-        target="_blank"
-        rel="noreferrer noopener"
-        className={buttonClass({ className: 'mt-6' })}
-      >
-        {acao.label}
-      </a>
+      {acao.to ? (
+        <Link to={acao.to} className={buttonClass({ className: 'mt-6' })}>
+          {acao.label}
+        </Link>
+      ) : (
+        <a
+          href={acao.href}
+          target="_blank"
+          rel="noreferrer noopener"
+          className={buttonClass({ className: 'mt-6' })}
+        >
+          {acao.label}
+        </a>
+      )}
     </section>
   );
 }

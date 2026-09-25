@@ -618,7 +618,7 @@ união discriminada em Zod. Justificativa em §15 D-05.
 | `phone` | String | obrigatório, normalizado E.164 |
 | `email` | String | opcional, validado |
 | `message` | String | opcional, ≤ 2000 |
-| `moto` | ObjectId → `Moto` | obrigatório se `type = MOTO_INTEREST` |
+| `moto` | ObjectId → `Moto` | obrigatório se `type = MOTO_INTEREST`; opcional em `FINANCING` |
 | `data` | Mixed validado | específico por tipo, ver abaixo |
 | `status` | Enum | `NEW \| IN_PROGRESS \| WON \| LOST`, default `NEW` |
 | `source` | Object | `{ page, referrer, utm }` — de onde veio |
@@ -628,8 +628,11 @@ união discriminada em Zod. Justificativa em §15 D-05.
 `data` por tipo:
 
 - `SELL_MOTO` — `{ brand, model, year, mileage, expectedPrice?, condition? }`
-- `FINANCING` — `{ motoId?, vehiclePrice, downPayment, installments }`
-- `MOTO_INTEREST` / `CONTACT` — vazio
+- `FINANCING` — `{ vehiclePrice, downPayment, installments }` (a moto simulada, quando
+  houver, vai no campo `moto`, como no interesse: uma referência só, populável na listagem)
+- `MOTO_INTEREST` / `CONTACT` — vazio (em `CONTACT`, `message` é obrigatória)
+
+Valores em dinheiro dentro de `data` seguem D-04: centavos no banco, reais na API.
 
 `consent` não é enfeite: é o registro da base legal exigido pela LGPD (P-06),
 com versionamento do texto aceito.

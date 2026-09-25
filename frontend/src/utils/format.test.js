@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
 
-import { formatarCilindrada, formatarKm, formatarPreco, iniciais } from './format.js';
+import {
+  formatarCilindrada,
+  formatarKm,
+  formatarPreco,
+  formatarTelefone,
+  iniciais,
+} from './format.js';
 
 describe('formatarPreco', () => {
   // O Intl separa "R$" do número com espaço inquebrável (U+00A0), não com
@@ -51,5 +57,17 @@ describe('iniciais', () => {
     expect(iniciais('  maria   silva  ')).toBe('MS');
     expect(iniciais('')).toBe('—');
     expect(iniciais(null)).toBe('—');
+  });
+});
+
+describe('formatarTelefone', () => {
+  it('formata celular e fixo em E.164', () => {
+    expect(formatarTelefone('+5549999998888')).toBe('(49) 99999-8888');
+    expect(formatarTelefone('+554935655098')).toBe('(49) 3565-5098');
+  });
+
+  it('devolve como veio o que não reconhece', () => {
+    expect(formatarTelefone('123')).toBe('123');
+    expect(formatarTelefone(null)).toBe('—');
   });
 });

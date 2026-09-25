@@ -7,6 +7,7 @@ import { validate } from '../middlewares/validate.js';
 import { authRoutes } from '../modules/auth/auth.routes.js';
 import { brandAdminRoutes, brandPublicRoutes } from '../modules/brands/brand.routes.js';
 import { healthRoutes } from '../modules/health/health.routes.js';
+import { leadAdminRoutes, leadPublicRoutes } from '../modules/leads/lead.routes.js';
 import * as motoController from '../modules/motos/moto.controller.js';
 import { motoAdminRoutes, motoPublicRoutes } from '../modules/motos/moto.routes.js';
 import { listMotosQuerySchema } from '../modules/motos/moto.schema.js';
@@ -34,6 +35,8 @@ apiRoutes.use('/auth', authRoutes);
 apiRoutes.use('/motos', publicApiLimiter, requireDatabase, motoPublicRoutes);
 apiRoutes.use('/marcas', publicApiLimiter, requireDatabase, brandPublicRoutes);
 apiRoutes.use('/store', publicApiLimiter, requireDatabase, storePublicRoutes);
+// Sem o limitador geral: o de leads (5/hora) é o que vale, e fica na rota.
+apiRoutes.use('/leads', requireDatabase, leadPublicRoutes);
 apiRoutes.get(
   '/filtros',
   publicApiLimiter,
@@ -51,3 +54,4 @@ apiRoutes.use('/admin/motos', motoAdminRoutes);
 apiRoutes.use('/admin/marcas', brandAdminRoutes);
 apiRoutes.use('/admin/usuarios', userRoutes);
 apiRoutes.use('/admin/store', storeAdminRoutes);
+apiRoutes.use('/admin/leads', leadAdminRoutes);

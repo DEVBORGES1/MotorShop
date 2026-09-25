@@ -48,6 +48,11 @@ export function Footer() {
                 Contato
               </Link>
             </li>
+            <li>
+              <Link to="/privacidade" className="text-ink-200 hover:text-brand-500">
+                Privacidade
+              </Link>
+            </li>
           </ul>
         </nav>
 

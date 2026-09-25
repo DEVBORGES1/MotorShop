@@ -21,6 +21,7 @@ import { iniciais } from '@/utils/format.js';
 
 const LINKS = [
   { to: '/admin', label: 'Painel', end: true },
+  { to: '/admin/leads', label: 'Leads' },
   { to: '/admin/motos', label: 'Motos' },
   { to: '/admin/marcas', label: 'Marcas' },
   { to: '/admin/usuarios', label: 'Usuários', apenasSuperAdmin: true },

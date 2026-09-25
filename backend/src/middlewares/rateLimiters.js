@@ -50,6 +50,18 @@ export const loginLimiter = rateLimit({
 
 export const refreshLimiter = rateLimit({ ...base, windowMs: 15 * 60 * 1000, limit: 30 });
 
+/**
+ * Formulários de lead: 5 envios por hora por IP (§8.3). Generoso para quem
+ * manda um contato e depois pergunta de outra moto; curto para spam.
+ *
+ * A fábrica existe para o teste: o limitador da aplicação é desligado em
+ * ambiente de teste (`base.skip`), e o teste do limite cria o seu, ligado.
+ */
+export const createLeadLimiter = (options = {}) =>
+  rateLimit({ ...base, windowMs: 60 * 60 * 1000, limit: 5, keyGenerator: byIp, ...options });
+
+export const leadLimiter = createLeadLimiter();
+
 export const publicApiLimiter = rateLimit({ ...base, windowMs: 15 * 60 * 1000, limit: 300 });
 
 export const adminApiLimiter = rateLimit({
