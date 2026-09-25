@@ -1012,8 +1012,8 @@ instalado no ambiente. `vitest` passou a ser dependência também do `shared`.
       próprias rotas, desde a FASE 10)*
 - [x] Os 5 fluxos E2E passam
 - [x] Testes de regressão de segurança no conjunto principal
-- [ ] CI verde, com bloqueio de merge em caso de falha — **o workflow está
-      pronto; a primeira execução acontece no GitHub com este push, e o
+- [ ] CI verde, com bloqueio de merge em caso de falha — **CI verde na
+      primeira execução no GitHub (os dois jobs, ~1min40s no total); o
       bloqueio de merge é uma regra do repositório que só o dono ativa**
       (Settings → Branches → regra para `main` exigindo os checks
       "Lint, formato, testes com cobertura e build" e "E2E (Playwright)")
