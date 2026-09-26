@@ -1,30 +1,13 @@
 import { logoUrl } from '@motorshop/shared';
 import { Link } from 'react-router-dom';
 
+import { CarrosselDestaques } from '@/components/home/CarrosselDestaques.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
-import { formatarPreco } from '@/utils/format.js';
-import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
-import { caminhoDaMoto } from '@/utils/moto.js';
 
 const ALTURA_LOGO = 56;
 
-/** Motos com foto, no máximo 3 — é o que cabe no mosaico. */
-export function motosParaMosaico(...listas) {
-  const vistas = new Set();
-  const escolhidas = [];
-
-  for (const moto of listas.flat()) {
-    if (!moto || vistas.has(moto.id ?? moto.slug) || !imagemPrincipal(moto)) continue;
-    vistas.add(moto.id ?? moto.slug);
-    escolhidas.push(moto);
-    if (escolhidas.length === 3) break;
-  }
-
-  return escolhidas;
-}
-
 /**
- * Abertura da home: logo, slogan e chamadas à esquerda; à direita, um mosaico
+ * Abertura da home: logo, slogan e chamadas à esquerda; à direita, um carrossel
  * com as motos em destaque. Sem fotos (loja nova), o texto ocupa a largura toda
  * e a identidade fica por conta da grade, do brilho e da listra no acento.
  */
@@ -89,59 +72,11 @@ export function Hero({ store, total, whatsapp, motos }) {
           </div>
         </div>
 
-        {motos.length > 0 && <Mosaico motos={motos} />}
+        {motos.length > 0 && <CarrosselDestaques motos={motos} />}
       </div>
 
       <div aria-hidden="true" className="faixa-listra absolute inset-x-0 top-0 h-1.5" />
     </section>
-  );
-}
-
-/** Uma foto grande e até duas menores, cada uma levando à página da moto. */
-function Mosaico({ motos }) {
-  return (
-    <ul className="grid grid-cols-2 gap-2 lg:col-span-5" aria-label="Motos em destaque">
-      {motos.map((moto, indice) => (
-        <li key={moto.id ?? moto.slug} className={indice === 0 ? 'col-span-2' : undefined}>
-          <FotoDoMosaico moto={moto} grande={indice === 0} />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function FotoDoMosaico({ moto, grande }) {
-  const foto = imagemPrincipal(moto);
-  const atributos = atributosDeImagem(foto, grande ? 'galeria' : 'card');
-  const tamanhos = grande ? '(min-width: 1024px) 40vw, 100vw' : '(min-width: 1024px) 20vw, 50vw';
-
-  return (
-    <Link
-      to={caminhoDaMoto(moto.slug)}
-      className={`group relative block overflow-hidden rounded-lg border border-ink-700 bg-surface-2 ${
-        grande ? 'aspect-16/10' : 'aspect-4/3'
-      }`}
-    >
-      <img
-        {...atributos}
-        sizes={atributos.srcSet ? tamanhos : undefined}
-        alt=""
-        loading={grande ? 'eager' : 'lazy'}
-        fetchPriority={grande ? 'high' : undefined}
-        decoding="async"
-        className="zoom-foto h-full w-full object-cover"
-      />
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-linear-to-t from-ink-900/90 via-transparent to-transparent"
-      />
-      <div className="absolute inset-x-0 bottom-0 flex items-end justify-between gap-3 p-3 sm:p-4">
-        <span className="text-sm font-bold text-ink-50 sm:text-base">{nomeDaMoto(moto)}</span>
-        <span className="font-display text-sm font-extrabold whitespace-nowrap text-brand-500 sm:text-base">
-          {formatarPreco(moto.price)}
-        </span>
-      </div>
-    </Link>
   );
 }
 

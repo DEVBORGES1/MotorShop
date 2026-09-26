@@ -5,7 +5,8 @@ import { MotoGrid } from '@/components/catalogo/MotoGrid.jsx';
 import { BuscaRapida } from '@/components/home/BuscaRapida.jsx';
 import { FaixaMarcas } from '@/components/home/FaixaMarcas.jsx';
 import { FaixaNumeros } from '@/components/home/FaixaNumeros.jsx';
-import { Hero, motosParaMosaico } from '@/components/home/Hero.jsx';
+import { motosParaCarrossel } from '@/components/home/CarrosselDestaques.jsx';
+import { Hero } from '@/components/home/Hero.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
@@ -63,7 +64,11 @@ export function Home() {
   // Faixas reais do estoque: alimentam a busca, os números e as marcas.
   const faixas = useAsyncData(() => publicService.filtros.get().catch(() => null), []).data;
   const total = faixas?.total || recentes.data?.meta?.total;
-  const mosaico = motosParaMosaico(destaques.data?.data, ofertas.data?.data, recentes.data?.data);
+  const carrossel = motosParaCarrossel(
+    destaques.data?.data,
+    ofertas.data?.data,
+    recentes.data?.data,
+  );
   const whatsapp = (mensagem) => linkWhatsApp(store.contact?.whatsapp, mensagem);
 
   const mostraDestaques = destaques.isLoading || destaques.data?.data?.length > 0;
@@ -76,7 +81,7 @@ export function Home() {
 
   return (
     <>
-      <Hero store={store} total={total} whatsapp={whatsapp} motos={mosaico} />
+      <Hero store={store} total={total} whatsapp={whatsapp} motos={carrossel} />
       <BuscaRapida faixas={faixas} />
       <FaixaNumeros faixas={faixas} />
       <FaixaMarcas marcas={faixas?.brands} />
