@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 
-import { abrir, entrar } from './apoio.js';
+import { abrir, entrar, percorrerPagina } from './apoio.js';
 import { CONTAS } from './dados.mjs';
 
 /**
@@ -37,6 +37,7 @@ const PAINEL = [
 
 /** Violações em texto legível: a falha diz o que corrigir e onde. */
 async function violacoes(page, caminho) {
+  await percorrerPagina(page);
   const { violations } = await new AxeBuilder({ page }).withTags(REGRAS).analyze();
   return violations.flatMap((v) =>
     v.nodes.map(

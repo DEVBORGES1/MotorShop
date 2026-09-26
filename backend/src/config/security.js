@@ -29,6 +29,9 @@ function contentSecurityPolicy() {
       // Fotos vêm do CDN do provedor; `blob:` são as prévias locais no painel.
       imgSrc: ["'self'", 'data:', 'blob:', 'https:'],
       connectSrc: ["'self'", ...(uploadOrigin ? [uploadOrigin] : [])],
+      // Único quadro que o site abre: o mapa da home, só depois de o visitante
+      // clicar em "Ver mapa". Apenas o caminho `/maps` do Google, não o domínio.
+      frameSrc: ["'self'", 'https://www.google.com/maps'],
       frameAncestors: ["'none'"],
       objectSrc: ["'none'"],
       baseUri: ["'self'"],

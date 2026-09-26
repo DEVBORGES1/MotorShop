@@ -37,6 +37,79 @@ describe('Home', () => {
     publicService.filtros.get.mockResolvedValue(FAIXAS);
   });
 
+  it('cards com parcela trazem o aviso legal uma vez, sob a grade (R-07)', async () => {
+    renderizar(<Home />);
+
+    const avisos = await screen.findAllByText(/Não constitui proposta de crédito/);
+    // Uma grade por seção com motos (destaques, ofertas e recentes): um aviso em cada.
+    expect(avisos.length).toBeGreaterThan(0);
+    expect(avisos.length).toBeLessThanOrEqual(3);
+  });
+
+  it('com o módulo de troca ligado, mostra os três passos e leva ao formulário', async () => {
+    renderizar(<Home />);
+
+    const passos = await screen.findByRole('region', { name: 'Sua moto na entrada' });
+    expect(within(passos).getAllByRole('listitem')).toHaveLength(3);
+    expect(
+      within(passos).getByRole('link', { name: 'Quero avaliar minha moto' }).getAttribute('href'),
+    ).toBe('/venda-sua-moto');
+  });
+
+  it('com o módulo de troca desligado, os passos não aparecem', async () => {
+    const store = { ...LOJA, features: { financingEnabled: true, sellMotoEnabled: false } };
+    renderizar(<Home />, { store });
+
+    await screen.findByRole('link', { name: /Ver estoque · 12 motos/ });
+    expect(screen.queryByRole('region', { name: 'Sua moto na entrada' })).toBeNull();
+  });
+
+  describe('localização', () => {
+    it('mostra endereço, horários e o "como chegar" da loja', async () => {
+      renderizar(<Home />);
+
+      const bloco = await screen.findByRole('region', { name: 'Onde estamos' });
+      expect(within(bloco).getByText('Rua das Motos, 10')).toBeTruthy();
+      expect(within(bloco).getByText('08:00 às 18:00')).toBeTruthy();
+      expect(
+        within(bloco)
+          .getByRole('link', { name: /Como chegar/ })
+          .getAttribute('href'),
+      ).toContain('google.com/maps/search');
+    });
+
+    it('o mapa só vira iframe depois do clique (nada é enviado ao Google antes)', async () => {
+      const { user, container } = renderizar(<Home />);
+      const bloco = await screen.findByRole('region', { name: 'Onde estamos' });
+
+      expect(container.querySelector('iframe')).toBeNull();
+      expect(within(bloco).getByText(/o Google recebe o seu acesso/)).toBeTruthy();
+
+      await user.click(within(bloco).getByRole('button', { name: 'Ver mapa' }));
+
+      const quadro = container.querySelector('iframe');
+      expect(quadro.getAttribute('src')).toMatch(/^https:\/\/www\.google\.com\/maps\?q=/);
+      expect(quadro.getAttribute('title')).toContain('Rua das Motos, 10');
+      expect(quadro.getAttribute('sandbox')).toBeTruthy();
+    });
+
+    it('sem endereço nem horários, o bloco não aparece', async () => {
+      const store = { ...LOJA, address: {}, businessHours: [] };
+      renderizar(<Home />, { store });
+
+      await screen.findByRole('link', { name: /Ver estoque · 12 motos/ });
+      expect(screen.queryByRole('region', { name: 'Onde estamos' })).toBeNull();
+    });
+
+    it('sem rua, mostra os dados mas sem o botão de mapa', async () => {
+      const store = { ...LOJA, address: { city: 'Chapecó', state: 'SC' } };
+      renderizar(<Home />, { store });
+
+      const bloco = await screen.findByRole('region', { name: 'Onde estamos' });
+      expect(within(bloco).queryByRole('button', { name: 'Ver mapa' })).toBeNull();
+    });
+  });
+
   it('abre com o carrossel de destaques: cada slide leva à página da moto', async () => {
     renderizar(<Home />);
 

@@ -6,8 +6,11 @@ import { BuscaRapida } from '@/components/home/BuscaRapida.jsx';
 import { FaixaMarcas } from '@/components/home/FaixaMarcas.jsx';
 import { FaixaNumeros } from '@/components/home/FaixaNumeros.jsx';
 import { motosParaCarrossel } from '@/components/home/CarrosselDestaques.jsx';
+import { ComoFunciona } from '@/components/home/ComoFunciona.jsx';
 import { Hero } from '@/components/home/Hero.jsx';
+import { Localizacao } from '@/components/home/Localizacao.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
+import { Revelar } from '@/components/ui/Revelar.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
 import { usePaginaSeo } from '@/hooks/useSeo.js';
@@ -18,7 +21,7 @@ import { linkWhatsApp } from '@/utils/whatsapp.js';
 /** Seção com título e link opcional para o estoque filtrado. */
 function Secao({ numero, titulo, descricao, verMais, children }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
+    <Revelar as="section" className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
           {numero && (
@@ -38,7 +41,7 @@ function Secao({ numero, titulo, descricao, verMais, children }) {
         )}
       </div>
       <div className="mt-7">{children}</div>
-    </section>
+    </Revelar>
   );
 }
 
@@ -133,23 +136,20 @@ export function Home() {
 
       <Beneficios itens={store.highlights} />
 
-      {/* Cada chamada leva à página do módulo e some se a loja o desligou. */}
-      <div className="mx-auto grid max-w-7xl gap-5 px-4 pb-4 sm:px-6 md:grid-cols-2">
-        {store.features?.sellMotoEnabled && (
-          <Chamada
-            titulo="Sua moto na entrada"
-            texto="Avaliamos a sua e abatemos no valor da próxima. Conte marca, modelo, ano e quilometragem."
-            acao={{ to: '/venda-sua-moto', label: 'Quero avaliar' }}
-          />
-        )}
-        {store.features?.financingEnabled && (
+      {/* Cada bloco leva à página do módulo e some se a loja o desligou. */}
+      {store.features?.sellMotoEnabled && <ComoFunciona />}
+
+      {store.features?.financingEnabled && (
+        <div className="mx-auto max-w-7xl px-4 pb-4 sm:px-6">
           <Chamada
             titulo="Financiamento"
             texto="Simule as parcelas agora e envie para a loja. Sem compromisso."
             acao={{ to: '/financiamento', label: 'Simular agora' }}
           />
-        )}
-      </div>
+        </div>
+      )}
+
+      <Localizacao store={store} />
 
       <SobreResumo store={store} />
     </>
@@ -166,11 +166,11 @@ function Beneficios({ itens }) {
   return (
     <section className="border-y border-ink-800 bg-surface">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-3">
-        {itens.map(({ title, text }) => (
-          <div key={title}>
+        {itens.map(({ title, text }, indice) => (
+          <Revelar key={title} atraso={indice * 120}>
             <h2 className="label-caps text-[12px] text-brand-500">{title}</h2>
             {text && <p className="mt-2.5 text-sm text-ink-400">{text}</p>}
-          </div>
+          </Revelar>
         ))}
       </div>
     </section>
@@ -178,36 +178,40 @@ function Beneficios({ itens }) {
 }
 
 function Chamada({ titulo, texto, acao }) {
+  const classe = buttonClass({ size: 'lg', className: 'shrink-0' });
+
   return (
-    <section className="rounded-lg border border-ink-800 bg-surface p-8">
-      <h2 className="text-xl font-extrabold tracking-tight">{titulo}</h2>
-      <p className="mt-2 text-sm text-ink-400">{texto}</p>
+    <Revelar
+      as="section"
+      className="flex flex-col gap-6 rounded-lg border border-l-4 border-ink-800 border-l-brand-500 bg-surface p-8 md:flex-row md:items-center md:justify-between"
+    >
+      <div>
+        <h2 className="text-xl font-extrabold tracking-tight">{titulo}</h2>
+        <p className="mt-2 max-w-xl text-sm text-ink-400">{texto}</p>
+      </div>
       {acao.to ? (
-        <Link to={acao.to} className={buttonClass({ className: 'mt-6' })}>
+        <Link to={acao.to} className={classe}>
           {acao.label}
         </Link>
       ) : (
-        <a
-          href={acao.href}
-          target="_blank"
-          rel="noreferrer noopener"
-          className={buttonClass({ className: 'mt-6' })}
-        >
+        <a href={acao.href} target="_blank" rel="noreferrer noopener" className={classe}>
           {acao.label}
         </a>
       )}
-    </section>
+    </Revelar>
   );
 }
 
 function SobreResumo({ store }) {
   return (
-    <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
-      <h2 className="text-2xl font-extrabold tracking-tight">Sobre a {store.name}</h2>
+    <Revelar as="section" className="mx-auto max-w-7xl px-4 py-16 sm:px-6">
+      <h2 className="titulo-traco text-2xl font-extrabold tracking-tight sm:text-3xl">
+        Sobre a {store.name}
+      </h2>
       {store.slogan && <p className="mt-3 max-w-2xl text-ink-400">{store.slogan}</p>}
       <Link to="/sobre" className={buttonClass({ variant: 'secondary', className: 'mt-6' })}>
         Conhecer a loja
       </Link>
-    </section>
+    </Revelar>
   );
 }

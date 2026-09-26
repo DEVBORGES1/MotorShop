@@ -2,7 +2,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { DONO, motoDeTeste, renderizar } from '@/test/renderizar.jsx';
+import { DONO, LOJA, motoDeTeste, renderizar } from '@/test/renderizar.jsx';
 
 import { MotoCard } from './MotoCard.jsx';
 
@@ -67,6 +67,21 @@ describe('MotoCard', () => {
     });
 
     expect(screen.queryByRole('link', { name: /Tenho interesse/ })).toBeNull();
+  });
+
+  it('mostra a parcela estimada com o prazo maior e a entrada mínima da loja', () => {
+    card(motoDeTeste({ price: 30000 }));
+
+    // 30.000 com 20% de entrada, 48x a 1,79% a.m. (o mesmo número do simulador).
+    expect(screen.getByText(/48x de R\$\s*749,39/)).toBeTruthy();
+  });
+
+  it('sem financiamento ligado, o card não mostra parcela', () => {
+    renderizar(<MotoCard moto={motoDeTeste()} />, {
+      store: { ...LOJA, features: { financingEnabled: false, sellMotoEnabled: true } },
+    });
+
+    expect(screen.queryByText(/\dx de R\$/)).toBeNull();
   });
 
   it('visitante não vê o atalho "Editar"', () => {

@@ -1,4 +1,9 @@
-import { checkFinancingRules, minimumDownPayment, simulateFinancing } from '@motorshop/shared';
+import {
+  checkFinancingRules,
+  isFinancingConfigured,
+  minimumDownPayment,
+  simulateFinancing,
+} from '@motorshop/shared';
 
 /**
  * Estado do simulador de financiamento, sem React.
@@ -57,4 +62,22 @@ export function tabelaDePrazos({ valor, entrada }, financing) {
     });
     return { parcelas, valor: simulacao.valid ? simulacao.installmentValue : null };
   });
+}
+
+/**
+ * Parcela estimada para o card da moto: maior prazo oferecido, entrada mínima
+ * da loja. É o mesmo ponto de partida do simulador da página da moto, então
+ * o número do card e o do simulador coincidem.
+ *
+ * @returns {{ parcelas: number, valor: number } | null} `null` quando a loja
+ *   não simula ou a moto não tem preço — o card simplesmente não mostra a linha.
+ */
+export function parcelaEstimada(preco, features, financing) {
+  if (!features?.financingEnabled || !isFinancingConfigured(financing) || !(preco > 0)) return null;
+
+  const parcelas = parcelasIniciais(financing);
+  const entrada = entradaInicial(preco, financing);
+  const resultado = resultadoDaSimulacao({ valor: preco, entrada, parcelas }, financing);
+
+  return resultado.erro ? null : { parcelas, valor: resultado.installmentValue };
 }

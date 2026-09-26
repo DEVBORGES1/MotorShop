@@ -10,6 +10,7 @@ import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js
 import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
 import { caminhoDaMoto, caminhoDeEdicao, urlDaMoto } from '@/utils/moto.js';
 import { carregarMotoDetalhe } from '@/routes/carregadores.js';
+import { parcelaEstimada } from '@/utils/simulador.js';
 import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
 
 /**
@@ -30,9 +31,10 @@ export function MotoCard({ moto }) {
 
   const url = urlDaMoto(moto.slug, useBaseDoSite(store));
   const whatsapp = linkWhatsApp(store.contact?.whatsapp, mensagemInteresse(moto, url));
+  const parcela = parcelaEstimada(moto.price, store.features, store.financing);
 
   return (
-    <article className="relative flex flex-col overflow-hidden rounded-lg border border-ink-800 bg-surface transition hover:border-ink-600">
+    <article className="group relative flex flex-col overflow-hidden rounded-lg border border-ink-800 bg-surface transition hover:border-brand-500/60">
       <div className="relative aspect-4/3 overflow-hidden bg-surface-2">
         {foto ? (
           <img
@@ -40,7 +42,7 @@ export function MotoCard({ moto }) {
             alt={foto.alt}
             loading="lazy"
             decoding="async"
-            className="h-full w-full object-cover"
+            className="zoom-foto h-full w-full object-cover"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-xs text-ink-400">
@@ -96,10 +98,21 @@ export function MotoCard({ moto }) {
               {formatarPreco(moto.previousPrice)}
             </span>
           )}
-          <span className="font-display text-xl font-extrabold text-brand-500">
+          <span className="font-display text-2xl font-extrabold text-brand-500">
             {formatarPreco(moto.price)}
           </span>
         </p>
+
+        {parcela && (
+          // O asterisco remete ao aviso legal que a grade mostra (R-07).
+          <p className="mt-1 text-xs text-ink-200">
+            ou{' '}
+            <strong className="font-bold text-ink-50">
+              {parcela.parcelas}x de {formatarPreco(parcela.valor)}
+            </strong>
+            *
+          </p>
+        )}
 
         {whatsapp && (
           <a

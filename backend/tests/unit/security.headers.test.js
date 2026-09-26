@@ -21,6 +21,16 @@ describe('cabeçalhos de segurança', () => {
     expect(csp).toContain("frame-ancestors 'none'");
   });
 
+  it('CSP deixa o site abrir quadro só do mapa do Google (home)', async () => {
+    const { createApp } = await import('../../src/app.js');
+    const res = await request(createApp()).get('/api');
+
+    const frameSrc = res.headers['content-security-policy']
+      .split(';')
+      .find((d) => d.startsWith('frame-src '));
+    expect(frameSrc).toBe("frame-src 'self' https://www.google.com/maps");
+  });
+
   it('sem HSTS fora de produção (localhost em http)', async () => {
     const { createApp } = await import('../../src/app.js');
     const res = await request(createApp()).get('/api');

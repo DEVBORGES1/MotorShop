@@ -5,7 +5,7 @@ import { FINANCING_DISCLAIMER } from '@motorshop/shared';
  * pacote compartilhado — é o mesmo em qualquer tela, e mudar a redação é
  * decisão consciente, num lugar só.
  */
-export function AvisoSimulacao({ className = '' }) {
+export function AvisoSimulacao({ className = '', marcador, detalhe }) {
   return (
     <p role="note" className={`flex gap-2 text-xs leading-relaxed text-ink-400 ${className}`}>
       <svg
@@ -16,7 +16,11 @@ export function AvisoSimulacao({ className = '' }) {
         <circle cx="8" cy="8" r="6.5" />
         <path d="M8 4.5v4.2M8 11h.01" />
       </svg>
-      {FINANCING_DISCLAIMER}
+      <span>
+        {marcador && <span aria-hidden="true">{marcador} </span>}
+        {detalhe && `${detalhe} `}
+        {FINANCING_DISCLAIMER}
+      </span>
     </p>
   );
 }

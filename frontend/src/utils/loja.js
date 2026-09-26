@@ -66,3 +66,74 @@ export function horariosAgrupados(businessHours = []) {
     horario,
   }));
 }
+
+// --- Localização e horário --------------------------------------------------
+
+const paraMinutos = (hhmm) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+};
+
+const aberto = (dia) => dia && !dia.closed && dia.opensAt && dia.closesAt;
+
+/**
+ * Situação da loja agora, a partir dos horários configurados.
+ *
+ * Usa o relógio de quem visita: quem consulta a loja costuma estar no mesmo
+ * fuso, e assim nenhum fuso é escrito no código de um produto revendável.
+ * Como depende da hora, só deve ser chamada depois da montagem — o HTML gerado
+ * no servidor não pode conter "aberto agora" de outra hora.
+ *
+ * @returns {{ aberto: boolean, texto: string } | null} `null` sem horários
+ */
+export function statusDeAbertura(businessHours = [], agora = new Date()) {
+  const porDia = new Map(businessHours.map((h) => [h.weekday, h]));
+  if (![...porDia.values()].some(aberto)) return null;
+
+  const hoje = porDia.get(agora.getDay());
+  const minutos = agora.getHours() * 60 + agora.getMinutes();
+
+  if (aberto(hoje)) {
+    if (minutos >= paraMinutos(hoje.opensAt) && minutos < paraMinutos(hoje.closesAt)) {
+      return { aberto: true, texto: `Aberto agora · fecha às ${hoje.closesAt}` };
+    }
+    if (minutos < paraMinutos(hoje.opensAt)) {
+      return { aberto: false, texto: `Fechado agora · abre hoje às ${hoje.opensAt}` };
+    }
+  }
+
+  for (let passo = 1; passo <= 7; passo += 1) {
+    const weekday = (agora.getDay() + passo) % 7;
+    const dia = porDia.get(weekday);
+    if (aberto(dia)) {
+      const quando = passo === 1 ? 'amanhã' : DIAS[weekday];
+      return { aberto: false, texto: `Fechado agora · abre ${quando} às ${dia.opensAt}` };
+    }
+  }
+
+  return null;
+}
+
+/** Texto de busca do endereço para o mapa; `null` sem rua, não há o que marcar. */
+export function consultaDoMapa(address = {}) {
+  if (!address.street) return null;
+  const rua = [address.street, address.number].filter(Boolean).join(', ');
+  return [rua, address.district, address.city, address.state].filter(Boolean).join(', ');
+}
+
+/** Mapa para incorporar na página. Só é aberto depois de o visitante pedir. */
+export function urlDoMapaIncorporado(address) {
+  const consulta = consultaDoMapa(address);
+  return consulta
+    ? `https://www.google.com/maps?q=${encodeURIComponent(consulta)}&hl=pt-BR&output=embed`
+    : null;
+}
+
+/** "Como chegar": o link que o lojista configurou ou, sem ele, uma busca pelo endereço. */
+export function urlDeRota(address = {}) {
+  if (address.mapsUrl) return address.mapsUrl;
+  const consulta = consultaDoMapa(address);
+  return consulta
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(consulta)}`
+    : null;
+}

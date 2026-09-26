@@ -35,6 +35,7 @@ style-src 'self' 'unsafe-inline';
 font-src 'self';
 img-src 'self' data: blob: https:;
 connect-src 'self' <origem de upload do provedor de imagens>;
+frame-src 'self' https://www.google.com/maps;
 frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
 ```
 
@@ -50,6 +51,12 @@ frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
   URL https cadastrada pela loja.
 - `connect-src` inclui só a origem de upload do provedor configurado — é para
   onde o navegador envia as fotos (§6).
+- `frame-src` libera só o caminho `/maps` do Google, para o mapa da home. O
+  quadro **não carrega na abertura**: aparece um botão "Ver mapa" e o
+  `<iframe>` só é criado depois do clique, com `sandbox` e
+  `referrerpolicy="no-referrer"`. Assim o Google não recebe o acesso de quem
+  não pediu o mapa (LGPD) e a home não paga o peso dele. O aviso ao lado do
+  botão diz que o Google recebe o acesso.
 
 Verificado no navegador: o site público e o painel funcionam sem nenhuma
 violação de CSP no console.

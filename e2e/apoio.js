@@ -16,6 +16,27 @@ export async function abrir(page, caminho) {
   return resposta;
 }
 
+/**
+ * Rola a página de ponta a ponta e espera as entradas suaves terminarem.
+ *
+ * Os blocos abaixo da dobra só aparecem quando entram na tela (`Revelar`). Medir
+ * contraste antes disso pegaria o quadro no meio do fade — a cor misturada com o
+ * fundo, que nenhum visitante vê em repouso. A animação segue ligada: o que se
+ * mede é a página como fica depois de lida.
+ */
+export async function percorrerPagina(page) {
+  const altura = await page.evaluate(() => document.documentElement.scrollHeight);
+  const passo = await page.evaluate(() => Math.max(window.innerHeight / 2, 200));
+
+  for (let y = 0; y < altura; y += passo) {
+    await page.evaluate((topo) => window.scrollTo(0, topo), y);
+    await page.waitForTimeout(80);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  // A entrada dura 700 ms, mais o atraso escalonado dos itens.
+  await page.waitForTimeout(1200);
+}
+
 /** Entra no painel pela tela de login, como a pessoa faz. */
 export async function entrar(page, conta) {
   await page.goto('/admin/login');
