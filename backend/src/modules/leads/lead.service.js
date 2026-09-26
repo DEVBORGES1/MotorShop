@@ -25,6 +25,17 @@ import { dataToStorage, serializeCreated, serializeLead } from './lead.serialize
  */
 
 /**
+ * Tipos de lead que pertencem a um módulo da loja. Com o módulo desligado a
+ * página some do site (404) — e a API também recusa, senão um envio direto
+ * (robô, formulário antigo em cache) criaria lead de um serviço que a loja não
+ * oferece.
+ */
+const MODULO_DO_TIPO = Object.freeze({
+  [LEAD_TYPE.SELL_MOTO]: 'sellMotoEnabled',
+  [LEAD_TYPE.FINANCING]: 'financingEnabled',
+});
+
+/**
  * Cria um lead a partir do formulário público.
  *
  * @param {object} input corpo já validado por `createLeadSchema`
@@ -38,6 +49,14 @@ export async function create(input, { now = new Date() } = {}) {
   if (website) {
     logger.info({ type: lead.type }, 'Lead descartado pelo honeypot');
     return { id: randomBytes(12).toString('hex'), type: lead.type, createdAt: now };
+  }
+
+  const modulo = MODULO_DO_TIPO[lead.type];
+  const store = modulo ? await storeRepository.findPublic() : null;
+  if (store?.features?.[modulo] === false) {
+    throw new ApiError(422, 'Dados inválidos', [
+      { field: 'type', code: 'disabled', message: 'Este serviço não está disponível na loja' },
+    ]);
   }
 
   if (lead.moto) {
@@ -63,7 +82,7 @@ export async function create(input, { now = new Date() } = {}) {
     return serializeCreated(repetido);
   }
 
-  const data = lead.type === LEAD_TYPE.FINANCING ? await financingData(lead.data) : lead.data;
+  const data = lead.type === LEAD_TYPE.FINANCING ? financingData(lead.data, store) : lead.data;
 
   const created = await repository.create({
     ...lead,
@@ -84,8 +103,7 @@ export async function create(input, { now = new Date() } = {}) {
  * que valia no momento do envio — se a loja mudar a taxa amanhã, o lead
  * continua dizendo o que foi simulado.
  */
-async function financingData(input) {
-  const store = await storeRepository.findPublic();
+function financingData(input, store) {
   const erro = checkFinancingRules(input, store?.financing);
   if (erro) {
     throw new ApiError(422, 'Dados inválidos', [{ field: 'data', code: 'custom', message: erro }]);

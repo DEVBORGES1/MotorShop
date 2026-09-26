@@ -1,7 +1,8 @@
-import { FINANCING_INSTALLMENT_CHOICES } from '@motorshop/shared';
+import { FINANCING_INSTALLMENT_CHOICES, STORE_HIGHLIGHTS } from '@motorshop/shared';
 import { useEffect, useState } from 'react';
 
 import { FormSection } from '@/components/admin/FormSection.jsx';
+import { ImagemDaLoja } from '@/components/admin/ImagemDaLoja.jsx';
 import { PageHeader } from '@/components/admin/PageHeader.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
 import { Button } from '@/components/ui/Button.jsx';
@@ -49,6 +50,9 @@ const VAZIO = {
   theme: { primary: '#4CD62B', secondary: '#0A0B0A', accent: '#38C172' },
   features: { financingEnabled: true, sellMotoEnabled: true },
   financing: { monthlyRate: '', installmentOptions: [], minDownPaymentPercent: '' },
+  seo: { siteUrl: '', defaultTitle: '', defaultDescription: '' },
+  // Sempre três espaços na tela; os vazios não vão para a API.
+  highlights: Array.from({ length: STORE_HIGHLIGHTS.MAX }, () => ({ title: '', text: '' })),
   horarios: horariosParaFormulario([]),
 };
 
@@ -76,6 +80,11 @@ function comDefaults(dados) {
     contact: { ...VAZIO.contact, ...(dados.contact ?? {}) },
     address: { ...VAZIO.address, ...(dados.address ?? {}) },
     social: { ...VAZIO.social, ...(dados.social ?? {}) },
+    seo: { ...VAZIO.seo, ...(dados.seo ?? {}) },
+    highlights: VAZIO.highlights.map((vazio, i) => ({
+      title: dados.highlights?.[i]?.title ?? '',
+      text: dados.highlights?.[i]?.text ?? '',
+    })),
     theme: { ...VAZIO.theme, ...(dados.theme ?? {}) },
     features: { ...VAZIO.features, ...(dados.features ?? {}) },
     financing: {
@@ -108,7 +117,13 @@ export function Configuracoes() {
   const [salvando, setSalvando] = useState(false);
   const [errosHorario, setErrosHorario] = useState({});
 
+  // Logo e imagem de compartilhamento salvam na hora (ImagemDaLoja), fora do
+  // formulário: guardadas à parte para o "Salvar" não as sobrescrever.
+  const [imagens, setImagens] = useState({ logo: null, ogImage: null });
+  const aoAlterarImagem = (loja) => setImagens({ logo: loja.logo, ogImage: loja.ogImage });
+
   useEffect(() => {
+    setImagens({ logo: data?.logo ?? null, ogImage: data?.ogImage ?? null });
     setForm(comDefaults(data));
   }, [data]);
 
@@ -118,6 +133,14 @@ export function Configuracoes() {
         ? { ...atual, [secao]: { ...atual[secao], [chave]: evento.target.value } }
         : { ...atual, [chave]: evento.target.value },
     );
+
+  const alterarDiferencial = (indice, chave) => (evento) =>
+    setForm((atual) => ({
+      ...atual,
+      highlights: atual.highlights.map((item, i) =>
+        i === indice ? { ...item, [chave]: evento.target.value } : item,
+      ),
+    }));
 
   const alternarPrazo = (prazo) => (evento) =>
     setForm((atual) => {
@@ -168,6 +191,10 @@ export function Configuracoes() {
         contact: paraEnvio(form.contact),
         address: paraEnvio(form.address),
         social: paraEnvio(form.social),
+        seo: paraEnvio(form.seo),
+        highlights: form.highlights
+          .filter((item) => item.title.trim())
+          .map((item) => ({ title: item.title.trim(), text: item.text.trim() || null })),
         businessHours: horariosParaEnvio(form.horarios),
         features: form.features,
         financing: {
@@ -228,6 +255,29 @@ export function Configuracoes() {
           {campo(null, 'name', 'Nome da loja')}
           {campo(null, 'slogan', 'Slogan')}
           {campo(null, 'legalName', 'Razão social', { hint: 'Nome registrado da empresa' })}
+        </FormSection>
+
+        <FormSection
+          titulo="Logo e imagem de compartilhamento"
+          colunas={1}
+          descricao="Salvas assim que enviadas. JPG, PNG, WebP ou AVIF, até 10 MB."
+        >
+          <ImagemDaLoja
+            tipo="logo"
+            titulo="Logo"
+            descricao="Aparece no cabeçalho do site (44 px de altura) e vira o ícone da aba. Prefira fundo transparente (PNG)."
+            imagem={imagens.logo}
+            podeEditar={podeEditar}
+            onAlterada={aoAlterarImagem}
+          />
+          <ImagemDaLoja
+            tipo="ogImage"
+            titulo="Imagem de compartilhamento"
+            descricao="Preview quando alguém envia o link do site no WhatsApp ou nas redes. Ideal: 1200 × 630 px. Sem ela, vale o logo."
+            imagem={imagens.ogImage}
+            podeEditar={podeEditar}
+            onAlterada={aoAlterarImagem}
+          />
         </FormSection>
 
         <FormSection titulo="Contato" colunas={3}>
@@ -367,13 +417,69 @@ export function Configuracoes() {
         </FormSection>
 
         <FormSection
+          titulo="Diferenciais (página inicial)"
+          colunas={2}
+          descricao="O que a loja promete ao cliente — ex.: “Troca aceita”, “Revisadas antes da vitrine”. Aparecem numa faixa da página inicial; sem nenhum, a faixa não aparece. Escreva só o que a loja cumpre."
+        >
+          {form.highlights.map((item, indice) => (
+            <div key={indice} className="contents">
+              <Field id={`destaque-${indice}-titulo`} label={`Diferencial ${indice + 1}`}>
+                {(props) => (
+                  <input
+                    {...props}
+                    value={item.title}
+                    maxLength={STORE_HIGHLIGHTS.MAX_TITLE}
+                    onChange={alterarDiferencial(indice, 'title')}
+                    disabled={!podeEditar}
+                    className={inputClass}
+                  />
+                )}
+              </Field>
+              <Field
+                id={`destaque-${indice}-texto`}
+                label={`Explicação do diferencial ${indice + 1}`}
+              >
+                {(props) => (
+                  <input
+                    {...props}
+                    value={item.text}
+                    maxLength={STORE_HIGHLIGHTS.MAX_TEXT}
+                    onChange={alterarDiferencial(indice, 'text')}
+                    disabled={!podeEditar}
+                    className={inputClass}
+                  />
+                )}
+              </Field>
+            </div>
+          ))}
+        </FormSection>
+
+        <FormSection
+          titulo="Endereço e busca (SEO)"
+          colunas={1}
+          descricao="O endereço é a base de todos os links que o site gera: Google, sitemap, preview no WhatsApp e mensagens de interesse. Título e descrição valem para a página inicial nos resultados de busca."
+        >
+          {campo('seo', 'siteUrl', 'Endereço do site', {
+            type: 'url',
+            hint: 'Com https://, sem barra no fim — ex.: https://www.sualoja.com.br',
+          })}
+          {campo('seo', 'defaultTitle', 'Título da página inicial', {
+            hint: 'Até 70 caracteres. Vazio: nome da loja + slogan',
+          })}
+          {campo('seo', 'defaultDescription', 'Descrição para o Google', {
+            hint: 'Até 180 caracteres. Vazio: o slogan',
+          })}
+        </FormSection>
+
+        <FormSection
           titulo="Cores"
           colunas={3}
-          descricao="A primária é aplicada ao site público assim que salva, sem nova compilação. Os tons de hover e o texto sobre ela são derivados automaticamente, com contraste garantido."
+          descricao="Aplicada ao site público assim que salva, sem nova compilação: botões, links e destaques. Os tons de hover e a cor do texto sobre ela são derivados automaticamente, com contraste garantido."
         >
-          {campo('theme', 'primary', 'Primária', { type: 'color' })}
-          {campo('theme', 'secondary', 'Secundária', { type: 'color' })}
-          {campo('theme', 'accent', 'Destaque', { type: 'color' })}
+          {campo('theme', 'primary', 'Cor da marca', {
+            type: 'color',
+            hint: 'Cores escuras são clareadas automaticamente no site, para o texto continuar legível sobre o fundo escuro.',
+          })}
         </FormSection>
 
         {podeEditar && (

@@ -141,7 +141,7 @@ export function Financiamento() {
           {store.features?.sellMotoEnabled && (
             <Pergunta titulo="Posso dar minha moto como entrada?">
               Pode.{' '}
-              <Link to="/venda-sua-moto" className="text-brand-500 hover:underline">
+              <Link to="/venda-sua-moto" className="text-brand-500 underline underline-offset-2">
                 Peça a avaliação da sua moto
               </Link>{' '}
               e use o valor na entrada.

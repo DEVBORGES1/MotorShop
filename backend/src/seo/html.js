@@ -30,6 +30,10 @@ const meta = (attr, key, content) =>
 export function renderHead(seo, initialData, preloads = [], imagePreload = null, themeCss = '') {
   const tags = [
     `<title data-seo>${escapeHtml(seo.title)}</title>`,
+    // Ícone da aba: o logo da loja (quadrado, PNG) ou o ícone padrão do produto.
+    seo.icon
+      ? `<link rel="icon" type="image/png" href="${escapeHtml(seo.icon)}">`
+      : '<link rel="icon" type="image/svg+xml" href="/favicon.svg">',
     meta('name', 'description', seo.description),
     meta('name', 'robots', seo.robots),
     `<link rel="canonical" href="${escapeHtml(seo.canonical)}" data-seo>`,

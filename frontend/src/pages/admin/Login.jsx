@@ -53,12 +53,12 @@ export function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center px-4">
+    <main className="flex min-h-screen items-center justify-center px-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <span className="font-display text-2xl font-extrabold tracking-tight text-ink-50">
+          <h1 className="font-display text-2xl font-extrabold tracking-tight text-ink-50">
             {store.name}
-          </span>
+          </h1>
           <p className="label-caps mt-2 text-[10px] text-ink-500">Painel administrativo</p>
         </div>
 
@@ -104,6 +104,6 @@ export function Login() {
           <code className="text-ink-200">npm run create:superadmin</code>
         </p>
       </div>
-    </div>
+    </main>
   );
 }

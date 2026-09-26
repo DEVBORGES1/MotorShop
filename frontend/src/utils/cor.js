@@ -30,7 +30,7 @@ const rgbParaHex = ([r, g, b]) => `#${doisDigitos(r)}${doisDigitos(g)}${doisDigi
 const limitar = (n, min, max) => Math.min(Math.max(n, min), max);
 
 /** Luminância relativa da WCAG. */
-export function luminancia(hex) {
+function luminancia(hex) {
   const rgb = hexParaRgb(hex);
   if (!rgb) return null;
 
@@ -101,17 +101,40 @@ export function corDeTextoSobre(hex, { escuro = '#07120a', claro = '#f2f4f1' } =
   return comEscuro >= contraste(hex, claro) ? escuro : claro;
 }
 
+/** O fundo mais claro sobre o qual a cor da marca aparece como texto (`surface-2`). */
+const FUNDO_MAIS_CLARO = '#191d19';
+/** 4,5 é o mínimo AA para texto pequeno; a folga cobre o arredondamento do hex. */
+const CONTRASTE_DE_TEXTO = 4.6;
+
+/**
+ * A cor da marca vira texto (links, menu ativo, rótulos) sobre o fundo escuro
+ * do site. Uma cor escura — azul-marinho, vinho, roxo — sumiria ali. Em vez de
+ * recusar a escolha do lojista, ela é clareada no mesmo matiz até ficar
+ * legível; cores que já passam saem intactas.
+ */
+export function corLegivel(hex) {
+  if (!hexParaRgb(hex)) return null;
+
+  let cor = hex;
+  // 50 passos de 2 pontos cobrem do preto ao branco.
+  for (let i = 0; i < 50 && contraste(cor, FUNDO_MAIS_CLARO) < CONTRASTE_DE_TEXTO; i++) {
+    cor = ajustarLuminosidade(cor, 2);
+  }
+  return cor;
+}
+
 /**
  * Variáveis CSS derivadas da cor primária da loja.
  * Devolve `{}` quando a cor é inválida ou ausente — aí vale o tema padrão.
  */
 export function variaveisDoTema(primaria) {
-  if (!hexParaRgb(primaria)) return {};
+  const marca = corLegivel(primaria);
+  if (!marca) return {};
 
   return {
-    '--color-brand-500': primaria,
-    '--color-brand-400': ajustarLuminosidade(primaria, 12),
-    '--color-brand-600': ajustarLuminosidade(primaria, -10),
-    '--color-on-brand': corDeTextoSobre(primaria),
+    '--color-brand-500': marca,
+    '--color-brand-400': ajustarLuminosidade(marca, 12),
+    '--color-brand-600': ajustarLuminosidade(marca, -10),
+    '--color-on-brand': corDeTextoSobre(marca),
   };
 }

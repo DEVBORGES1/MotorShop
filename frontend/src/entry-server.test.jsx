@@ -41,6 +41,29 @@ describe('render (renderização no servidor)', () => {
     expect(html).not.toContain('<script');
   });
 
+  it('diferenciais só aparecem se a loja os configurou — nenhuma promessa fixa no código', async () => {
+    const sem = await renderizar('/');
+    expect(sem).not.toContain('Troca aceita');
+    expect(sem).not.toContain('Revisadas antes da vitrine');
+
+    const com = await render({
+      url: `${ORIGEM}/`,
+      dados: { store: { ...store, highlights: [{ title: 'Garantia de 90 dias', text: null }] } },
+    });
+    expect(com).toContain('Garantia de 90 dias');
+  });
+
+  it('telefone da loja aparece com máscara no cabeçalho e no rodapé, e o link discado só com dígitos', async () => {
+    const html = await render({
+      url: `${ORIGEM}/`,
+      dados: { store: { ...store, contact: { ...store.contact, phone: '4935550000' } } },
+    });
+
+    expect(html).toContain('(49) 3555-0000');
+    expect(html).toContain('href="tel:4935550000"');
+    expect(html).not.toContain('>4935550000<');
+  });
+
   it('página da moto sai com título, preço e ficha — e escapa o texto do banco', async () => {
     const html = await renderizar(`/motos/${moto.slug}`, { moto, motoSlug: moto.slug });
 

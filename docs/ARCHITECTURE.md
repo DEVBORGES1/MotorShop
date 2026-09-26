@@ -1,9 +1,11 @@
 # MotorShop — Documento de Arquitetura (FASE 0)
 
-> **Status:** FASE 0 — Arquitetura. Nenhuma funcionalidade implementada.
-> **Data:** 2026-09-12
-> **Escopo deste documento:** definir arquitetura, modelos, contratos de API, fluxos,
-> decisões técnicas e riscos **antes** de qualquer implementação.
+> **Status:** escrito na FASE 0 (2026-09-12) e revisado na FASE 13
+> (2026-09-26) para refletir o que foi **construído**. Onde a construção
+> divergiu do plano, a seção traz uma nota "Como construído".
+> **Escopo deste documento:** arquitetura, modelos, contratos de API, fluxos,
+> decisões técnicas e riscos. Referência de endpoints como construída:
+> [`API.md`](./API.md). Débito conhecido: [`TECHNICAL-DEBT.md`](./TECHNICAL-DEBT.md).
 
 ---
 
@@ -681,6 +683,20 @@ tema como variáveis CSS. Trocar a loja = trocar um documento, não recompilar.
 `features` é o interruptor que permite vender o produto com módulos ligados ou
 desligados por cliente, sem branch de código.
 
+> **Como construído (FASE 13).** Construídos e editáveis no painel: `name`,
+> `legalName`, `slogan`, `logo` e `ogImage` (enviados ao provedor pelo mesmo
+> fluxo assinado das fotos; o **ícone da aba é gerado do logo**),
+> `theme.primary`, `contact`, `address` (sem `geo`), `social` (Instagram,
+> Facebook, YouTube), `businessHours`, `seo` (`siteUrl`, `defaultTitle`,
+> `defaultDescription`), `features` (financiamento e venda sua moto) e
+> `financing`. Acrescentado: **`highlights`** — até 3 diferenciais da loja
+> exibidos na home (antes eram texto fixo no código). Não construídos, por
+> falta de uso no briefing: `favicon` separado, `theme.neutral/radius/fontes`,
+> `seo.titleTemplate`, `social.tiktok`, `features.tradeInEnabled`
+> (TECHNICAL-DEBT DT-10). `theme.secondary/accent` existem no modelo, mas o
+> site deriva tudo da primária (DT-04). Como uma loja nova preenche cada campo:
+> [`CUSTOMIZATION.md`](./CUSTOMIZATION.md).
+
 > Já é a futura entidade `Store`/`Tenant`. Não há `storeId` em Moto/Brand/Lead
 > agora — seria campo morto (você pediu para não antecipar). O caminho de
 > migração está em §14.3.
@@ -758,7 +774,7 @@ Códigos usados: `400` semântica inválida · `401` não autenticado ·
 |---|---|---|
 | `GET` | `/api/motos` | Lista paginada + filtros + ordenação |
 | `GET` | `/api/motos/slug/:slug` | **Rota canônica** da página de detalhe |
-| `GET` | `/api/motos/:id/similares` | Motos relacionadas (mesma faixa/marca) |
+| `GET` | `/api/motos/slug/:slug/similares` | Motos relacionadas (mesma faixa/marca) — por slug, como construído |
 | `GET` | `/api/marcas` | Marcas ativas, com contagem de motos |
 | `GET` | `/api/store` | Configuração pública da loja |
 | `GET` | `/api/filtros` | Faixas reais para montar os filtros (§6.6) |
@@ -829,6 +845,14 @@ page       limit         (limit padrão 12, máximo 48)
 | `GET` | `/sitemap.xml` | público, gerado da base |
 | `GET` | `/robots.txt` | público |
 | `GET` | `/api/health` | público, sem detalhe interno |
+
+> **Como construído.** Além das rotas acima: `PATCH /api/admin/motos/:id/imagens/:imageId`
+> (texto alternativo), `POST /api/admin/leads/exclusao` (exclusão em lote,
+> decisão E), `GET /api/admin/marcas[/:id]`, `GET /api/admin/usuarios/:id` e
+> as imagens da loja — `POST /api/admin/store/imagens/assinatura`,
+> `PUT|DELETE /api/admin/store/imagens/:tipo` (`logo` ou `ogImage`, SUPER_ADMIN).
+> Tipo de lead de um módulo desligado é recusado com 422. Referência completa
+> em [`API.md`](./API.md).
 
 **Simulação de financiamento roda no cliente** (função pura, testável) — não há
 endpoint. É cálculo determinístico sem dado sensível; ir ao servidor só
@@ -1639,6 +1663,14 @@ Regra que sustenta isso: **nenhum componente contém dado de loja**. Nome, logo,
 WhatsApp, endereço, horário e redes vêm todos do contexto de configuração
 (§5.5).
 
+> **Como construído.** Tailwind 4 declara os tokens em `@theme`
+> (`frontend/src/styles/index.css`); a loja troca `--color-brand-500`, e os
+> tons de hover e a cor do texto sobre ela são derivados em
+> `frontend/src/utils/cor.js`. O servidor já manda o tema no HTML
+> (`<style id="tema">`), sem piscar a cor padrão. Uma cor escura demais para o
+> fundo do site é clareada no mesmo tom até o contraste AA — o E2E de
+> acessibilidade roda com a cor de outra loja para garantir isso.
+
 ### 14.3 Escalar para multi-loja (sem implementar agora)
 
 Você pediu explicitamente para não implementar multi-tenancy. O que está sendo
@@ -1843,9 +1875,7 @@ critérios de conclusão e testes de cada fase — em **[`docs/ROADMAP.md`](./RO
 
 ### Situação atual
 
-FASE 0 concluída. **Nenhuma linha de código de aplicação foi escrita, nenhuma
-dependência instalada, nenhum arquivo de configuração criado** — conforme sua
-instrução.
-
-**Aguardo sua autorização para iniciar a FASE 1**, preferencialmente junto com
-as respostas às decisões A–I de §15.
+FASES 0 a 11 e 13 concluídas; FASE 12 (deploy) preparada no repositório,
+aguardando as contas. O andamento de cada fase, com critérios e o que mudou
+em relação a este documento, está no [`ROADMAP.md`](./ROADMAP.md); a
+auditoria final, em [`FINAL-AUDIT.md`](./FINAL-AUDIT.md).

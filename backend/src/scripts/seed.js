@@ -29,6 +29,14 @@ const LOJA_DEMO = {
   slogan: 'Motos revisadas, prontas para rodar',
   contact: { whatsapp: '11999990000', email: 'contato@demonstracao.invalid' },
   address: { city: 'São Paulo', state: 'SP' },
+  highlights: [
+    {
+      title: 'Revisadas antes da vitrine',
+      text: 'Cada moto passa pela bancada antes de ser anunciada.',
+    },
+    { title: 'Documentação em dia', text: 'Transferência e pendências resolvidas com você.' },
+    { title: 'Troca aceita', text: 'Sua moto atual pode entrar como parte do pagamento.' },
+  ],
   features: { financingEnabled: true, sellMotoEnabled: true },
   financing: { monthlyRate: 1.79, installmentOptions: [12, 24, 36, 48], minDownPaymentPercent: 20 },
 };

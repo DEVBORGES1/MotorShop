@@ -13,8 +13,12 @@
  * de oficina, não de e-commerce genérico.
  *
  * Contraste sobre o fundo (`--color-ink-900`), medido em WCAG:
- * ink-50 17.8 · ink-200 11.7 · ink-400 7.6 · ink-500 4.9 · brand-500 10.3 ·
- * warn 10.3 · danger 5.0. Todos passam AA para texto normal. `ink-600` fica
+ * ink-50 17.8 · ink-200 11.7 · ink-400 7.6 · ink-500 5.6 · brand-500 10.3 ·
+ * warn 10.3 · danger 5.5. Todos passam AA para texto normal — também sobre
+ * as superfícies elevadas (`surface-2`: ink-500 4.9, danger 4.8; ambos foram
+ * clareados na auditoria da FASE 13, quando ali ficavam abaixo de 4.5). A cor
+ * que o lojista escolhe é clareada, se preciso, pelo mesmo critério
+ * (`utils/cor.js`, conferido pelo E2E de acessibilidade). `ink-600` fica
  * em 3.3 e existe só para elemento desabilitado e traço decorativo — nunca
  * para texto que precise ser lido.
  */
@@ -33,7 +37,7 @@
   --color-ink-100: #e6e9e4;
   --color-ink-200: #c3c9c1;
   --color-ink-400: #9aa39a;
-  --color-ink-500: #79817a;
+  --color-ink-500: #838b84;
   --color-ink-600: #5c655c;
   --color-ink-700: #262b26;
   --color-ink-800: #1a1d1a;
@@ -45,7 +49,7 @@
 
   --color-ok: #38c172;
   --color-warn: #e8b33c;
-  --color-danger: #e5484d;
+  --color-danger: #e7555a;
 
   /* Títulos, botões e rótulos em caixa alta usam a display; o corpo usa a
      sans. As duas são configuráveis pela loja, daí serem tokens. */

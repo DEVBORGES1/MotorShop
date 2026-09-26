@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 
 import { useStore } from '@/hooks/useStore.js';
+import { formatarTelefone } from '@/utils/format.js';
 import { cidadeLinha, enderecoLinha, horariosAgrupados } from '@/utils/loja.js';
 
 const REDES = [
@@ -81,7 +82,7 @@ export function Footer() {
                     href={`tel:${store.contact.phone.replace(/\D/g, '')}`}
                     className="text-ink-200 hover:text-brand-500"
                   >
-                    {store.contact.phone}
+                    {formatarTelefone(store.contact.phone)}
                   </a>
                 </li>
               )}

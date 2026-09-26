@@ -41,7 +41,7 @@ export function MotoCard({ moto }) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full items-center justify-center text-xs text-ink-600">
+          <div className="flex h-full items-center justify-center text-xs text-ink-400">
             sem foto
           </div>
         )}

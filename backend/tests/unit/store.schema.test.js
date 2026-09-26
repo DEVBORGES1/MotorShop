@@ -116,3 +116,25 @@ describe('updateStoreSchema — financiamento', () => {
     ).toBe(false);
   });
 });
+
+describe('updateStoreSchema — diferenciais', () => {
+  it('aceita até três, com explicação opcional', () => {
+    expect(
+      valido({
+        highlights: [
+          { title: 'Troca aceita', text: 'Sua moto entra no pagamento.' },
+          { title: 'Revisadas', text: null },
+          { title: 'Garantia de 90 dias' },
+        ],
+      }),
+    ).toBe(true);
+    expect(valido({ highlights: [] })).toBe(true);
+  });
+
+  it('recusa o quarto, título vazio e campo desconhecido', () => {
+    const um = { title: 'Troca aceita' };
+    expect(valido({ highlights: [um, um, um, um] })).toBe(false);
+    expect(valido({ highlights: [{ title: '  ' }] })).toBe(false);
+    expect(valido({ highlights: [{ title: 'Ok', icone: 'x' }] })).toBe(false);
+  });
+});

@@ -5,6 +5,7 @@ import {
   contraste,
   corDeTextoSobre,
   hexParaRgb,
+  corLegivel,
   variaveisDoTema,
 } from './cor.js';
 
@@ -66,12 +67,29 @@ describe('variaveisDoTema', () => {
     expect(vars['--color-brand-600']).toMatch(/^#[0-9a-f]{6}$/);
   });
 
-  it('o texto derivado é sempre legível sobre a primária escolhida', () => {
+  it('o texto derivado é sempre legível sobre a cor aplicada', () => {
     // A loja escolhe a cor; a legibilidade do botão não pode depender disso.
     for (const cor of ['#4CD62B', '#1D4ED8', '#FACC15', '#7C3AED', '#FFFFFF', '#000000']) {
       const vars = variaveisDoTema(cor);
-      expect(contraste(cor, vars['--color-on-brand'])).toBeGreaterThanOrEqual(4.5);
+      expect(contraste(vars['--color-brand-500'], vars['--color-on-brand'])).toBeGreaterThanOrEqual(
+        4.5,
+      );
     }
+  });
+
+  it('cor escura demais para o fundo do site é clareada até o texto ficar legível', () => {
+    for (const cor of ['#1e6fff', '#1D4ED8', '#7C3AED', '#7f1d1d', '#000000']) {
+      const aplicada = variaveisDoTema(cor)['--color-brand-500'];
+      expect(aplicada).not.toBe(cor);
+      // Contra o fundo mais claro onde a cor vira texto: AA para texto pequeno.
+      expect(contraste(aplicada, '#191d19')).toBeGreaterThanOrEqual(4.5);
+    }
+  });
+
+  it('cor que já é legível sai intacta — a escolha do lojista é respeitada', () => {
+    expect(corLegivel('#4CD62B')).toBe('#4CD62B');
+    expect(corLegivel('#FACC15')).toBe('#FACC15');
+    expect(corLegivel('azul')).toBeNull();
   });
 
   it('devolve vazio sem cor válida, deixando o tema padrão valer', () => {

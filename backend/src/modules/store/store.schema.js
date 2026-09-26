@@ -1,5 +1,7 @@
-import { financingSettingsSchema } from '@motorshop/shared';
+import { financingSettingsSchema, STORE_HIGHLIGHTS, STORE_IMAGE, values } from '@motorshop/shared';
 import { z } from 'zod';
+
+import { attachImageSchema } from '../motos/moto.schema.js';
 
 /**
  * Validação da configuração da loja.
@@ -109,6 +111,18 @@ export const updateStoreSchema = z
       .strict()
       .optional(),
 
+    highlights: z
+      .array(
+        z
+          .object({
+            title: z.string().trim().min(1, 'Informe o título').max(STORE_HIGHLIGHTS.MAX_TITLE),
+            text: optionalText(STORE_HIGHLIGHTS.MAX_TEXT),
+          })
+          .strict(),
+      )
+      .max(STORE_HIGHLIGHTS.MAX, `No máximo ${STORE_HIGHLIGHTS.MAX} diferenciais`)
+      .optional(),
+
     social: z
       .object({
         instagram: httpUrl(200),
@@ -147,3 +161,11 @@ export const updateStoreSchema = z
     financing: financingSettingsSchema.optional(),
   })
   .strict();
+
+/** `logo` ou `ogImage` (imagem de compartilhamento). */
+export const storeImageParamSchema = z
+  .object({ tipo: z.enum(values(STORE_IMAGE), { error: 'Use logo ou ogImage' }) })
+  .strict();
+
+/** Metadados do envio ao provedor — a mesma conferência das fotos das motos. */
+export const storeImageSchema = attachImageSchema;

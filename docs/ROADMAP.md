@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 11 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live; FASE 11 com o bloqueio de merge a ativar no GitHub). FASE 12 preparada no repositório — a publicação depende das contas do dono.**
+> **Status atual: FASES 0 a 11 e 13 concluídas (verificações que dependem do ambiente real listadas em [`TECHNICAL-DEBT.md`](./TECHNICAL-DEBT.md) §1). FASE 12 preparada no repositório — a publicação depende das contas do dono.**
 
 ---
 
@@ -1179,7 +1179,7 @@ Na ordem do [DEPLOYMENT.md](./DEPLOYMENT.md):
 
 ---
 
-# FASE 13 — Auditoria final
+# FASE 13 — Auditoria final ✅ concluída (dispositivos reais, leitor de tela e Lighthouse em produção pendentes)
 
 ### Objetivo
 Confirmar que a plataforma é um **produto base revendável**, não um site único —
@@ -1206,31 +1206,69 @@ e entregar documentação que permita personalizá-la para o próximo cliente.
 
 ### Arquivos envolvidos
 ```
-README.md
-docs/{ARCHITECTURE,ROADMAP,CUSTOMIZATION,API,DEPLOYMENT,SECURITY}.md
-docs/TECHNICAL-DEBT.md                 (novo)
-todo o código                          revisão
+README.md · CLAUDE.md
+docs/{ARCHITECTURE,ROADMAP,DEPLOYMENT,SECURITY}.md
+docs/{API,CUSTOMIZATION,TECHNICAL-DEBT,FINAL-AUDIT}.md      (novos)
+backend/src/modules/store/store.images.service.js           logo e imagem de compartilhamento (novo)
+backend/src/modules/store/*  · backend/src/seo/*            destaques, ícone, campos públicos
+backend/src/modules/leads/lead.service.js                   módulo desligado recusa o lead
+frontend/src/components/admin/ImagemDaLoja.jsx              envio do logo (novo)
+frontend/src/pages/admin/Configuracoes.jsx                  logo, diferenciais, SEO
+frontend/src/utils/cor.js · frontend/src/styles/index.css   contraste da cor da loja e dos tokens
+e2e/6-revenda.spec.js · e2e/7-acessibilidade.spec.js        (novos)
+backend/tests/integration/{envelope,storeImages}.test.js    (novos)
 ```
 
 ### Dependências
-Nenhuma.
+`@axe-core/playwright` (dev, raiz) — justificativa: a revisão de
+acessibilidade vira teste que roda a cada push; sem ele, a próxima mudança de
+cor ou de layout regride sem ninguém ver. Não vai para o bundle nem para o
+servidor. `npm audit` segue em zero.
 
 ### Critérios de conclusão
-- [ ] Todo requisito do briefing classificado como entregue / adiado /
-      descartado, com justificativa
-- [ ] **Segunda loja fictícia configurada sem tocar em código** — critério
-      central do produto base
-- [ ] Varredura confirma zero dado de loja hardcoded
-- [ ] Envelope de resposta consistente em todos os endpoints
-- [ ] Acessibilidade: contraste AA, navegação por teclado completa, foco
-      visível, rótulos em todos os campos
+Detalhe e evidências em [`FINAL-AUDIT.md`](./FINAL-AUDIT.md).
+
+- [x] Todo requisito do briefing classificado como entregue / adiado /
+      descartado, com justificativa *(FINAL-AUDIT §2)*
+- [x] **Segunda loja fictícia configurada sem tocar em código** — critério
+      central do produto base *(`e2e/6-revenda.spec.js`, a cada push)*
+- [x] Varredura confirma zero dado de loja hardcoded
+- [x] Envelope de resposta consistente em todos os endpoints
+      *(`envelope.test.js` percorre todas as rotas)*
+- [x] Acessibilidade: contraste AA, navegação por teclado completa, foco
+      visível, rótulos em todos os campos *(axe sem violações em todas as
+      páginas, celular e computador; falta o leitor de tela real)*
 - [ ] Responsividade validada em dispositivo real (não só emulador)
-- [ ] Auditoria de segurança reexecutada, sem pendência
-- [ ] Testes verdes; cobertura mantida
-- [ ] Lighthouse mantido ≥ 90 em produção
-- [ ] `docs/CUSTOMIZATION.md` permite a um terceiro personalizar a plataforma
-- [ ] `docs/TECHNICAL-DEBT.md` com o que ficou para depois e o porquê
-- [ ] Nenhum `console.log` ou `TODO` esquecido em produção
+      *(emulado em 390/768/1280 px sem problemas; aparelhos com o dono)*
+- [x] Auditoria de segurança reexecutada, sem pendência *(rotação de
+      segredos segue para o go-live)*
+- [x] Testes verdes; cobertura mantida
+- [ ] Lighthouse mantido ≥ 90 em produção *(local 95–98; depende do domínio)*
+- [x] `docs/CUSTOMIZATION.md` permite a um terceiro personalizar a plataforma
+- [x] `docs/TECHNICAL-DEBT.md` com o que ficou para depois e o porquê
+- [x] Nenhum `console.log` ou `TODO` esquecido em produção
+
+### O que a auditoria encontrou e corrigiu
+- **Logo, imagem de compartilhamento e SEO sem tela no painel** — uma loja
+  nova precisaria de acesso ao banco. Agora são enviados pelo painel (fluxo
+  verificado das fotos, só SUPER_ADMIN), e o ícone da aba sai do logo.
+- **Razão social e imagem de compartilhamento fora da configuração pública**.
+- **Promessas fixas na home** ("Troca aceita"…) viraram **diferenciais**
+  configuráveis; sem nenhum, a faixa some.
+- **Seletores de cor que não faziam nada** (secundária, destaque) retirados.
+- **Módulo desligado ainda aceitava lead pela API** — agora 422.
+- **Cor da loja podia ficar ilegível** sobre o fundo escuro: clareada no mesmo
+  tom até o contraste AA. Tokens de cinza e erro também ajustados.
+- **Acessibilidade estrutural:** regiões, ordem de títulos, nome da coluna de
+  ações, `<main>` e `h1` no login, link sublinhado no texto.
+- **Tablet:** menu espremido em 768 px; tabela do painel alargando a página.
+- Telefone sem máscara no cabeçalho; exemplo de telefone com DDD fixo;
+  código morto.
+
+### Pendências
+- Aparelhos reais (Android, iOS, tablet) e leitor de tela — com o dono.
+- Lighthouse, preview de link e Rich Results no domínio — com a publicação
+  (FASE 12).
 
 ### Testes necessários
 | Tipo | O que |
@@ -1259,7 +1297,7 @@ Nenhuma.
 | 10 | — |
 | 11 | @testing-library/react, @testing-library/user-event, @vitest/coverage-v8, @playwright/test |
 | 12 | @sentry/node (ou equivalente) |
-| 13 | — |
+| 13 | @axe-core/playwright (dev) |
 
 Nenhuma dependência entra sem justificativa registrada.
 
@@ -1288,34 +1326,28 @@ Itens fora do briefing, registrados para não entrarem por dentro do escopo
 
 ## Situação atual
 
-**FASES 0 a 11 concluídas.** Backend com catálogo, autenticação, painel
-administrativo e leads; site público com home, estoque filtrável, página da
-moto (galeria, ficha, similares, interesse, simulador), financiamento, venda
-sua moto, sobre, contato e privacidade; fotos das motos com envio direto ao
-provedor; SEO com meta, dados estruturados e sitemap no HTML inicial. A FASE 8
-aguarda o teste manual com uma conta Cloudinary real; a FASE 9, a validação de
-preview com endereço público. As páginas públicas são renderizadas no
-servidor (LCP 1,5–1,7 s em 4G).
+**FASES 0 a 11 e 13 concluídas; FASE 12 preparada.** Backend com catálogo,
+autenticação, painel administrativo e leads; site público com home, estoque
+filtrável, página da moto (galeria, ficha, similares, interesse, simulador),
+financiamento, venda sua moto, sobre, contato e privacidade, renderizado no
+servidor (LCP 1,5–1,6 s em 4G); fotos com envio direto ao provedor; SEO com
+meta, dados estruturados e sitemap no HTML inicial.
 
-A FASE 10 auditou e endureceu a segurança: estado verificado, checklist
-OWASP Top 10, política LGPD e checklist de go-live em
-[`SECURITY.md`](./SECURITY.md). A rotação dos segredos acontece no deploy
-(FASE 12).
+Segurança auditada e endurecida ([`SECURITY.md`](./SECURITY.md)); ~1.000
+testes com cobertura mínima e CI a cada push, incluindo o teste de revenda e
+o de acessibilidade; deploy descrito no `render.yaml` com runbook em
+[`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
-A FASE 11 fechou a rede de testes: ~950 testes (unitários, integração,
-componentes, segurança e 5 fluxos E2E), cobertura com limites e CI no
-GitHub Actions a cada push. Sem MongoDB disponível, os testes de banco
-aparecem como **pulados** — nunca aprovados — e na CI falham. Como rodar:
-[`SETUP.md`](./SETUP.md#testes).
+A FASE 13 confirmou o produto base: uma segunda loja configurada só pelo
+painel muda o site inteiro. Relatório em [`FINAL-AUDIT.md`](./FINAL-AUDIT.md);
+personalização em [`CUSTOMIZATION.md`](./CUSTOMIZATION.md); endpoints em
+[`API.md`](./API.md); o que ficou para depois em
+[`TECHNICAL-DEBT.md`](./TECHNICAL-DEBT.md).
 
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-A FASE 12 deixou o deploy pronto para executar: serviços descritos no
-`render.yaml` (produção e staging), índices e health check que bloqueiam
-deploy defeituoso, monitoramento de erros sem dado pessoal, teste de fumaça
-e o runbook [`DEPLOYMENT.md`](./DEPLOYMENT.md).
-
-**Próximo passo:** criar as contas e seguir o [`DEPLOYMENT.md`](./DEPLOYMENT.md)
-— com os acessos em mãos, a publicação e as verificações de produção fecham a
-FASE 12. Depois, a **FASE 13** (auditoria final).
+**Próximo passo:** criar as contas e seguir o [`DEPLOYMENT.md`](./DEPLOYMENT.md).
+Com o site no ar, fecham as verificações de ambiente real
+(TECHNICAL-DEBT §1): Lighthouse e preview no domínio, restauração de backup,
+rollback, aparelhos reais e leitor de tela.

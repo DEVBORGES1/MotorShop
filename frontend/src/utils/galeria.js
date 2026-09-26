@@ -47,7 +47,7 @@ export function indiceAposAcao(acao, atual, total) {
 }
 
 /** Deslocamento horizontal mínimo, em px, para o arraste contar como troca. */
-export const LIMIAR_ARRASTE = 50;
+const LIMIAR_ARRASTE = 50;
 
 /**
  * Direção de um arraste: `1` avança (dedo para a esquerda), `-1` volta, `0`

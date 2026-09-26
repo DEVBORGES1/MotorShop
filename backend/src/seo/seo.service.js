@@ -3,6 +3,7 @@ import {
   breadcrumbJsonLd,
   coverImage,
   dealerJsonLd,
+  iconUrl,
   imageAttributes,
   motoJsonLd,
   motoSeo,
@@ -30,7 +31,7 @@ async function loadMoto(slug) {
 }
 
 /** Base das URLs absolutas: a configurada pela loja ou a da própria requisição. */
-export const siteBase = (store, requestOrigin) => store.seo?.siteUrl || requestOrigin;
+const siteBase = (store, requestOrigin) => store.seo?.siteUrl || requestOrigin;
 
 /**
  * Tudo que a página precisa no `<head>` e o status HTTP.
@@ -43,6 +44,8 @@ export async function buildPageSeo(route, { path, origin }) {
   const base = siteBase(store, origin);
   const home = absoluteUrl(base, '/');
   const siteName = store.name;
+  // Ícone da aba: o logo da loja, quando houver.
+  const icon = iconUrl(store.logo?.url) ?? null;
   const storeImage = shareImageUrl(store.ogImage?.url || store.logo?.url);
 
   // Dados que o SPA precisaria buscar logo ao abrir: vão junto no HTML
@@ -52,7 +55,7 @@ export async function buildPageSeo(route, { path, origin }) {
   const notFound = (data = initialData) => ({
     status: 404,
     initialData: data,
-    seo: { ...pageSeo('not-found', store), canonical: absoluteUrl(base, path), siteName },
+    seo: { ...pageSeo('not-found', store), canonical: absoluteUrl(base, path), siteName, icon },
   });
 
   if (route.page === 'moto') {
@@ -72,6 +75,7 @@ export async function buildPageSeo(route, { path, origin }) {
         ...motoSeo(moto, store),
         canonical,
         siteName,
+        icon,
         image: shareImageUrl(coverImage(moto)?.url) ?? storeImage,
         jsonLd: [
           motoJsonLd(moto, store, canonical),
@@ -114,6 +118,7 @@ export async function buildPageSeo(route, { path, origin }) {
       robots: route.filtered ? 'noindex, follow' : meta.robots,
       canonical: absoluteUrl(base, canonicalPath),
       siteName,
+      icon,
       image: storeImage,
       jsonLd,
     },

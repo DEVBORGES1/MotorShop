@@ -103,7 +103,7 @@ export function Home() {
         />
       </Secao>
 
-      <Beneficios />
+      <Beneficios itens={store.highlights} />
 
       {/* Cada chamada leva à página do módulo e some se a loja o desligou. */}
       <div className="mx-auto grid max-w-7xl gap-5 px-4 pb-4 sm:px-6 md:grid-cols-2">
@@ -143,7 +143,7 @@ function Hero({ store, total, whatsapp }) {
         </h1>
 
         <p className="mt-4 max-w-xl text-ink-400">
-          Motos usadas e seminovas revisadas, prontas para sair da loja.
+          Estoque atualizado, com fotos, ficha e preço de cada moto.
         </p>
 
         <div className="mt-9 flex flex-wrap gap-3">
@@ -224,20 +224,20 @@ function BuscaRapida() {
   );
 }
 
-const BENEFICIOS = [
-  ['Revisadas antes da vitrine', 'Cada moto passa pela bancada antes de ser anunciada.'],
-  ['Documentação em dia', 'Transferência e pendências resolvidas com você.'],
-  ['Troca aceita', 'Sua moto atual pode entrar como parte do pagamento.'],
-];
-
-function Beneficios() {
+/**
+ * Diferenciais da loja, das Configurações. São promessas ("troca aceita",
+ * "revisadas") que cada loja faz ou não — nunca texto fixo. Sem nenhum
+ * configurado, a seção não aparece.
+ */
+function Beneficios({ itens }) {
+  if (!itens?.length) return null;
   return (
     <section className="border-y border-ink-800 bg-surface">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-14 sm:px-6 md:grid-cols-3">
-        {BENEFICIOS.map(([titulo, texto]) => (
-          <div key={titulo}>
-            <h2 className="label-caps text-[12px] text-brand-500">{titulo}</h2>
-            <p className="mt-2.5 text-sm text-ink-400">{texto}</p>
+        {itens.map(({ title, text }) => (
+          <div key={title}>
+            <h2 className="label-caps text-[12px] text-brand-500">{title}</h2>
+            {text && <p className="mt-2.5 text-sm text-ink-400">{text}</p>}
           </div>
         ))}
       </div>

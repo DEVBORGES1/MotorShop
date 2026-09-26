@@ -25,7 +25,7 @@ export function DataTable({ colunas, vazio, children }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-lg border border-ink-800">
+    <div className="relative overflow-x-auto rounded-lg border border-ink-800">
       <table className="w-full min-w-[640px] text-sm">
         <thead>
           <tr className="border-b border-ink-800 bg-surface-2">
@@ -35,11 +35,12 @@ export function DataTable({ colunas, vazio, children }) {
                   coluna.chave ?? (typeof coluna.titulo === 'string' ? coluna.titulo : `col-${i}`)
                 }
                 scope="col"
-                className={`label-caps px-4 py-3 text-[10px] text-ink-500 ${coluna.className ?? ''} ${
+                className={`label-caps px-4 py-3 text-[10px] text-ink-400 ${coluna.className ?? ''} ${
                   coluna.alinhar === 'direita' ? 'text-right' : 'text-left'
                 }`}
               >
-                {coluna.titulo}
+                {/* Coluna sem título (a dos botões) ainda precisa de nome para o leitor de tela. */}
+                {coluna.titulo || <span className="sr-only">Ações</span>}
               </th>
             ))}
           </tr>

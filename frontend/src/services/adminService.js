@@ -31,6 +31,10 @@ export const usuariosAdmin = {
 export const storeAdmin = {
   get: () => api.get('/admin/store').then((e) => e.data),
   update: (data) => api.patch('/admin/store', data).then((e) => e.data),
+  /** Logo e imagem de compartilhamento: o arquivo vai direto ao provedor. */
+  assinaturaDeImagem: () => api.post('/admin/store/imagens/assinatura').then((e) => e.data),
+  definirImagem: (tipo, meta) => api.put(`/admin/store/imagens/${tipo}`, meta).then((e) => e.data),
+  removerImagem: (tipo) => api.delete(`/admin/store/imagens/${tipo}`).then((e) => e.data),
 };
 
 export const leadsAdmin = {

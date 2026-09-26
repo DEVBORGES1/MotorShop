@@ -33,7 +33,7 @@ export function CamposDeContato({ register, errors, prefixo }) {
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
-            placeholder="(49) 99999-8888"
+            placeholder="(DDD) 00000-0000"
             className={inputClass}
           />
         )}

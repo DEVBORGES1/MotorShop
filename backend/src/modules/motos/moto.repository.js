@@ -25,7 +25,7 @@ export const PUBLIC_LIST_FIELDS =
 export const PUBLIC_DETAIL_FIELDS = `${PUBLIC_LIST_FIELDS} description features updatedAt`;
 
 /** Ordenações permitidas. O valor do cliente é uma CHAVE, nunca o campo. */
-export const SORT_MAP = Object.freeze({
+const SORT_MAP = Object.freeze({
   [MOTO_SORT.RECENTES]: { featured: -1, createdAt: -1 },
   [MOTO_SORT.PRECO_ASC]: { price: 1 },
   [MOTO_SORT.PRECO_DESC]: { price: -1 },
@@ -211,10 +211,6 @@ export function findByIdAdmin(id) {
 
 export function existsWithSlug(slug) {
   return Moto.exists({ slug }).then(Boolean);
-}
-
-export function countByBrand(brandId) {
-  return Moto.countDocuments({ brand: brandId });
 }
 
 export function create(data) {

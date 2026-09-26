@@ -22,7 +22,7 @@ import { connect, disconnect, skipWithoutDb } from '../helpers/db.js';
 
 const OBJECT_ID = '507f1f77bcf86cd799439011';
 const UUID = '2b1f9a8e-6d2c-4f6e-9b0a-1c2d3e4f5a6b';
-const PARAMS = { ':id': OBJECT_ID, ':imageId': UUID };
+const PARAMS = { ':id': OBJECT_ID, ':imageId': UUID, ':tipo': 'logo' };
 
 const rolesOf = (layer) => layer?.handle?.roles ?? layer?.roles ?? null;
 

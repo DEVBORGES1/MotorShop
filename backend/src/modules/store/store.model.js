@@ -67,6 +67,20 @@ const storeSchema = new mongoose.Schema(
 
     businessHours: { type: [businessHourSchema], default: [] },
 
+    // Diferenciais da página inicial: promessas da loja, configuráveis.
+    highlights: {
+      type: [
+        new mongoose.Schema(
+          {
+            title: { type: String, required: true, trim: true, maxlength: 40 },
+            text: { type: String, trim: true, maxlength: 140, default: null },
+          },
+          { _id: false },
+        ),
+      ],
+      default: [],
+    },
+
     seo: {
       defaultTitle: { type: String, trim: true, maxlength: 70, default: null },
       defaultDescription: { type: String, trim: true, maxlength: 180, default: null },

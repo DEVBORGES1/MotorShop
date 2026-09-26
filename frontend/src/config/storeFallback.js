@@ -16,6 +16,7 @@ export const storeFallback = Object.freeze({
   address: {},
   social: {},
   businessHours: [],
+  highlights: [],
   seo: {},
   features: { financingEnabled: true, sellMotoEnabled: true },
   financing: { monthlyRate: null, installmentOptions: [], minDownPaymentPercent: 0 },

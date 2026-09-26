@@ -128,7 +128,7 @@ export async function removeImage(motoId, imageId) {
   return getByIdAdmin(motoId);
 }
 
-function destroyInBackground(publicId, context) {
+export function destroyInBackground(publicId, context) {
   const storage = getStorage();
   if (!storage) {
     logger.warn(

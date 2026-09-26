@@ -142,6 +142,35 @@ describe.skipIf(skipWithoutDb)('API de leads', () => {
       expect(await Lead.countDocuments()).toBe(0);
     });
 
+    it('módulo desligado: a API recusa o lead do serviço, e os outros tipos seguem', async () => {
+      await StoreSettings.updateOne(
+        {},
+        { features: { financingEnabled: false, sellMotoEnabled: false } },
+      );
+
+      const venda = await enviar({
+        ...contato,
+        type: 'SELL_MOTO',
+        data: { brand: 'Yamaha', model: 'Fazer', year: 2019, mileage: 28000 },
+      });
+      const financiamento = await enviar({
+        ...contato,
+        type: 'FINANCING',
+        data: { vehiclePrice: 30000, downPayment: 6000, installments: 48 },
+      });
+
+      for (const res of [venda, financiamento]) {
+        expect(res.status).toBe(422);
+        expect(res.body.errors).toEqual([
+          expect.objectContaining({ field: 'type', code: 'disabled' }),
+        ]);
+      }
+      expect(await Lead.countDocuments()).toBe(0);
+
+      const contatoGeral = await enviar({ ...contato, type: 'CONTACT', message: 'Estão abertos?' });
+      expect(contatoGeral.status).toBe(201);
+    });
+
     it('lead de interesse referencia a moto certa', async () => {
       const moto = await criarMoto(honda._id);
 

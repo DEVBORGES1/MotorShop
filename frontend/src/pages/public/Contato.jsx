@@ -3,6 +3,7 @@ import { buttonClass } from '@/components/ui/Button.jsx';
 import { Card, CardTitle } from '@/components/ui/Card.jsx';
 import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
+import { formatarTelefone } from '@/utils/format.js';
 import { cidadeLinha, enderecoLinha, horariosAgrupados } from '@/utils/loja.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
 
@@ -65,7 +66,7 @@ export function Contato() {
                       href={`tel:${telefone.replace(/\D/g, '')}`}
                       className="text-ink-200 hover:text-brand-500"
                     >
-                      {telefone}
+                      {formatarTelefone(telefone)}
                     </a>
                   </li>
                 )}

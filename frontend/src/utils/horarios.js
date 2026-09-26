@@ -8,7 +8,7 @@
  */
 
 /** Semana começando na segunda, como no rodapé do site. */
-export const DIAS_SEMANA = [
+const DIAS_SEMANA = [
   { weekday: 1, nome: 'Segunda' },
   { weekday: 2, nome: 'Terça' },
   { weekday: 3, nome: 'Quarta' },

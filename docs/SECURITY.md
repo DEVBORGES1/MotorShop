@@ -1,7 +1,7 @@
 # Segurança e LGPD
 
-Resultado da auditoria da FASE 10: o que está em pé, como foi verificado e o
-que ainda depende de ação antes do go-live. Complementa o ARCHITECTURE §8,
+Resultado da auditoria da FASE 10, **reexecutada na FASE 13** (§13): o que
+está em pé, como foi verificado e o que ainda depende de ação antes do go-live. Complementa o ARCHITECTURE §8,
 que registra as decisões de projeto; este documento registra o **estado
 verificado**.
 
@@ -102,9 +102,9 @@ ninguém lembrar de escrever teste.
 | Motos: listar, criar, editar, status, fotos | ✅ | ✅ |
 | Marcas | ✅ | ✅ |
 | Leads: listar, ver, mudar status, anotar | ✅ | ✅ |
-| Leads: **excluir** (pedido do titular) | ❌ | ✅ |
+| Leads: **excluir** (um a um ou em lote) | ❌ | ✅ |
 | Loja: ler configuração | ✅ | ✅ |
-| Loja: **alterar** configuração | ❌ | ✅ |
+| Loja: **alterar** configuração, logo e imagem de compartilhamento | ❌ | ✅ |
 | Usuários (todas as operações) | ❌ | ✅ |
 | Assinatura de upload | ✅ | ✅ |
 
@@ -324,3 +324,31 @@ dados dela nas Configurações. Quem hospeda e mantém a plataforma atua como
 - Números dos limites sem tráfego real (§7).
 - Sem MFA no painel: equipe pequena, senha forte obrigatória e limites de
   tentativa. Candidato a melhoria futura.
+
+## 13. Reauditoria da FASE 13 (2026-09-26)
+
+| Verificação | Resultado |
+|---|---|
+| `npm audit` (todos os workspaces) | 0 vulnerabilidades, inclusive com a dependência nova de teste (`@axe-core/playwright`) |
+| Segredos no histórico inteiro do git | Nenhum (URIs com senha, chaves do Cloudinary, `JWT_SECRET`, DSN, chaves privadas). Só o marcador `USUARIO:SENHA` da documentação |
+| Matriz de permissões e exposição pública | Verde, já com as rotas novas (descobertas sozinhas) |
+| Envelope em todas as rotas | `envelope.test.js`: nenhuma resposta fora do contrato, nenhuma 500 com entrada inválida |
+
+**Superfície nova desta fase e como foi fechada:**
+
+- **Logo e imagem de compartilhamento da loja** (`/api/admin/store/imagens/*`):
+  só `SUPER_ADMIN`; a assinatura vale só para a pasta `…/loja` do ambiente;
+  o vínculo confere a pasta e a **assinatura da resposta do provedor**, e a
+  URL é montada pelo servidor (mesmas garantias das fotos, §6). Assinatura com
+  `Cache-Control: no-store`. A imagem anterior é apagada no provedor ao trocar.
+- **Diferenciais** (`highlights`): texto do lojista, validado (máx. 3, 40/140
+  caracteres, `.strict()`), escapado pelo React e pelo servidor como todo
+  texto do banco.
+- **Módulo desligado:** o lead do serviço desligado agora é recusado pela API
+  (422), não só escondido na interface.
+- **Cor da loja:** continua aceita só como hexadecimal, validada no schema e
+  de novo antes de entrar no `<style>` do HTML.
+
+Pendências inalteradas: rotação dos segredos e revisão dos limites com
+tráfego real (§9, §12).
+

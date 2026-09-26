@@ -15,7 +15,7 @@ import { env } from './env.js';
  * envio direto de fotos a ele —, então cada origem externa é liberada só no
  * tipo de recurso que precisa.
  */
-export function contentSecurityPolicy() {
+function contentSecurityPolicy() {
   const uploadOrigin = getStorage()?.uploadOrigin;
 
   return {

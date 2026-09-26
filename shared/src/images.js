@@ -36,6 +36,23 @@ export function optimizedImageUrl(url, width) {
 }
 
 /**
+ * Logo em altura fixa (o cabeçalho usa 44 px; 88 cobre telas de alta
+ * densidade), mantendo a proporção. Fora do provedor, a URL original.
+ */
+export function logoUrl(url, height = 88) {
+  if (!url || !url.includes(DELIVERY_MARK)) return url;
+  const [before, after] = url.split(DELIVERY_MARK);
+  return `${before}${DELIVERY_MARK}c_limit,f_auto,q_auto,h_${height}/${after}`;
+}
+
+/** Ícone da aba (favicon) a partir do logo: quadrado de 64 px, em PNG. */
+export function iconUrl(url) {
+  if (!url || !url.includes(DELIVERY_MARK)) return url;
+  const [before, after] = url.split(DELIVERY_MARK);
+  return `${before}${DELIVERY_MARK}c_pad,w_64,h_64,f_png/${after}`;
+}
+
+/**
  * Atributos de `<img>` para um contexto: `src`, `srcSet`, `sizes` e as
  * dimensões (que reservam o espaço antes do download — sem salto de layout).
  */

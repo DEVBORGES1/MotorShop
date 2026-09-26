@@ -26,38 +26,25 @@ a outras lojas **por configuração, sem alteração de código**.
 | **FASE 10** — Segurança | ✅ concluída — segredos são rotacionados no deploy |
 | **FASE 11** — Testes | ✅ concluída |
 | **FASE 12** — Deploy | 🟡 preparada — falta publicar com as contas da loja ([`DEPLOYMENT.md`](./docs/DEPLOYMENT.md)) |
-| **FASE 13** — Auditoria final | — |
+| **FASE 13** — Auditoria final | ✅ concluída — faltam aparelhos reais, leitor de tela e Lighthouse no domínio ([`FINAL-AUDIT.md`](./docs/FINAL-AUDIT.md)) |
 
 O que existe hoje: site público renderizado no servidor (home, estoque com
 filtros, página da moto com galeria e simulador, financiamento, venda sua
 moto, sobre, contato, privacidade), SEO com meta, dados estruturados e
 sitemap, painel administrativo (motos com fotos, marcas, leads, usuários e
-configurações da loja), autenticação com sessões revogáveis, segurança
-auditada ([`docs/SECURITY.md`](./docs/SECURITY.md)) e ~950 testes — unitários,
-integração, componentes, segurança e E2E — rodando na CI.
+configurações da loja — inclusive logo, cor, diferenciais e SEO), autenticação
+com sessões revogáveis, segurança auditada
+([`docs/SECURITY.md`](./docs/SECURITY.md)) e ~1.000 testes — unitários,
+integração, componentes, segurança, E2E, revenda e acessibilidade — rodando
+na CI.
 
-O que falta: publicar seguindo o [`DEPLOYMENT.md`](./docs/DEPLOYMENT.md) (FASE 12)
-e a auditoria final para revenda (FASE 13)
-([`docs/ROADMAP.md`](./docs/ROADMAP.md)).
+**Produto base comprovado:** uma segunda loja configurada só pelo painel muda
+o site inteiro, e um teste confere isso a cada push. Para colocar uma loja
+nova no ar: [`docs/CUSTOMIZATION.md`](./docs/CUSTOMIZATION.md).
 
----|---|
-| **FASE 0** — Arquitetura | ✅ concluída |
-| **FASE 1** — Fundação do projeto | ✅ concluída |
-| **FASE 2** — Banco + API | ✅ concluída — falta executar os testes com banco |
-| **FASE 3** — Autenticação + Admin | ✅ concluída — falta executar os testes com banco |
-| **FASE 4** — Catálogo público | ⏳ aguardando autorização |
-
-O que existe hoje: monorepo configurado, API REST com catálogo de motos
-(filtros, ordenação e paginação no servidor), CRUD de motos e marcas, modelos
-com índices, seed da loja fictícia, segurança básica, SPA React consumindo a
-API, lint, formatação e testes.
-
-Também: autenticação com JWT, painel administrativo completo (motos, marcas,
-usuários e configurações da loja) e gestão de sessões revogáveis.
-
-O que **ainda não** existe: catálogo no site público, página da moto, leads,
-financiamento e upload de imagens — cada um na sua fase
-([`docs/ROADMAP.md`](./docs/ROADMAP.md)).
+O que falta: publicar seguindo o [`DEPLOYMENT.md`](./docs/DEPLOYMENT.md)
+(FASE 12) e as verificações que dependem do ambiente real
+([`docs/TECHNICAL-DEBT.md`](./docs/TECHNICAL-DEBT.md) §1).
 
 ---
 
@@ -140,7 +127,7 @@ está falando com o backend.
 ```bash
 npm test                          # shared, backend e frontend (~1 min)
 npm run test:coverage             # idem, com limites de cobertura
-npm run build && npm run test:e2e # 5 fluxos no navegador (Playwright)
+npm run build && npm run test:e2e # fluxos, revenda e acessibilidade no navegador (Playwright)
 ```
 
 Os testes de integração usam um MongoDB em memória ou, com
@@ -163,10 +150,11 @@ primeiro administrador, e não há credencial padrão embutida.
 ```bash
 npm run seed        # popula a loja fictícia: 6 marcas e 22 motos
 npm run db:indexes  # cria e lista os índices
+npm run db:check    # confere banco, loja, administradores e índices
 ```
 
 Ambos exigem `MONGODB_URI` no `.env`. O `seed` apaga motos e marcas antes de
-inserir, e se recusa a rodar em produção.
+inserir, e em produção só roda com `--confirmar-apagar-estoque`.
 
 ## Lint e formatação
 
@@ -185,52 +173,57 @@ npm run verify        # lint + format + testes + build (rode antes de commitar)
 
 ```
 MotorShop/
-├─ backend/                    API REST (Express + Mongoose)
+├─ backend/                    API REST (Express + Mongoose) e servidor do site
 │  ├─ src/
-│  │  ├─ config/               env validado, conexão do banco, logger
-│  │  ├─ middlewares/          validate, requireDatabase, adminGuard,
-│  │  │                        requestId, notFound, errorHandler
-│  │  ├─ modules/              um diretório por domínio
-│  │  │  ├─ motos/             model · repository · service · serializer
-│  │  │  ├─ brands/            controller · routes · schema
-│  │  │  └─ health/
+│  │  ├─ config/               env validado, banco, índices, logger, segurança, Sentry
+│  │  ├─ middlewares/          authenticate, authorize, validate, rateLimiters,
+│  │  │                        requireDatabase, requestId, errorHandler…
+│  │  ├─ modules/              um diretório por domínio: auth, motos, brands,
+│  │  │                        leads, store, users, uploads, health
+│  │  │                        (routes · controller · service · repository ·
+│  │  │                        model · schema · serializer)
+│  │  ├─ infra/                porta de armazenamento de imagens (Cloudinary)
+│  │  ├─ seo/                  HTML renderizado no servidor, meta, sitemap, robots
 │  │  ├─ routes/               agregador de /api
-│  │  ├─ scripts/              seed e criação de índices
+│  │  ├─ scripts/              seed, índices, create:superadmin, db:check
 │  │  ├─ utils/                ApiError, envelope, money, slug, pagination
 │  │  ├─ app.js                monta o Express (sem listen — testável)
 │  │  └─ server.js             conecta o banco e sobe o servidor
-│  └─ tests/                   unitários, integração e fábricas de dados
+│  └─ tests/                   unitários, integração, segurança e fábricas
 │
-├─ shared/                     enums do domínio, usados pelos dois lados
-│  └─ src/enums.js
+├─ shared/                     usado pelos dois lados: enums, schemas Zod,
+│  └─ src/                     cálculo de financiamento, imagens e SEO
 │
-├─ frontend/                   SPA React (Vite)
-│  ├─ public/
+├─ frontend/                   React (Vite), renderizado no servidor
 │  └─ src/
-│     ├─ components/           componentes de apresentação
+│     ├─ components/           ui, layout, catálogo, moto, leads, admin
 │     ├─ config/               configuração centralizada (VITE_*)
-│     ├─ hooks/                estado e efeitos reutilizáveis
-│     ├─ layouts/              cascas de página
-│     ├─ pages/                Home, NotFound
-│     ├─ routes/               mapa de rotas
+│     ├─ contexts/ hooks/      loja, sessão, SEO
+│     ├─ layouts/              cascas do site e do painel
+│     ├─ pages/                public/ e admin/
+│     ├─ routes/               mapa de rotas (lazy por página)
 │     ├─ services/             única camada que conhece Axios
-│     └─ styles/               tokens de design (variáveis CSS)
+│     ├─ styles/               tokens de design (variáveis CSS)
+│     ├─ utils/                formatação, cor do tema, simulador…
+│     └─ entry-server.jsx      renderização no servidor
 │
-├─ e2e/                       fluxos de ponta a ponta (Playwright)
+├─ e2e/                       fluxos, revenda e acessibilidade (Playwright)
 ├─ scripts/fumaca.mjs         teste de fumaça de um site publicado
 ├─ render.yaml                serviços de produção e staging no Render
-├─ .github/workflows/ci.yml   CI: lint, formato, testes com cobertura, build e E2E
+├─ .github/workflows/         CI (lint, formato, testes, build, E2E) e fumaça
 │
 ├─ docs/
 │  ├─ design/                  protótipo visual de referência
 │  ├─ ARCHITECTURE.md          arquitetura, decisões e riscos
 │  ├─ ROADMAP.md               fases 0 a 13
+│  ├─ API.md                   referência de endpoints
+│  ├─ CUSTOMIZATION.md         como personalizar para um novo cliente
 │  ├─ SETUP.md                 configuração do ambiente local
 │  ├─ SECURITY.md              segurança verificada, OWASP e LGPD
 │  ├─ DEPLOYMENT.md            deploy, backup, rollback e operação
-│  ├─ PHASE-1-REPORT.md        relatório da FASE 1
-│  ├─ PHASE-2-REPORT.md        relatório da FASE 2
-│  └─ PHASE-3-REPORT.md        relatório da FASE 3
+│  ├─ FINAL-AUDIT.md           auditoria final: requisitos, revenda, a11y
+│  ├─ TECHNICAL-DEBT.md        débito técnico e backlog pós-lançamento
+│  └─ PHASE-{1,2,3}-REPORT.md  relatórios das primeiras fases
 │
 ├─ .env.example                variáveis do backend
 └─ package.json                workspaces e scripts

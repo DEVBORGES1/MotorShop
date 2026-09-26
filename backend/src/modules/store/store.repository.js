@@ -2,9 +2,14 @@ import { StoreSettings } from './store.model.js';
 
 const SINGLETON_KEY = 'default';
 
-/** Campos expostos publicamente — allowlist. `seo` e internos ficam de fora. */
+/**
+ * Campos expostos publicamente — allowlist; internos ficam de fora.
+ * `legalName` vai para a política de privacidade (quem é o controlador dos
+ * dados) e `ogImage` para o preview de link — os dois faltavam aqui, e o site
+ * mostrava o nome fantasia no lugar da razão social e nunca a imagem.
+ */
 const PUBLIC_FIELDS =
-  'name slogan logo theme contact address social businessHours seo features financing';
+  'name legalName slogan logo ogImage theme contact address social businessHours highlights seo features financing';
 
 export function findPublic() {
   return StoreSettings.findOne({ key: SINGLETON_KEY }, PUBLIC_FIELDS).lean();

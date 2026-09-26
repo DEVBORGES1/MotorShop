@@ -17,5 +17,3 @@ const DEFAULT_API_URL = import.meta.env.DEV ? 'http://localhost:3000/api' : '/ap
 
 /** Base da API, sem barra final. */
 export const apiBaseUrl = (import.meta.env.VITE_API_URL ?? DEFAULT_API_URL).replace(/\/+$/, '');
-
-export const isDev = import.meta.env.DEV;

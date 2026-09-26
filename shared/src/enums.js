@@ -190,3 +190,16 @@ export const LEAD_LIMITS = Object.freeze({
 export const CONSENT_TEXT_VERSION = '2026-09-v1';
 
 export const values = (enumObject) => Object.values(enumObject);
+
+/**
+ * Imagens da identidade da loja, enviadas pelo painel: o logo (cabeçalho e
+ * ícone da aba) e a imagem de compartilhamento (preview de link, 1200×630).
+ */
+export const STORE_IMAGE = Object.freeze({ LOGO: 'logo', SHARE: 'ogImage' });
+
+/**
+ * Diferenciais da loja na página inicial ("Revisadas antes da vitrine",
+ * "Troca aceita"...). São promessas de cada loja — por isso configuráveis,
+ * nunca texto fixo no código: outra loja pode não cumpri-las.
+ */
+export const STORE_HIGHLIGHTS = Object.freeze({ MAX: 3, MAX_TITLE: 40, MAX_TEXT: 140 });

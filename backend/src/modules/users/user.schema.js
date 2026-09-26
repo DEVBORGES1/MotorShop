@@ -7,7 +7,7 @@ import { z } from 'zod';
  */
 const WEAK = ['senha', 'password', '123456', 'qwerty', 'admin', 'motorshop'];
 
-export const passwordSchema = z
+const passwordSchema = z
   .string()
   .min(PASSWORD_MIN_LENGTH, `A senha deve ter no mínimo ${PASSWORD_MIN_LENGTH} caracteres`)
   .max(200)
@@ -16,7 +16,7 @@ export const passwordSchema = z
     'A senha é previsível demais. Escolha outra.',
   );
 
-export const emailSchema = z.string().trim().toLowerCase().email('E-mail inválido').max(160);
+const emailSchema = z.string().trim().toLowerCase().email('E-mail inválido').max(160);
 
 export const createUserSchema = z
   .object({

@@ -50,6 +50,10 @@ diretamente no código.
 | `docs/SETUP.md` | Configuração do ambiente local |
 | `docs/SECURITY.md` | Segurança verificada, OWASP Top 10, LGPD e checklist de go-live |
 | `docs/DEPLOYMENT.md` | Deploy, backup, rollback, monitoramento e operação |
+| `docs/API.md` | Referência de endpoints, como construídos |
+| `docs/CUSTOMIZATION.md` | Como configurar a plataforma para uma loja nova |
+| `docs/FINAL-AUDIT.md` | Auditoria final: matriz de requisitos, revenda, acessibilidade |
+| `docs/TECHNICAL-DEBT.md` | Débito técnico conhecido e backlog pós-lançamento |
 | `docs/design/README.md` | Protótipo visual de referência e tokens de design |
 
 **O trabalho é executado por fases.** Não implemente funcionalidades de fases

@@ -80,7 +80,7 @@ export function Privacidade() {
               <>
                 Basta falar com a loja pelo <strong className="text-ink-50">{canal}</strong> ou pela
                 página de{' '}
-                <Link to="/contato" className="text-brand-500 hover:underline">
+                <Link to="/contato" className="text-brand-500 underline underline-offset-2">
                   contato
                 </Link>
                 .
@@ -88,7 +88,7 @@ export function Privacidade() {
             ) : (
               <>
                 Basta falar com a loja pela página de{' '}
-                <Link to="/contato" className="text-brand-500 hover:underline">
+                <Link to="/contato" className="text-brand-500 underline underline-offset-2">
                   contato
                 </Link>
                 .

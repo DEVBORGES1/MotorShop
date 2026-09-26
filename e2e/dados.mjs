@@ -24,6 +24,7 @@ export const CONTAS = Object.freeze({
   status: { name: 'Dono (status)', email: 'status@e2e.test', password: SENHA },
   leads: { name: 'Dono (leads)', email: 'leads@e2e.test', password: SENHA },
   conferencia: { name: 'Conferência', email: 'conferencia@e2e.test', password: SENHA },
+  revenda: { name: 'Dono (revenda)', email: 'revenda@e2e.test', password: SENHA },
 });
 
 export const LOJA = Object.freeze({

@@ -207,7 +207,7 @@ Todos rodam a partir da **raiz**:
 | `npm run build` | Build do frontend + verificação de módulos do backend |
 | `npm test` | Testes dos três workspaces (shared, backend, frontend) |
 | `npm run test:coverage` | Os mesmos testes com cobertura e limites (70% global, 90% em serviços e no financiamento) |
-| `npm run test:e2e` | Os 5 fluxos de ponta a ponta no navegador (exige `npm run build` antes) |
+| `npm run test:e2e` | Fluxos de ponta a ponta, teste de revenda e acessibilidade (axe) no navegador (exige `npm run build` antes) |
 | `npm run db:indexes` | Cria os índices de todas as coleções (passo do deploy) |
 | `npm run db:check` | Confere o banco: loja, administrador e índices (só lê) |
 | `npm run smoke -- <url>` | Teste de fumaça de um site publicado ([DEPLOYMENT §9](./DEPLOYMENT.md#9-conferir-um-deploy)) |

@@ -237,4 +237,27 @@ describe.skipIf(skipWithoutDb)('SEO: HTML inicial por rota', () => {
       .send({});
     expect(res.status).toBe(422); // chegou à validação, não foi barrado pelo CORS
   });
+
+  it('logo da loja vira o ícone da aba em todo tipo de página; sem logo, o ícone padrão', async () => {
+    const padrao = await pagina('/');
+    expect(padrao.text).toContain('<link rel="icon" type="image/svg+xml" href="/favicon.svg">');
+
+    await StoreSettings.updateOne(
+      {},
+      {
+        logo: {
+          id: 'l1',
+          publicId: 'loja/logo',
+          url: 'https://res.cloudinary.com/loja/image/upload/v1/loja/logo.png',
+        },
+      },
+    );
+    for (const caminho of ['/', '/estoque', '/motos/honda-cb-500f-2024', '/nao-existe']) {
+      const res = await pagina(caminho);
+      expect(res.text, caminho).toContain(
+        '<link rel="icon" type="image/png" href="https://res.cloudinary.com/loja/image/upload/c_pad,w_64,h_64,f_png/v1/loja/logo.png">',
+      );
+      expect(res.text.match(/rel="icon"/g), caminho).toHaveLength(1);
+    }
+  });
 });

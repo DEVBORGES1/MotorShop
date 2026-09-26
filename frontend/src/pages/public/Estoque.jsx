@@ -139,6 +139,8 @@ export function Estoque() {
           </div>
 
           <div className="mt-6">
+            {/* Os cards são h3: sem este h2 a hierarquia pularia do h1 direto para eles. */}
+            <h2 className="sr-only">Resultado da busca</h2>
             <MotoGrid
               motos={motos}
               isLoading={isLoading}

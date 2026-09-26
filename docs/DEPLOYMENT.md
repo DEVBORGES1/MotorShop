@@ -140,10 +140,12 @@ npm run create:superadmin      # pede nome, e-mail e senha do dono
 npm run db:check               # confere loja, administrador e índices
 ```
 
-Depois, no site: `/admin/login` → **Configurações**: nome da loja, contato,
-endereço, horários, cores, módulos, taxa de financiamento e, em SEO, o
-**endereço do site** (`siteUrl`) — é dele que saem os links do Google, do
-WhatsApp e do sitemap.
+Depois, no site: `/admin/login` → **Configurações**: nome, razão social,
+**logo e imagem de compartilhamento**, contato, endereço, horários,
+diferenciais, cor, módulos, taxa de financiamento e, em *Endereço e busca*,
+o **endereço do site** (`siteUrl`) — é dele que saem os links do Google, do
+WhatsApp e do sitemap. Seção por seção, e o checklist de entrega de uma loja
+nova: [`CUSTOMIZATION.md`](./CUSTOMIZATION.md).
 
 ---
 

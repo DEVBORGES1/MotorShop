@@ -1,8 +1,10 @@
+import { logoUrl } from '@motorshop/shared';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { useStore } from '@/hooks/useStore.js';
+import { formatarTelefone } from '@/utils/format.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
 
 /**
@@ -42,7 +44,19 @@ export function Header() {
       <div className="mx-auto flex min-h-16 max-w-7xl items-center gap-6 px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-3">
           {store.logo?.url ? (
-            <img src={store.logo.url} alt={store.name} className="h-11 w-auto" />
+            <img
+              src={logoUrl(store.logo.url)}
+              alt={store.name}
+              // Largura pela proporção do arquivo: o espaço fica reservado
+              // antes de a imagem chegar (sem salto de layout).
+              width={
+                store.logo.height
+                  ? Math.round((44 * store.logo.width) / store.logo.height)
+                  : undefined
+              }
+              height={44}
+              className="h-11 w-auto"
+            />
           ) : (
             <span className="font-display text-xl font-extrabold tracking-tight text-ink-50">
               {store.name}
@@ -50,7 +64,7 @@ export function Header() {
           )}
         </Link>
 
-        <nav className="ml-auto hidden items-center gap-7 md:flex">
+        <nav className="ml-auto hidden items-center gap-7 lg:flex">
           {links.map((link) => (
             <NavLink key={link.to} to={link.to} className={classeLink}>
               {link.label}
@@ -58,7 +72,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="ml-auto flex items-center gap-4 md:ml-0">
+        <div className="ml-auto flex items-center gap-4 lg:ml-0">
           {store.contact?.phone && (
             <div className="hidden text-right lg:block">
               {store.address?.city && (
@@ -70,7 +84,7 @@ export function Header() {
                 href={`tel:${store.contact.phone.replace(/\D/g, '')}`}
                 className="font-display text-[15px] font-bold text-ink-50"
               >
-                {store.contact.phone}
+                {formatarTelefone(store.contact.phone)}
               </a>
             </div>
           )}
@@ -91,7 +105,7 @@ export function Header() {
             onClick={() => setAberto((v) => !v)}
             aria-expanded={aberto}
             aria-controls="menu-principal"
-            className="rounded-md border border-ink-700 px-3 py-2 text-ink-100 md:hidden"
+            className="rounded-md border border-ink-700 px-3 py-2 text-ink-100 lg:hidden"
           >
             <span className="sr-only">{aberto ? 'Fechar menu' : 'Abrir menu'}</span>
             <span aria-hidden="true">{aberto ? '✕' : '☰'}</span>
@@ -100,7 +114,7 @@ export function Header() {
       </div>
 
       {aberto && (
-        <nav id="menu-principal" className="border-t border-ink-800 px-4 py-3 md:hidden">
+        <nav id="menu-principal" className="border-t border-ink-800 px-4 py-3 lg:hidden">
           <ul className="flex flex-col">
             {links.map((link) => (
               <li key={link.to}>
