@@ -105,6 +105,9 @@ enxergam a tela em modo leitura.
    a capa; descreva cada foto para leitores de tela e Google).
 3. **Usuários** → crie os vendedores como **Administrador** (operam estoque e
    leads, não mexem em configuração nem excluem leads).
+   Senha ou e-mail errados? **Editar** na linha do usuário troca nome, e-mail,
+   papel e senha, e reativa uma conta desativada — contas nunca são excluídas
+   (o nome fica no histórico das anotações dos leads).
 
 ### 2.5 Conferir antes de entregar
 

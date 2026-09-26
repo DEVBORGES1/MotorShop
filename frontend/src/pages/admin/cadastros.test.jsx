@@ -10,7 +10,7 @@ import { Usuarios } from './Usuarios.jsx';
 
 vi.mock('@/services/adminService.js', () => ({
   marcasAdmin: { list: vi.fn(), create: vi.fn(), update: vi.fn(), remove: vi.fn() },
-  usuariosAdmin: { list: vi.fn(), create: vi.fn(), deactivate: vi.fn() },
+  usuariosAdmin: { list: vi.fn(), create: vi.fn(), update: vi.fn(), deactivate: vi.fn() },
 }));
 
 const linhaDe = (texto) => screen.getByText(texto).closest('tr');
@@ -153,5 +153,57 @@ describe('usuários', () => {
 
     expect(window.confirm.mock.lastCall[0]).toMatch(/sessões abertas serão encerradas/);
     expect(usuariosAdmin.deactivate).toHaveBeenCalledWith('u2');
+  });
+
+  it('editar envia só o que mudou; senha em branco mantém a atual', async () => {
+    usuariosAdmin.update.mockResolvedValue({});
+    const { user } = renderizar(<Usuarios />, { usuario: DONO });
+    await screen.findByText('Ana Vendas');
+
+    await user.click(within(linhaDe('Ana Vendas')).getByRole('button', { name: 'Editar' }));
+    const nome = screen.getByLabelText(/^Nome/, { selector: '#editar-name' });
+    await user.clear(nome);
+    await user.type(nome, 'Ana Souza');
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(usuariosAdmin.update).toHaveBeenCalledWith('u2', { name: 'Ana Souza' });
+    expect(await screen.findByText('Usuário atualizado.')).toBeTruthy();
+  });
+
+  it('conta inativa com senha errada: define senha nova e reativa, sem apagar nada', async () => {
+    usuariosAdmin.update.mockResolvedValue({});
+    const { user } = renderizar(<Usuarios />, { usuario: DONO });
+    await screen.findByText('Ex-funcionário');
+
+    await user.click(within(linhaDe('Ex-funcionário')).getByRole('button', { name: 'Editar' }));
+    await user.type(screen.getByLabelText(/^Nova senha/), 'nova-chave-forte-2026');
+    await user.click(screen.getByRole('checkbox', { name: /Conta ativa/ }));
+    await user.click(screen.getByRole('button', { name: 'Salvar alterações' }));
+
+    expect(usuariosAdmin.update).toHaveBeenCalledWith('u3', {
+      password: 'nova-chave-forte-2026',
+      active: true,
+    });
+  });
+
+  it('"Reativar" na linha da conta inativa', async () => {
+    usuariosAdmin.update.mockResolvedValue({});
+    const { user } = renderizar(<Usuarios />, { usuario: DONO });
+    await screen.findByText('Ex-funcionário');
+
+    await user.click(within(linhaDe('Ex-funcionário')).getByRole('button', { name: 'Reativar' }));
+
+    expect(usuariosAdmin.update).toHaveBeenCalledWith('u3', { active: true });
+    expect(await screen.findByText('Ex-funcionário reativado.')).toBeTruthy();
+  });
+
+  it('na própria conta, o papel fica travado e não há opção de desativar', async () => {
+    const { user } = renderizar(<Usuarios />, { usuario: DONO });
+    await screen.findByText('Dono da Loja');
+
+    await user.click(within(linhaDe('Dono da Loja')).getByRole('button', { name: 'Editar' }));
+
+    expect(screen.getByLabelText(/^Papel/, { selector: '#editar-role' }).disabled).toBe(true);
+    expect(screen.queryByRole('checkbox', { name: /Conta ativa/ })).toBeNull();
   });
 });

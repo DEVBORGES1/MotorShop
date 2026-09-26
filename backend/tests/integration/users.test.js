@@ -259,6 +259,35 @@ describe.skipIf(skipWithoutDb)('gestão de usuários', () => {
         (await autenticar(app, { email: 'alvo@teste.com', password: novaSenha })).response.status,
       ).toBe(200);
     });
+
+    it('conta desativada: senha nova + reativar devolve o acesso, sem precisar recriar', async () => {
+      const { accessToken } = await comoSuperAdmin();
+      await criarUsuario({ email: 'errada@teste.com' });
+      const alvoId = (await User.findOne({ email: 'errada@teste.com' }))._id;
+      await autenticado(request(app).delete(`/api/admin/usuarios/${alvoId}`), accessToken);
+      const novaSenha = 'chave-certa-desta-vez-2026';
+
+      // Desativada, não entra — nem com a senha certa.
+      expect(
+        (await autenticar(app, { email: 'errada@teste.com', password: SENHA_VALIDA })).response
+          .status,
+      ).toBe(401);
+
+      const res = await autenticado(
+        request(app).patch(`/api/admin/usuarios/${alvoId}`),
+        accessToken,
+      ).send({ password: novaSenha, active: true });
+
+      expect(res.status).toBe(200);
+      expect(res.body.data.active).toBe(true);
+      expect(
+        (await autenticar(app, { email: 'errada@teste.com', password: novaSenha })).response.status,
+      ).toBe(200);
+      expect(
+        (await autenticar(app, { email: 'errada@teste.com', password: SENHA_VALIDA })).response
+          .status,
+      ).toBe(401);
+    });
   });
 
   describe('GET /api/admin/usuarios', () => {
