@@ -107,3 +107,72 @@ h4 {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 2px;
 }
+
+/*
+ * Identidade visual da home — tudo derivado dos tokens, nada de cor literal.
+ * O acento (`brand-500`) é o que o lojista escolhe, então grade, brilho e
+ * listra acompanham o tema sem regra por loja.
+ */
+
+/* Grade técnica de fundo (papel milimetrado de oficina), esmaecida nas bordas
+   para não competir com o texto. */
+@utility fundo-grade {
+  background-image:
+    linear-gradient(
+      to right,
+      color-mix(in srgb, var(--color-ink-50) 5%, transparent) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      to bottom,
+      color-mix(in srgb, var(--color-ink-50) 5%, transparent) 1px,
+      transparent 1px
+    );
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at 30% 40%, #000 20%, transparent 75%);
+}
+
+/* Brilho suave do acento atrás do título. */
+@utility fundo-brilho {
+  background-image: radial-gradient(
+    ellipse 60% 70% at 15% 30%,
+    color-mix(in srgb, var(--color-brand-500) 14%, transparent),
+    transparent 70%
+  );
+}
+
+/* Listra diagonal de sinalização, no acento. */
+@utility faixa-listra {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    var(--color-brand-500) 0 10px,
+    transparent 10px 20px
+  );
+}
+
+/* Traço curto de acento sob o título de seção. */
+@utility titulo-traco {
+  position: relative;
+  padding-bottom: 0.75rem;
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 2.5rem;
+    height: 3px;
+    background: var(--color-brand-500);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .zoom-foto {
+    transition: transform 0.5s ease;
+  }
+
+  .group:hover .zoom-foto,
+  .group:focus-within .zoom-foto {
+    transform: scale(1.05);
+  }
+}

@@ -1,26 +1,33 @@
 import { dealerJsonLd, shareImageUrl } from '@motorshop/shared';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { MotoGrid } from '@/components/catalogo/MotoGrid.jsx';
+import { BuscaRapida } from '@/components/home/BuscaRapida.jsx';
+import { FaixaMarcas } from '@/components/home/FaixaMarcas.jsx';
+import { FaixaNumeros } from '@/components/home/FaixaNumeros.jsx';
+import { Hero, motosParaMosaico } from '@/components/home/Hero.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
-import { selectClass } from '@/components/ui/Field.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
 import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
 import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import * as publicService from '@/services/publicService.js';
-import { formatarPreco } from '@/utils/format.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
 
-const FAIXAS_DE_PRECO = [10000, 20000, 30000, 50000];
-
 /** Seção com título e link opcional para o estoque filtrado. */
-function Secao({ titulo, descricao, verMais, children }) {
+function Secao({ numero, titulo, descricao, verMais, children }) {
   return (
     <section className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-extrabold tracking-tight">{titulo}</h2>
+          {numero && (
+            <p aria-hidden="true" className="label-caps mb-2 text-[11px] text-brand-500">
+              {numero}
+            </p>
+          )}
+          <h2 className="titulo-traco text-2xl font-extrabold tracking-tight sm:text-3xl">
+            {titulo}
+          </h2>
           {descricao && <p className="mt-1.5 text-sm text-ink-400">{descricao}</p>}
         </div>
         {verMais && (
@@ -53,16 +60,30 @@ export function Home() {
   );
   const recentes = useAsyncData(() => publicService.motos.list({ limit: 6, sort: 'recentes' }), []);
 
-  const total = recentes.data?.meta?.total;
+  // Faixas reais do estoque: alimentam a busca, os números e as marcas.
+  const faixas = useAsyncData(() => publicService.filtros.get().catch(() => null), []).data;
+  const total = faixas?.total || recentes.data?.meta?.total;
+  const mosaico = motosParaMosaico(destaques.data?.data, ofertas.data?.data, recentes.data?.data);
   const whatsapp = (mensagem) => linkWhatsApp(store.contact?.whatsapp, mensagem);
+
+  const mostraDestaques = destaques.isLoading || destaques.data?.data?.length > 0;
+  const mostraOfertas = ofertas.isLoading || ofertas.data?.data?.length > 0;
+  // Numeração só das seções que aparecem: "03" sozinho na página seria estranho.
+  const numeroDaSecao = (posicao) => {
+    const anteriores = [mostraDestaques, mostraOfertas].slice(0, posicao).filter(Boolean).length;
+    return String(anteriores + 1).padStart(2, '0');
+  };
 
   return (
     <>
-      <Hero store={store} total={total} whatsapp={whatsapp} />
-      <BuscaRapida />
+      <Hero store={store} total={total} whatsapp={whatsapp} motos={mosaico} />
+      <BuscaRapida faixas={faixas} />
+      <FaixaNumeros faixas={faixas} />
+      <FaixaMarcas marcas={faixas?.brands} />
 
-      {(destaques.isLoading || destaques.data?.data?.length > 0) && (
+      {mostraDestaques && (
         <Secao
+          numero={numeroDaSecao(0)}
           titulo="Destaques"
           descricao="Selecionadas pela loja"
           verMais={{ to: '/estoque', label: 'Ver estoque completo' }}
@@ -76,8 +97,9 @@ export function Home() {
         </Secao>
       )}
 
-      {(ofertas.isLoading || ofertas.data?.data?.length > 0) && (
+      {mostraOfertas && (
         <Secao
+          numero={numeroDaSecao(1)}
           titulo="Ofertas"
           descricao="Preço abaixo do praticado até agora"
           verMais={{ to: '/estoque?oferta=true', label: 'Ver todas as ofertas' }}
@@ -92,6 +114,7 @@ export function Home() {
       )}
 
       <Secao
+        numero={numeroDaSecao(2)}
         titulo="Últimas cadastradas"
         descricao="O que entrou mais recentemente no estoque"
         verMais={{ to: '/estoque', label: 'Ver estoque completo' }}
@@ -125,102 +148,6 @@ export function Home() {
 
       <SobreResumo store={store} />
     </>
-  );
-}
-
-function Hero({ store, total, whatsapp }) {
-  const contato = whatsapp(`Olá! Vim pelo site da ${store.name}.`);
-
-  return (
-    <section className="border-b border-ink-800 bg-surface">
-      <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6">
-        <p className="label-caps text-[11px] text-brand-500">
-          {[store.address?.city, store.address?.state].filter(Boolean).join(' · ') || 'Motos'}
-        </p>
-
-        <h1 className="mt-4 max-w-3xl text-4xl font-extrabold tracking-tight sm:text-5xl">
-          {store.slogan || 'Sua próxima moto está aqui.'}
-        </h1>
-
-        <p className="mt-4 max-w-xl text-ink-400">
-          Estoque atualizado, com fotos, ficha e preço de cada moto.
-        </p>
-
-        <div className="mt-9 flex flex-wrap gap-3">
-          <Link to="/estoque" className={buttonClass({ size: 'lg' })}>
-            Ver estoque{total ? ` · ${total} motos` : ''}
-          </Link>
-          {contato && (
-            <a
-              href={contato}
-              target="_blank"
-              rel="noreferrer noopener"
-              className={buttonClass({ variant: 'secondary', size: 'lg' })}
-            >
-              Falar no WhatsApp
-            </a>
-          )}
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/** Busca rápida: leva para o estoque já filtrado, sem duplicar a lógica dele. */
-function BuscaRapida() {
-  const navigate = useNavigate();
-  const { data: faixas } = useAsyncData(() => publicService.filtros.get().catch(() => null), []);
-
-  const enviar = (evento) => {
-    evento.preventDefault();
-    const form = new FormData(evento.currentTarget);
-    const params = new URLSearchParams();
-
-    for (const [chave, valor] of form.entries()) {
-      if (valor) params.set(chave, valor);
-    }
-
-    navigate({ pathname: '/estoque', search: params.toString() });
-  };
-
-  return (
-    <form
-      onSubmit={enviar}
-      className="mx-auto -mt-8 flex max-w-7xl flex-wrap gap-3 px-4 sm:px-6"
-      aria-label="Busca rápida"
-    >
-      <div className="flex-1 basis-48">
-        <label htmlFor="busca-marca" className="label-caps text-[10px] text-ink-500">
-          Marca
-        </label>
-        <select id="busca-marca" name="marca" className={`${selectClass} mt-1.5`}>
-          <option value="">Todas</option>
-          {(faixas?.brands ?? []).map((marca) => (
-            <option key={marca.slug} value={marca.slug}>
-              {marca.name}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="flex-1 basis-48">
-        <label htmlFor="busca-preco" className="label-caps text-[10px] text-ink-500">
-          Preço até
-        </label>
-        <select id="busca-preco" name="precoMax" className={`${selectClass} mt-1.5`}>
-          <option value="">Qualquer</option>
-          {FAIXAS_DE_PRECO.map((valor) => (
-            <option key={valor} value={valor}>
-              {formatarPreco(valor)}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <button type="submit" className={buttonClass({ size: 'lg', className: 'mt-auto' })}>
-        Buscar
-      </button>
-    </form>
   );
 }
 
