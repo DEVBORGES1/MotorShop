@@ -28,16 +28,16 @@ export function ComoFunciona() {
     <section aria-labelledby="como-funciona" className="mx-auto max-w-7xl px-4 py-14 sm:px-6">
       <Revelar>
         <p aria-hidden="true" className="label-caps mb-2 text-[11px] text-brand-500">
-          Troca
+          Passo a passo
         </p>
         <h2
           id="como-funciona"
           className="titulo-traco text-2xl font-extrabold tracking-tight sm:text-3xl"
         >
-          Sua moto na entrada
+          Como funciona a troca
         </h2>
         <p className="mt-3 max-w-2xl text-sm text-ink-400">
-          Avaliamos a sua e abatemos no valor da próxima, em três passos.
+          Da avaliação da sua moto à entrada na próxima, em três passos.
         </p>
       </Revelar>
 

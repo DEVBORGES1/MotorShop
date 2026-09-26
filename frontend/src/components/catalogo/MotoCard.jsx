@@ -1,12 +1,13 @@
 import { MOTO_STATUS } from '@motorshop/shared';
 import { Link } from 'react-router-dom';
 
+import { AtributosDaMoto } from '@/components/catalogo/AtributosDaMoto.jsx';
 import { Badge } from '@/components/ui/Badge.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
 import { useStore } from '@/hooks/useStore.js';
-import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
+import { formatarPreco } from '@/utils/format.js';
 import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
 import { caminhoDaMoto, caminhoDeEdicao, urlDaMoto } from '@/utils/moto.js';
 import { carregarMotoDetalhe } from '@/routes/carregadores.js';
@@ -86,11 +87,7 @@ export function MotoCard({ moto }) {
         </h3>
         {moto.version && <p className="mt-0.5 text-sm text-ink-400">{moto.version}</p>}
 
-        <p className="mt-3 text-xs text-ink-400">
-          {[moto.year, formatarKm(moto.mileage), formatarCilindrada(moto.engineCapacity)]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
+        <AtributosDaMoto moto={moto} className="mt-3" />
 
         <p className="mt-4 flex flex-wrap items-baseline gap-2">
           {emOferta && (

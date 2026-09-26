@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { screen, waitFor, within } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as publicService from '@/services/publicService.js';
@@ -49,7 +49,7 @@ describe('Home', () => {
   it('com o módulo de troca ligado, mostra os três passos e leva ao formulário', async () => {
     renderizar(<Home />);
 
-    const passos = await screen.findByRole('region', { name: 'Sua moto na entrada' });
+    const passos = await screen.findByRole('region', { name: 'Como funciona a troca' });
     expect(within(passos).getAllByRole('listitem')).toHaveLength(3);
     expect(
       within(passos).getByRole('link', { name: 'Quero avaliar minha moto' }).getAttribute('href'),
@@ -61,7 +61,7 @@ describe('Home', () => {
     renderizar(<Home />, { store });
 
     await screen.findByRole('link', { name: /Ver estoque · 12 motos/ });
-    expect(screen.queryByRole('region', { name: 'Sua moto na entrada' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Como funciona a troca' })).toBeNull();
   });
 
   describe('localização', () => {
@@ -110,84 +110,141 @@ describe('Home', () => {
     });
   });
 
-  it('abre com o carrossel de destaques: cada slide leva à página da moto', async () => {
-    renderizar(<Home />);
-
-    const carrossel = await screen.findByRole('region', { name: 'Motos em destaque' });
-    const link = within(carrossel).getByRole('link', { name: /Honda CB 500F/ });
-
-    expect(link.getAttribute('href')).toBe('/motos/honda-cb-500f-2024');
-  });
-
-  it('sem nenhuma foto, o hero fica só com texto (sem carrossel quebrado)', async () => {
-    publicService.motos.list.mockResolvedValue(pagina([motoDeTeste()]));
-    renderizar(<Home />);
-
-    await screen.findByRole('link', { name: /Ver estoque · 12 motos/ });
-    expect(screen.queryByRole('region', { name: 'Motos em destaque' })).toBeNull();
-  });
-
-  describe('carrossel com várias motos', () => {
-    const tresMotos = () => [
-      comFoto({ id: 'a', slug: 'moto-a', model: 'Alfa' }),
-      comFoto({ id: 'b', slug: 'moto-b', model: 'Beta' }),
-      comFoto({ id: 'c', slug: 'moto-c', model: 'Gama' }),
-    ];
-    let rolar;
-
-    beforeEach(() => {
-      publicService.motos.list.mockResolvedValue(pagina(tresMotos()));
-      rolar = vi.fn();
-      // O jsdom não implementa rolagem nem layout: fixamos uma largura de 400 px.
-      Element.prototype.scrollTo = rolar;
-      Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
-        configurable: true,
-        get: () => 400,
-      });
-    });
-
-    it('não repete moto que aparece em mais de uma lista', async () => {
+  describe('hero com foto grande', () => {
+    it('a foto do hero é de uma moto, identificada num cartão que leva à página dela', async () => {
       renderizar(<Home />);
 
-      const carrossel = await screen.findByRole('region', { name: 'Motos em destaque' });
-      // destaques, ofertas e recentes devolvem as mesmas 3 motos.
-      expect(within(carrossel).getAllByRole('listitem', { name: /de 3$/ })).toHaveLength(3);
+      const cartao = await screen.findByRole('link', { name: /Na foto.*Honda CB 500F/ });
+      expect(cartao.getAttribute('href')).toBe('/motos/honda-cb-500f-2024');
     });
 
-    it('a seta avança um slide e volta; nas pontas fica desabilitada', async () => {
-      const { user } = renderizar(<Home />);
-      await screen.findByRole('region', { name: 'Motos em destaque' });
-
-      const anterior = screen.getByRole('button', { name: 'Moto anterior' });
-      const proxima = screen.getByRole('button', { name: 'Próxima moto' });
-      expect(anterior.disabled).toBe(true);
-
-      await user.click(proxima);
-      expect(rolar).toHaveBeenLastCalledWith(expect.objectContaining({ left: 400 }));
-    });
-
-    it('os pontos acompanham a rolagem e levam ao slide escolhido', async () => {
-      const { user } = renderizar(<Home />);
-      const carrossel = await screen.findByRole('region', { name: 'Motos em destaque' });
-
-      const trilho = within(carrossel).getAllByRole('list')[0];
-      trilho.scrollLeft = 800;
-      fireEvent.scroll(trilho);
-
-      const gama = await screen.findByRole('button', { name: /Ir para .*Gama/ });
-      await waitFor(() => expect(gama.getAttribute('aria-current')).toBe('true'));
-      expect(screen.getByRole('button', { name: 'Próxima moto' }).disabled).toBe(true);
-
-      await user.click(screen.getByRole('button', { name: /Ir para .*Alfa/ }));
-      expect(rolar).toHaveBeenLastCalledWith(expect.objectContaining({ left: 0 }));
-    });
-
-    it('com uma moto só, não há setas nem pontos', async () => {
-      publicService.motos.list.mockResolvedValue(pagina([comFoto()]));
+    it('escolhe o destaque antes da oferta e da mais recente', async () => {
+      const destaque = comFoto({ id: 'd', slug: 'moto-destaque', model: 'Destaque' });
+      const outra = comFoto({ id: 'o', slug: 'moto-outra', model: 'Outra' });
+      publicService.motos.list.mockImplementation(async (params) =>
+        pagina(params.destaque ? [destaque] : [outra]),
+      );
       renderizar(<Home />);
 
-      await screen.findByRole('region', { name: 'Motos em destaque' });
+      const cartao = await screen.findByRole('link', { name: /Na foto/ });
+      expect(cartao.getAttribute('href')).toBe('/motos/moto-destaque');
+    });
+
+    it('pula a moto sem foto e usa a próxima que tem', async () => {
+      const semFoto = motoDeTeste({ id: 'a', slug: 'sem-foto', model: 'Sem foto' });
+      const comImagem = comFoto({ id: 'b', slug: 'com-foto', model: 'Com foto' });
+      publicService.motos.list.mockResolvedValue(pagina([semFoto, comImagem]));
+      renderizar(<Home />);
+
+      const cartao = await screen.findByRole('link', { name: /Na foto/ });
+      expect(cartao.getAttribute('href')).toBe('/motos/com-foto');
+    });
+
+    it('sem nenhuma foto, o hero fica só com texto (sem cartão nem imagem quebrada)', async () => {
+      publicService.motos.list.mockResolvedValue(pagina([motoDeTeste()]));
+      renderizar(<Home />);
+
+      await screen.findByRole('link', { name: /Ver estoque · 12 motos/ });
+      expect(screen.queryByRole('link', { name: /Na foto/ })).toBeNull();
+    });
+
+    it('não é um carrossel: não há setas nem pontos para trocar de moto', async () => {
+      publicService.motos.list.mockResolvedValue(
+        pagina([comFoto({ id: 'a', slug: 'a' }), comFoto({ id: 'b', slug: 'b' })]),
+      );
+      renderizar(<Home />);
+
+      await screen.findByRole('link', { name: /Na foto/ });
       expect(screen.queryByRole('button', { name: 'Próxima moto' })).toBeNull();
+      expect(screen.queryByRole('region', { name: 'Motos em destaque' })).toBeNull();
+    });
+  });
+
+  describe('destaques em cartões grandes', () => {
+    const secaoDestaques = async () =>
+      (await screen.findByRole('heading', { name: 'Destaques', level: 2 })).closest('section');
+
+    it('mostra cada destaque num cartão com link, preço e ficha', async () => {
+      publicService.motos.list.mockResolvedValue(
+        pagina([
+          comFoto({ id: 'a', slug: 'moto-a', model: 'Alfa' }),
+          comFoto({ id: 'b', slug: 'moto-b', model: 'Beta' }),
+        ]),
+      );
+      renderizar(<Home />);
+
+      const secao = await secaoDestaques();
+      const cartoes = within(secao).getAllByRole('article');
+      expect(cartoes).toHaveLength(2);
+      const link = within(cartoes[0]).getByRole('link', { name: 'Honda Alfa' });
+      expect(link.getAttribute('href')).toBe('/motos/moto-a');
+      expect(within(cartoes[0]).getByText(/R\$\s*38\.900/)).toBeTruthy();
+      expect(within(cartoes[0]).getByText(/2024 · 4\.200 km · 471 cc/)).toBeTruthy();
+    });
+
+    it('com número ímpar, o último cartão ocupa a linha toda', async () => {
+      publicService.motos.list.mockResolvedValue(
+        pagina([1, 2, 3].map((n) => comFoto({ id: `m${n}`, slug: `m${n}`, model: `M${n}` }))),
+      );
+      renderizar(<Home />);
+
+      const cartoes = within(await secaoDestaques()).getAllByRole('article');
+      expect(cartoes).toHaveLength(3);
+      expect(cartoes[2].className).toContain('md:col-span-2');
+      expect(cartoes[0].className).not.toContain('md:col-span-2');
+    });
+
+    it('oferta mostra o preço antigo riscado no cartão', async () => {
+      publicService.motos.list.mockResolvedValue(
+        pagina([comFoto({ onSale: true, previousPrice: 42000 })]),
+      );
+      renderizar(<Home />);
+
+      const cartao = within(await secaoDestaques()).getByRole('article');
+      expect(within(cartao).getByText('Oferta')).toBeTruthy();
+      expect(within(cartao).getByText(/R\$\s*42\.000/).className).toContain('line-through');
+    });
+  });
+
+  describe('facilidades (financiamento e troca)', () => {
+    it('mostra os dois blocos, cada um levando ao módulo', async () => {
+      renderizar(<Home />);
+
+      const bloco = await screen.findByRole('region', { name: 'Facilidades da loja' });
+      const simular = within(bloco).getByRole('link', { name: 'Simular agora' });
+      const avaliar = within(bloco).getByRole('link', { name: 'Quero avaliar' });
+      expect(simular.getAttribute('href')).toBe('/financiamento');
+      expect(avaliar.getAttribute('href')).toBe('/venda-sua-moto');
+    });
+
+    it('usa a foto de uma moto do estoque no fundo de cada bloco', async () => {
+      renderizar(<Home />);
+
+      const bloco = await screen.findByRole('region', { name: 'Facilidades da loja' });
+      expect(bloco.querySelectorAll('img')).toHaveLength(2);
+    });
+
+    it('sem foto no estoque, o bloco fica com o fundo do tema, sem imagem', async () => {
+      publicService.motos.list.mockResolvedValue(pagina([motoDeTeste()]));
+      renderizar(<Home />);
+
+      const bloco = await screen.findByRole('region', { name: 'Facilidades da loja' });
+      expect(bloco.querySelectorAll('img')).toHaveLength(0);
+    });
+
+    it('módulo desligado tira o bloco; os dois desligados tiram a seção', async () => {
+      const so = (features) => ({ ...LOJA, features });
+      const { unmount } = renderizar(<Home />, {
+        store: so({ financingEnabled: false, sellMotoEnabled: true }),
+      });
+      const bloco = await screen.findByRole('region', { name: 'Facilidades da loja' });
+      expect(within(bloco).queryByRole('link', { name: 'Simular agora' })).toBeNull();
+      expect(within(bloco).getByRole('link', { name: 'Quero avaliar' })).toBeTruthy();
+      unmount();
+
+      renderizar(<Home />, { store: so({ financingEnabled: false, sellMotoEnabled: false }) });
+      await screen.findByRole('link', { name: /Ver estoque · 12 motos/ });
+      expect(screen.queryByRole('region', { name: 'Facilidades da loja' })).toBeNull();
     });
   });
 

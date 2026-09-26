@@ -2,6 +2,7 @@ import { logoUrl } from '@motorshop/shared';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
+import { BuscaNoCabecalho } from '@/components/layout/BuscaNoCabecalho.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { useAuth } from '@/hooks/useAuth.js';
 import { useStore } from '@/hooks/useStore.js';
@@ -60,7 +61,7 @@ export function Header() {
               className="h-11 w-auto"
             />
           ) : (
-            <span className="font-display text-xl font-extrabold tracking-tight text-ink-50">
+            <span className="font-display text-xl font-extrabold tracking-tight whitespace-nowrap text-ink-50">
               {store.name}
             </span>
           )}
@@ -96,11 +97,13 @@ export function Header() {
               href={whatsapp}
               target="_blank"
               rel="noreferrer noopener"
-              className={buttonClass({ className: 'hidden sm:inline-flex' })}
+              className={buttonClass({ className: 'max-sm:hidden' })}
             >
               WhatsApp
             </a>
           )}
+
+          <BuscaNoCabecalho />
 
           {/* Entrada da equipe: discreta (só o ícone), sem competir com o menu
               do cliente. Com a sessão aberta, leva direto ao painel. */}

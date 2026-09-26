@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { Outlet, ScrollRestoration } from 'react-router-dom';
 
 import { BarraDaEquipe } from '@/components/layout/BarraDaEquipe.jsx';
+import { BarraDeTopo } from '@/components/layout/BarraDeTopo.jsx';
 import { Footer } from '@/components/layout/Footer.jsx';
 import { Header } from '@/components/layout/Header.jsx';
 import { WhatsAppFloatingButton } from '@/components/layout/WhatsAppFloatingButton.jsx';
@@ -29,6 +30,7 @@ export function RootLayout() {
       </a>
 
       <BarraDaEquipe />
+      <BarraDeTopo />
       <Header />
 
       <main id="conteudo" className="flex-1">

@@ -1,12 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { Revelar } from '@/components/ui/Revelar.jsx';
+import { useSituacaoDaLoja } from '@/hooks/useSituacaoDaLoja.js';
 import {
   cidadeLinha,
   enderecoLinha,
   horariosAgrupados,
-  statusDeAbertura,
   urlDeRota,
   urlDoMapaIncorporado,
 } from '@/utils/loja.js';
@@ -87,20 +87,8 @@ export function Localizacao({ store }) {
   );
 }
 
-/**
- * "Aberto agora" depende da hora de quem visita, então só é calculado depois
- * da montagem: o HTML do servidor não pode afirmar que a loja está aberta.
- */
 function SituacaoDaLoja({ businessHours }) {
-  const [situacao, setSituacao] = useState(null);
-
-  useEffect(() => {
-    setSituacao(statusDeAbertura(businessHours));
-    // Reavalia a cada minuto: quem deixa a aba aberta vê a virada do horário.
-    const relogio = setInterval(() => setSituacao(statusDeAbertura(businessHours)), 60_000);
-    return () => clearInterval(relogio);
-  }, [businessHours]);
-
+  const situacao = useSituacaoDaLoja(businessHours);
   if (!situacao) return null;
 
   return (

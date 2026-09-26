@@ -5,8 +5,9 @@ import { MotoGrid } from '@/components/catalogo/MotoGrid.jsx';
 import { BuscaRapida } from '@/components/home/BuscaRapida.jsx';
 import { FaixaMarcas } from '@/components/home/FaixaMarcas.jsx';
 import { FaixaNumeros } from '@/components/home/FaixaNumeros.jsx';
-import { motosParaCarrossel } from '@/components/home/CarrosselDestaques.jsx';
 import { ComoFunciona } from '@/components/home/ComoFunciona.jsx';
+import { DestaquesGrandes } from '@/components/home/DestaquesGrandes.jsx';
+import { Facilidades } from '@/components/home/Facilidades.jsx';
 import { Hero } from '@/components/home/Hero.jsx';
 import { Localizacao } from '@/components/home/Localizacao.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
@@ -16,6 +17,7 @@ import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
 import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import * as publicService from '@/services/publicService.js';
+import { motosComFoto } from '@/utils/imagem.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
 
 /** Seção com título e link opcional para o estoque filtrado. */
@@ -55,7 +57,7 @@ export function Home() {
   });
 
   const destaques = useAsyncData(
-    () => publicService.motos.list({ destaque: true, limit: 3, sort: 'recentes' }),
+    () => publicService.motos.list({ destaque: true, limit: 4, sort: 'recentes' }),
     [],
   );
   const ofertas = useAsyncData(
@@ -67,11 +69,19 @@ export function Home() {
   // Faixas reais do estoque: alimentam a busca, os números e as marcas.
   const faixas = useAsyncData(() => publicService.filtros.get().catch(() => null), []).data;
   const total = faixas?.total || recentes.data?.meta?.total;
-  const carrossel = motosParaCarrossel(
+  // A moto da foto do hero: destaque primeiro, depois oferta, depois a mais recente.
+  const [motoDoHero] = motosComFoto([
     destaques.data?.data,
     ofertas.data?.data,
     recentes.data?.data,
-  );
+  ]);
+  // Fotos para o fundo dos blocos de serviço: outras motos, para não repetir a do hero.
+  const fotosDeApoio = motosComFoto([
+    recentes.data?.data,
+    ofertas.data?.data,
+    destaques.data?.data,
+  ]).filter((moto) => moto.id !== motoDoHero?.id);
+  const motoDeFundo = (indice) => fotosDeApoio[indice] ?? fotosDeApoio[0] ?? motoDoHero ?? null;
   const whatsapp = (mensagem) => linkWhatsApp(store.contact?.whatsapp, mensagem);
 
   const mostraDestaques = destaques.isLoading || destaques.data?.data?.length > 0;
@@ -84,7 +94,7 @@ export function Home() {
 
   return (
     <>
-      <Hero store={store} total={total} whatsapp={whatsapp} motos={carrossel} />
+      <Hero store={store} total={total} whatsapp={whatsapp} moto={motoDoHero} />
       <BuscaRapida faixas={faixas} />
       <FaixaNumeros faixas={faixas} />
       <FaixaMarcas marcas={faixas?.brands} />
@@ -96,11 +106,10 @@ export function Home() {
           descricao="Selecionadas pela loja"
           verMais={{ to: '/estoque', label: 'Ver estoque completo' }}
         >
-          <MotoGrid
+          <DestaquesGrandes
             motos={destaques.data?.data}
             isLoading={destaques.isLoading}
             error={destaques.error}
-            quantidadeEsqueleto={3}
           />
         </Secao>
       )}
@@ -137,17 +146,8 @@ export function Home() {
       <Beneficios itens={store.highlights} />
 
       {/* Cada bloco leva à página do módulo e some se a loja o desligou. */}
+      <Facilidades store={store} motoDeFundo={motoDeFundo} />
       {store.features?.sellMotoEnabled && <ComoFunciona />}
-
-      {store.features?.financingEnabled && (
-        <div className="mx-auto max-w-7xl px-4 pb-4 sm:px-6">
-          <Chamada
-            titulo="Financiamento"
-            texto="Simule as parcelas agora e envie para a loja. Sem compromisso."
-            acao={{ to: '/financiamento', label: 'Simular agora' }}
-          />
-        </div>
-      )}
 
       <Localizacao store={store} />
 
@@ -174,31 +174,6 @@ function Beneficios({ itens }) {
         ))}
       </div>
     </section>
-  );
-}
-
-function Chamada({ titulo, texto, acao }) {
-  const classe = buttonClass({ size: 'lg', className: 'shrink-0' });
-
-  return (
-    <Revelar
-      as="section"
-      className="flex flex-col gap-6 rounded-lg border border-l-4 border-ink-800 border-l-brand-500 bg-surface p-8 md:flex-row md:items-center md:justify-between"
-    >
-      <div>
-        <h2 className="text-xl font-extrabold tracking-tight">{titulo}</h2>
-        <p className="mt-2 max-w-xl text-sm text-ink-400">{texto}</p>
-      </div>
-      {acao.to ? (
-        <Link to={acao.to} className={classe}>
-          {acao.label}
-        </Link>
-      ) : (
-        <a href={acao.href} target="_blank" rel="noreferrer noopener" className={classe}>
-          {acao.label}
-        </a>
-      )}
-    </Revelar>
   );
 }
 

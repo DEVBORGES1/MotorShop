@@ -14,7 +14,9 @@ describe('MotoCard', () => {
 
     const link = screen.getByRole('link', { name: 'Honda CB 500F' });
     expect(link.getAttribute('href')).toBe('/motos/honda-cb-500f-2024');
-    expect(screen.getByText(/2024 · 4\.200 km · 471 cc/)).toBeTruthy();
+    // Ficha em lista, com um item por atributo.
+    const ficha = screen.getAllByRole('listitem').map((item) => item.textContent);
+    expect(ficha).toEqual(['2024', '4.200 km', '471 cc', 'Manual']);
     expect(screen.getByText(/R\$\s*38\.900/)).toBeTruthy();
   });
 

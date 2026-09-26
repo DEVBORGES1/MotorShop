@@ -67,3 +67,26 @@ export const urlOtimizada = optimizedImageUrl;
 
 /** Atributos de `<img>` (`src`, `srcSet`, `sizes`, dimensões) para um contexto da tela. */
 export const atributosDeImagem = (imagem, contexto) => imageAttributes(imagem, CONTEXTO[contexto]);
+
+/**
+ * Motos que têm foto, sem repetir, na ordem das listas dadas (a primeira lista
+ * tem prioridade). Serve às áreas da home que dependem de imagem — o hero e os
+ * blocos de serviço —, que não podem exibir uma moto sem foto.
+ *
+ * @param {Array<Array<object> | null | undefined>} listas
+ * @param {number} [limite]
+ */
+export function motosComFoto(listas, limite = Infinity) {
+  const vistas = new Set();
+  const escolhidas = [];
+
+  for (const moto of listas.flatMap((lista) => lista ?? [])) {
+    const chave = moto?.id ?? moto?.slug;
+    if (!moto || vistas.has(chave) || !imagemPrincipal(moto)) continue;
+    vistas.add(chave);
+    escolhidas.push(moto);
+    if (escolhidas.length === limite) break;
+  }
+
+  return escolhidas;
+}
