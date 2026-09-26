@@ -14,6 +14,11 @@ export function revokeByJti(jti) {
   return RefreshToken.updateOne({ jti, revokedAt: null }, { revokedAt: new Date() });
 }
 
+/** Rotação: o token usado é revogado e passa a apontar para o substituto. */
+export function markRotated(jti, replacedBy) {
+  return RefreshToken.updateOne({ jti, revokedAt: null }, { revokedAt: new Date(), replacedBy });
+}
+
 /** Usado na detecção de reuso e ao desativar um usuário. */
 export function revokeAllForUser(userId) {
   return RefreshToken.updateMany({ user: userId, revokedAt: null }, { revokedAt: new Date() });

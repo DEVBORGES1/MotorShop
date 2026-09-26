@@ -23,6 +23,14 @@ import {
 const INVALID_CREDENTIALS = 'E-mail ou senha inválidos';
 
 /**
+ * Janela em que reapresentar um refresh **recém-trocado** é outra aba (ou uma
+ * resposta que se perdeu) renovando ao mesmo tempo — não roubo. Duas abas do
+ * painel recarregadas juntas mandam o mesmo cookie; sem esta tolerância, a
+ * segunda derrubava todas as sessões do usuário.
+ */
+export const ROTATION_GRACE_MS = 20_000;
+
+/**
  * @returns {Promise<{ user: object, accessToken: string, refreshCookie: string }>}
  */
 export async function login({ email, password, userAgent, ip }) {
@@ -44,9 +52,29 @@ export async function login({ email, password, userAgent, ip }) {
 }
 
 /**
+ * Reapresentação de um refresh já revogado: renovação simultânea legítima,
+ * sessão encerrada, ou roubo.
+ *
+ * @returns {Promise<'concurrent' | 'ended' | 'theft'>}
+ */
+async function classifyReuse(stored, secret) {
+  const rotatedRecently =
+    stored.replacedBy && Date.now() - new Date(stored.revokedAt).getTime() <= ROTATION_GRACE_MS;
+  if (!rotatedRecently || stored.tokenHash !== hashRefreshToken(secret)) return 'theft';
+
+  // O substituto foi encerrado pelo "Sair" (ou por uma revogação geral): a
+  // sessão acabou de vez — nada a renovar, e nada de suspeito.
+  const successor = await repository.findByJti(stored.replacedBy);
+  if (!successor || (successor.revokedAt && !successor.replacedBy)) return 'ended';
+
+  return 'concurrent';
+}
+
+/**
  * Renova a sessão com **rotação**: o refresh usado é revogado e um novo par é
  * emitido. Reapresentar um refresh já revogado é sinal de token roubado —
- * nesse caso TODAS as sessões do usuário caem.
+ * nesse caso TODAS as sessões do usuário caem —, exceto logo depois de uma
+ * rotação legítima (`ROTATION_GRACE_MS`), quando é outra aba renovando junto.
  */
 export async function refresh({ cookieValue, userAgent, ip }) {
   const parsed = unpackRefreshToken(cookieValue);
@@ -57,12 +85,22 @@ export async function refresh({ cookieValue, userAgent, ip }) {
 
   // Detecção de reuso: o token existe, mas já havia sido revogado.
   if (stored.revokedAt) {
-    await repository.revokeAllForUser(stored.user);
-    logger.warn(
+    const reuse = await classifyReuse(stored, parsed.secret);
+
+    if (reuse === 'ended') throw new ApiError(401, 'Sessão encerrada');
+    if (reuse === 'theft') {
+      await repository.revokeAllForUser(stored.user);
+      logger.warn(
+        { userId: String(stored.user), jti: parsed.jti },
+        'Refresh token revogado foi reapresentado — todas as sessões do usuário foram encerradas',
+      );
+      throw new ApiError(401, 'Sessão inválida');
+    }
+
+    logger.info(
       { userId: String(stored.user), jti: parsed.jti },
-      'Refresh token revogado foi reapresentado — todas as sessões do usuário foram encerradas',
+      'Renovação simultânea (outra aba) dentro da tolerância',
     );
-    throw new ApiError(401, 'Sessão inválida');
   }
 
   if (stored.expiresAt <= new Date()) throw new ApiError(401, 'Sessão expirada');
@@ -74,9 +112,10 @@ export async function refresh({ cookieValue, userAgent, ip }) {
   const user = await userRepository.findById(stored.user);
   if (!user || !user.active) throw new ApiError(401, 'Sessão inválida');
 
-  await repository.revokeByJti(parsed.jti);
+  const { jti, accessToken, refreshCookie } = await issueSession({ user, userAgent, ip });
+  // Na renovação simultânea, o token usado já estava marcado como trocado.
+  if (!stored.revokedAt) await repository.markRotated(parsed.jti, jti);
 
-  const { accessToken, refreshCookie } = await issueSession({ user, userAgent, ip });
   return { user: serializeUser(user), accessToken, refreshCookie };
 }
 
@@ -129,6 +168,7 @@ async function issueSession({ user, userAgent, ip }) {
   });
 
   return {
+    jti,
     accessToken: signAccessToken({ id: user._id, role: user.role ?? USER_ROLE.ADMIN }),
     refreshCookie: packRefreshToken({ jti, secret }),
   };

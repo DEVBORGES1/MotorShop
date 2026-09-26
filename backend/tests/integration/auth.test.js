@@ -3,6 +3,7 @@ import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { createApp } from '../../src/app.js';
+import { ROTATION_GRACE_MS } from '../../src/modules/auth/auth.service.js';
 import { RefreshToken } from '../../src/modules/auth/refreshToken.model.js';
 import { User } from '../../src/modules/users/user.model.js';
 import { autenticar, criarUsuario, extrairCookie } from '../helpers/auth.js';
@@ -106,7 +107,7 @@ describe.skipIf(skipWithoutDb)('autenticação', () => {
       expect(revogados).toBe(1);
     });
 
-    it('DETECTA REUSO: reapresentar token revogado derruba todas as sessões', async () => {
+    it('DETECTA REUSO: token trocado há tempo e reapresentado derruba todas as sessões', async () => {
       await criarUsuario();
       const { refreshCookie } = await autenticar(app);
 
@@ -115,11 +116,79 @@ describe.skipIf(skipWithoutDb)('autenticação', () => {
       await autenticar(app);
       expect(await RefreshToken.countDocuments({ revokedAt: null })).toBe(2);
 
-      // O token antigo reaparece: sinal de roubo.
+      // O token antigo reaparece bem depois da troca: sinal de roubo.
+      await RefreshToken.updateMany(
+        { revokedAt: { $ne: null } },
+        { revokedAt: new Date(Date.now() - ROTATION_GRACE_MS - 1000) },
+      );
       const response = await request(app).post('/api/auth/refresh').set('Cookie', refreshCookie);
 
       expect(response.status).toBe(401);
       expect(await RefreshToken.countDocuments({ revokedAt: null })).toBe(0);
+    });
+
+    describe('duas abas renovando ao mesmo tempo', () => {
+      it('as duas renovações passam e ninguém é deslogado', async () => {
+        await criarUsuario();
+        const { refreshCookie } = await autenticar(app);
+
+        const [aba1, aba2] = await Promise.all(
+          [1, 2].map(() => request(app).post('/api/auth/refresh').set('Cookie', refreshCookie)),
+        );
+
+        expect([aba1.status, aba2.status]).toEqual([200, 200]);
+        // Os dois cookies novos valem (o navegador fica com um deles).
+        for (const aba of [aba1, aba2]) {
+          const seguinte = await request(app)
+            .post('/api/auth/refresh')
+            .set('Cookie', extrairCookie(aba));
+          expect(seguinte.status).toBe(200);
+        }
+      });
+
+      it('reapresentado logo depois da troca: nova sessão, e a anterior segue valendo', async () => {
+        await criarUsuario();
+        const { refreshCookie } = await autenticar(app);
+        const primeira = await request(app).post('/api/auth/refresh').set('Cookie', refreshCookie);
+
+        const atrasada = await request(app).post('/api/auth/refresh').set('Cookie', refreshCookie);
+
+        expect(atrasada.status).toBe(200);
+        expect(
+          (await request(app).post('/api/auth/refresh').set('Cookie', extrairCookie(primeira)))
+            .status,
+        ).toBe(200);
+      });
+
+      it('depois do "Sair", o token antigo não ressuscita a sessão (e não é tratado como roubo)', async () => {
+        await criarUsuario();
+        const { refreshCookie } = await autenticar(app);
+        const { refreshCookie: outroAparelho } = await autenticar(app);
+        const nova = await request(app).post('/api/auth/refresh').set('Cookie', refreshCookie);
+        await request(app).post('/api/auth/logout').set('Cookie', extrairCookie(nova));
+
+        const response = await request(app).post('/api/auth/refresh').set('Cookie', refreshCookie);
+
+        expect(response.status).toBe(401);
+        expect(response.body.message).toBe('Sessão encerrada');
+        // A sessão do outro aparelho não caiu.
+        expect(
+          (await request(app).post('/api/auth/refresh').set('Cookie', outroAparelho)).status,
+        ).toBe(200);
+      });
+
+      it('segredo errado dentro da janela: recusado como sempre', async () => {
+        await criarUsuario();
+        const { refreshCookie } = await autenticar(app);
+        await request(app).post('/api/auth/refresh').set('Cookie', refreshCookie);
+        const [jti] = refreshCookie.replace('motorshop_refresh=', '').split('.');
+
+        const response = await request(app)
+          .post('/api/auth/refresh')
+          .set('Cookie', `motorshop_refresh=${jti}.segredo-errado`);
+
+        expect(response.status).toBe(401);
+      });
     });
 
     it('rejeita cookie ausente, malformado ou com segredo trocado', async () => {

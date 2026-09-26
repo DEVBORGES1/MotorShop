@@ -33,13 +33,13 @@ test('visitante: ícone leva ao login, que avisa ser da equipe; nenhuma chamada 
 test('equipe logada: faixa no site, "Editar" abre o formulário da moto, "Sair" volta ao normal', async ({
   page,
 }) => {
-  await entrar(page, CONTAS.conferencia);
+  await entrar(page, CONTAS.equipe);
 
   // Recarregar o site (não navegar dentro do app): a sessão é restaurada pelo
   // cookie, como quando o dono abre o site no dia seguinte.
   await abrir(page, '/motos/yamaha-fazer-250-2019');
   const faixa = page.getByRole('navigation', { name: 'Acesso da equipe' });
-  await expect(faixa).toContainText(`Conectado como ${CONTAS.conferencia.name}`);
+  await expect(faixa).toContainText(`Conectado como ${CONTAS.equipe.name}`);
   await expect(page.getByRole('link', { name: 'Painel da loja' })).toHaveAttribute(
     'href',
     '/admin',
@@ -58,4 +58,29 @@ test('equipe logada: faixa no site, "Editar" abre o formulário da moto, "Sair" 
   await abrir(page, '/estoque');
   await expect(page.getByRole('link', { name: /^Editar/ })).toHaveCount(0);
   await expect(page.getByRole('link', { name: 'Área da equipe da loja' })).toBeVisible();
+});
+
+test('painel em duas abas renovando ao mesmo tempo: ninguém é deslogado', async ({
+  page,
+  context,
+}) => {
+  await entrar(page, CONTAS.equipe);
+  const cookieAntigo = (await context.cookies()).find((c) => c.name === 'motorshop_refresh');
+
+  // Aba 1 recarrega: a sessão é renovada e o cookie trocado.
+  await page.goto('/admin/leads');
+  await expect(page.getByRole('heading', { level: 1, name: 'Leads' })).toBeVisible();
+
+  // Aba 2 recarregou no mesmo instante: o pedido dela saiu com o cookie
+  // ANTIGO e chega ao servidor depois da troca. (No navegador local as duas
+  // chegam juntas demais para a corrida aparecer; aqui ela é reproduzida.)
+  await context.addCookies([cookieAntigo]);
+  const outraAba = await context.newPage();
+  await outraAba.goto('/admin/motos');
+  await expect(outraAba.getByRole('heading', { level: 1, name: 'Motos' })).toBeVisible();
+
+  // E a aba 1 continua logada: antes da correção, o servidor tomava o pedido
+  // atrasado por roubo e encerrava todas as sessões.
+  await page.reload();
+  await expect(page.getByRole('heading', { level: 1, name: 'Leads' })).toBeVisible();
 });

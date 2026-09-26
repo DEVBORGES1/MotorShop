@@ -937,6 +937,13 @@ novo par (rotação). Se um refresh já revogado for reapresentado, é sinal de
 roubo de token: **todas** as sessões daquele usuário são revogadas e o evento
 é logado. Isso é detecção de reuso, e é o que torna o refresh token seguro.
 
+> **Como construído.** Tolerância de 20 s (`ROTATION_GRACE_MS`): duas abas do
+> painel recarregadas juntas mandam o mesmo cookie, e a segunda renovação
+> chegava depois da troca — o servidor tomava por roubo e derrubava a sessão.
+> Agora o token guarda qual o substituiu (`replacedBy`); reapresentado dentro
+> da janela, com o segredo certo e o substituto ainda válido, emite outra
+> sessão. Fora da janela, ou depois do "Sair", vale a regra acima.
+
 No cliente, um interceptor Axios trata `401` uma única vez: chama refresh,
 repete a requisição original e, em caso de falha, redireciona para o login.
 Requisições concorrentes compartilham uma única promessa de refresh para não

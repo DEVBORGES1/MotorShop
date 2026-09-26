@@ -71,7 +71,8 @@ Stack trace nunca é serializado.
   usuário **ativo**. Usuário desativado perde o acesso na próxima requisição.
 - `POST /api/auth/refresh` troca o refresh token por um novo (rotação);
   reapresentar um refresh token já trocado é tratado como roubo e **encerra
-  todas as sessões** do usuário.
+  todas as sessões** do usuário — exceto nos 20 s seguintes à troca (outra aba
+  renovando junto), enquanto a sessão nova seguir válida.
 
 Papéis: **ADMIN** (operação: estoque, marcas, leads) e **SUPER_ADMIN**
 (tudo do ADMIN + usuários, configurações da loja, exclusão de leads).

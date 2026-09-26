@@ -115,19 +115,6 @@ tem campo morto no banco. Entram se um cliente pedir.
 **Por quê:** simples e rápido (~1 min) para 7 arquivos.
 **Gatilho:** a suíte passar de ~5 min. Aí: banco por arquivo e paralelismo.
 
-### DT-13 — Painel recarregado em várias abas ao mesmo tempo
-**O quê:** cada renovação de sessão troca o token (rotação), e reapresentar
-um token já trocado é tratado como roubo — todas as sessões caem. Dentro de
-uma aba, as renovações são uma por vez; mas **duas abas do painel
-recarregadas no mesmo instante** renovam em paralelo com o mesmo cookie, e a
-segunda derruba a sessão.
-**Por quê ficou:** raro no uso normal (uma aba do painel). O site público
-**não** entra nessa conta: ele só consulta a sessão (`GET /api/auth/sessao`),
-sem renovar.
-**Caminho:** janela de tolerância de poucos segundos para o token recém-
-trocado (devolver o mesmo par novo), ou trava entre abas com
-`BroadcastChannel`/`navigator.locks` no cliente.
-
 ### DT-12 — Casca do painel fora dos tokens
 **O quê:** a barra lateral e o topo do painel usam `bg-[#0D0F0D]` direto,
 não um token. É cor do **produto** (não da loja) e passa no contraste, mas

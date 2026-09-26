@@ -25,6 +25,8 @@ export const CONTAS = Object.freeze({
   leads: { name: 'Dono (leads)', email: 'leads@e2e.test', password: SENHA },
   conferencia: { name: 'Conferência', email: 'conferencia@e2e.test', password: SENHA },
   revenda: { name: 'Dono (revenda)', email: 'revenda@e2e.test', password: SENHA },
+  // Conta própria: o limite de login (5 por conta a cada 15 min) é por e-mail.
+  equipe: { name: 'Dono (equipe)', email: 'equipe@e2e.test', password: SENHA },
 });
 
 export const LOJA = Object.freeze({

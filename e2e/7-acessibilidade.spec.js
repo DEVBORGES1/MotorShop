@@ -69,7 +69,12 @@ for (const { nome, largura } of [
 
       await entrar(page, CONTAS.conferencia);
       for (const caminho of PAINEL) {
-        await page.goto(caminho);
+        // Pelos links do próprio painel, como a pessoa navega: recarregar a
+        // página a cada tela gastaria uma renovação de sessão por tela, e o
+        // limite (30 por IP a cada 15 min) é compartilhado pela suíte inteira.
+        // `dispatchEvent` alcança o link mesmo com o menu recolhido no celular.
+        await page.locator(`a[href="${caminho}"]`).first().dispatchEvent('click');
+        await expect(page).toHaveURL(caminho);
         await page.getByRole('heading', { level: 1 }).first().waitFor();
         // Tabelas e formulários chegam depois do título: espera a rede assentar.
         await page.waitForLoadState('networkidle');

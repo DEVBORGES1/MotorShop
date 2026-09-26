@@ -15,6 +15,9 @@ const refreshTokenSchema = new mongoose.Schema(
 
     expiresAt: { type: Date, required: true },
     revokedAt: { type: Date, default: null },
+    // Na rotação, o jti do token que substituiu este. Distingue "trocado por
+    // renovação" (outra aba pode ainda estar usando) de "encerrado" (Sair).
+    replacedBy: { type: String, default: null },
 
     // Auditoria: ajudam a reconhecer a sessão em caso de incidente.
     userAgent: { type: String, default: null, maxlength: 300 },

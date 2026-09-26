@@ -82,7 +82,9 @@ Se o site e a API ficarem no mesmo domínio, basta ele.
 - **Refresh token** opaco de 7 dias em cookie `httpOnly`, `Secure` em
   produção, `SameSite=Strict`, `Path=/api/auth`. Guardado só como hash.
   **Rotação** a cada uso e **detecção de reuso**: um token já revogado que
-  reaparece derruba todas as sessões do usuário.
+  reaparece derruba todas as sessões do usuário — exceto logo depois de uma troca legítima: por **20 segundos**, o token recém-
+  trocado ainda renova (outra aba recarregando junto), desde que o substituto
+  dele siga válido — depois do "Sair", nem isso.
 - Usuário desativado perde as sessões na hora.
 - Não existe cadastro público; o primeiro `SUPER_ADMIN` nasce por script.
 - `JWT_SECRET` com menos de 32 caracteres impede o boot; em produção, ausente
