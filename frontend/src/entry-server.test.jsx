@@ -41,6 +41,15 @@ describe('render (renderização no servidor)', () => {
     expect(html).not.toContain('<script');
   });
 
+  it('HTML do servidor é o de visitante: ícone leva ao login, nada da equipe (vai para o cache)', async () => {
+    const html = await renderizar(`/motos/${moto.slug}`, { moto, motoSlug: moto.slug });
+
+    const icone = html.match(/<a[^>]*aria-label="Área da equipe da loja"[^>]*>/)?.[0];
+    expect(icone).toContain('href="/admin/login"');
+    expect(html).not.toContain('Conectado como');
+    expect(html).not.toContain('Editar');
+  });
+
   it('diferenciais só aparecem se a loja os configurou — nenhuma promessa fixa no código', async () => {
     const sem = await renderizar('/');
     expect(sem).not.toContain('Troca aceita');

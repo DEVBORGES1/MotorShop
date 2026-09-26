@@ -18,6 +18,9 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [verificada, setVerificada] = useState(false);
   const iniciada = useRef(false);
+  // Sessão vista pelo site público (só nome e papel; sem token).
+  const [equipeNoSite, setEquipeNoSite] = useState(null);
+  const consultada = useRef(false);
 
   const verificarSessao = useCallback(() => {
     if (iniciada.current) return;
@@ -31,9 +34,27 @@ export function AuthProvider({ children }) {
       .finally(() => setVerificada(true));
   }, []);
 
+  /**
+   * No site público: consulta a sessão (sem renovar) só se alguém da equipe
+   * já entrou neste navegador — para o visitante comum, nenhuma requisição.
+   * A renovação de verdade fica para quando a pessoa entra no painel.
+   */
+  const verificarSessaoSeJaEntrou = useCallback(() => {
+    if (consultada.current || !authService.jaEntrouNesteNavegador()) return;
+    consultada.current = true;
+
+    authService
+      .consultarSessao()
+      .then(setEquipeNoSite)
+      .catch(() => setEquipeNoSite(null));
+  }, []);
+
   // Quando a renovação falha no interceptor, a sessão morreu: reflete na UI.
   useEffect(() => {
-    setSessionLostHandler(() => setUser(null));
+    setSessionLostHandler(() => {
+      authService.esquecerEntrada();
+      setUser(null);
+    });
     return () => setSessionLostHandler(null);
   }, []);
 
@@ -46,8 +67,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signOut = useCallback(async () => {
-    await authService.logout();
-    setUser(null);
+    try {
+      await authService.logout();
+    } finally {
+      setUser(null);
+      setEquipeNoSite(null);
+    }
   }, []);
 
   const value = useMemo(
@@ -55,11 +80,14 @@ export function AuthProvider({ children }) {
       user,
       isRestoring: !verificada,
       isAuthenticated: Boolean(user),
+      // Para o site público: quem da equipe está logado (painel ou consulta).
+      membroDaEquipe: user ?? equipeNoSite,
       verificarSessao,
+      verificarSessaoSeJaEntrou,
       signIn,
       signOut,
     }),
-    [user, verificada, verificarSessao, signIn, signOut],
+    [user, verificada, equipeNoSite, verificarSessao, verificarSessaoSeJaEntrou, signIn, signOut],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

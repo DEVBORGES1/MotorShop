@@ -349,6 +349,16 @@ dados dela nas Configurações. Quem hospeda e mantém a plataforma atua como
 - **Cor da loja:** continua aceita só como hexadecimal, validada no schema e
   de novo antes de entrar no `<style>` do HTML.
 
+**Depois da FASE 13 — atalhos da equipe no site.** O site público mostra a
+faixa "Conectado como" e o botão "Editar" para quem da equipe está logado.
+Para isso existe `GET /api/auth/sessao`, que **só consulta** o cookie de
+refresh: não emite token, não troca o cookie, não aciona a detecção de reuso
+e devolve só nome e papel (`no-store`). O site só a chama se o navegador tem
+a marca `motorshop:equipe` (sem valor secreto; não abre nada) — o visitante
+comum não faz nenhuma chamada de sessão. O HTML do servidor, que vai para o
+cache, é sempre o de visitante: os atalhos surgem só no navegador, e todo
+acesso ao painel continua exigindo a sessão verificada no servidor.
+
 Pendências inalteradas: rotação dos segredos e revisão dos limites com
 tráfego real (§9, §12).
 

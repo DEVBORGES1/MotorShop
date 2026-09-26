@@ -1,7 +1,12 @@
 import { Router } from 'express';
 
 import { authenticate } from '../../middlewares/authenticate.js';
-import { loginIpLimiter, loginLimiter, refreshLimiter } from '../../middlewares/rateLimiters.js';
+import {
+  loginIpLimiter,
+  loginLimiter,
+  publicApiLimiter,
+  refreshLimiter,
+} from '../../middlewares/rateLimiters.js';
 import { requireDatabase } from '../../middlewares/requireDatabase.js';
 import { validate } from '../../middlewares/validate.js';
 import * as controller from './auth.controller.js';
@@ -25,4 +30,6 @@ authRoutes.post(
 );
 authRoutes.post('/refresh', requireDatabase, refreshLimiter, controller.refresh);
 authRoutes.post('/logout', requireDatabase, controller.logout);
+// Consulta sem renovação, para o site público (limite do site, não o do refresh).
+authRoutes.get('/sessao', requireDatabase, publicApiLimiter, controller.session);
 authRoutes.get('/me', requireDatabase, authenticate, controller.me);

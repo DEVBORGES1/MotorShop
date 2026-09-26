@@ -153,6 +153,58 @@ describe.skipIf(skipWithoutDb)('autenticação', () => {
     });
   });
 
+  describe('GET /api/auth/sessao (consulta do site, sem renovar)', () => {
+    const consultar = (cookie) => {
+      const req = request(app).get('/api/auth/sessao');
+      return cookie ? req.set('Cookie', cookie) : req;
+    };
+
+    it('sem cookie: 200 com data null — não é erro, é o visitante comum', async () => {
+      const res = await consultar();
+
+      expect(res.status).toBe(200);
+      expect(res.body).toMatchObject({ success: true, data: null });
+      expect(res.headers['cache-control']).toBe('no-store');
+    });
+
+    it('com sessão: só nome e papel, e o cookie NÃO é trocado nem revogado', async () => {
+      await criarUsuario({ name: 'Dono da Loja', role: USER_ROLE.SUPER_ADMIN });
+      const { refreshCookie } = await autenticar(app);
+
+      // Várias abas ao mesmo tempo: nenhuma derruba a sessão.
+      const respostas = await Promise.all([1, 2, 3].map(() => consultar(refreshCookie)));
+
+      for (const res of respostas) {
+        expect(res.body.data).toEqual({ name: 'Dono da Loja', role: USER_ROLE.SUPER_ADMIN });
+        expect(res.headers['set-cookie']).toBeUndefined();
+      }
+      expect(await RefreshToken.countDocuments({ revokedAt: null })).toBe(1);
+      // O mesmo cookie continua renovando normalmente no painel.
+      expect(
+        (await request(app).post('/api/auth/refresh').set('Cookie', refreshCookie)).status,
+      ).toBe(200);
+    });
+
+    it('sessão encerrada, vencida, adulterada ou de usuário desativado: data null', async () => {
+      const user = await criarUsuario();
+      const { refreshCookie } = await autenticar(app);
+      const [jti] = refreshCookie.replace('motorshop_refresh=', '').split('.');
+
+      expect((await consultar(`motorshop_refresh=${jti}.segredo-errado`)).body.data).toBeNull();
+
+      await User.updateOne({ _id: user._id }, { active: false });
+      expect((await consultar(refreshCookie)).body.data).toBeNull();
+
+      await User.updateOne({ _id: user._id }, { active: true });
+      await RefreshToken.updateMany({}, { expiresAt: new Date(Date.now() - 1000) });
+      expect((await consultar(refreshCookie)).body.data).toBeNull();
+
+      await RefreshToken.updateMany({}, { revokedAt: new Date() });
+      expect((await consultar(refreshCookie)).body.data).toBeNull();
+      // Consultar token revogado não é tratado como roubo (não revoga nada a mais).
+    });
+  });
+
   describe('POST /api/auth/logout', () => {
     it('revoga a sessão e limpa o cookie', async () => {
       await criarUsuario();

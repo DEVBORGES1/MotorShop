@@ -41,6 +41,13 @@ describe('RequireAuth e login', () => {
     authService.restoreSession.mockRejectedValue(new Error('Sessão inválida'));
   });
 
+  it('login avisa que a área é da equipe e oferece a volta ao site', async () => {
+    painel('/admin/login');
+
+    expect(await screen.findByText(/Área restrita à equipe da loja/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Voltar ao site' }).getAttribute('href')).toBe('/');
+  });
+
   it('sem sessão, manda para o login', async () => {
     painel('/admin/leads');
 

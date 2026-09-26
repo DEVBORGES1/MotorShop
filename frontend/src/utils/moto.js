@@ -5,6 +5,9 @@ import { formatarCilindrada, formatarKm } from './format.js';
 /** Caminho da página da moto no site. */
 export const caminhoDaMoto = (slug) => `/motos/${encodeURIComponent(slug)}`;
 
+/** Formulário da moto no painel — atalho da equipe a partir do site. */
+export const caminhoDeEdicao = (id) => `/admin/motos/${encodeURIComponent(id)}/editar`;
+
 /**
  * Endereço absoluto da página, para a mensagem do WhatsApp. `base` é o
  * `siteUrl` configurado pela loja ou, sem ele, a origem em que o site está

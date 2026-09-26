@@ -79,8 +79,10 @@ export function renderizar(
       value={{
         user: usuario,
         isAuthenticated: true,
+        membroDaEquipe: usuario,
         isRestoring: false,
         verificarSessao: () => {},
+        verificarSessaoSeJaEntrou: () => {},
         signIn: async () => usuario,
         signOut: async () => {},
       }}

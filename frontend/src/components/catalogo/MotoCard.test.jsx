@@ -2,7 +2,7 @@
 import { screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { motoDeTeste, renderizar } from '@/test/renderizar.jsx';
+import { DONO, motoDeTeste, renderizar } from '@/test/renderizar.jsx';
 
 import { MotoCard } from './MotoCard.jsx';
 
@@ -67,5 +67,16 @@ describe('MotoCard', () => {
     });
 
     expect(screen.queryByRole('link', { name: /Tenho interesse/ })).toBeNull();
+  });
+
+  it('visitante não vê o atalho "Editar"', () => {
+    card(motoDeTeste());
+    expect(screen.queryByRole('link', { name: /Editar/ })).toBeNull();
+  });
+
+  it('equipe logada vê "Editar", que leva ao formulário da moto no painel', () => {
+    renderizar(<MotoCard moto={motoDeTeste()} />, { usuario: DONO });
+    const editar = screen.getByRole('link', { name: 'Editar Honda CB 500F' });
+    expect(editar.getAttribute('href')).toBe('/admin/motos/m1/editar');
   });
 });

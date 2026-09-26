@@ -1,14 +1,22 @@
+import { useEffect } from 'react';
 import { Outlet, ScrollRestoration } from 'react-router-dom';
 
+import { BarraDaEquipe } from '@/components/layout/BarraDaEquipe.jsx';
 import { Footer } from '@/components/layout/Footer.jsx';
 import { Header } from '@/components/layout/Header.jsx';
 import { WhatsAppFloatingButton } from '@/components/layout/WhatsAppFloatingButton.jsx';
+import { useAuth } from '@/hooks/useAuth.js';
 
 const chaveDeRolagem = (location) =>
   location.pathname === '/estoque' ? location.pathname : location.key;
 
 /** Casca das páginas públicas. */
 export function RootLayout() {
+  const { verificarSessaoSeJaEntrou } = useAuth();
+  // Depois de hidratar: quem da equipe já entrou neste navegador vê os
+  // atalhos (faixa, "Editar"). O visitante comum não dispara nada.
+  useEffect(verificarSessaoSeJaEntrou, [verificarSessaoSeJaEntrou]);
+
   return (
     <div className="flex min-h-screen flex-col">
       {/* Primeiro elemento focável da página: quem navega por teclado pula o
@@ -20,6 +28,7 @@ export function RootLayout() {
         Pular para o conteúdo
       </a>
 
+      <BarraDaEquipe />
       <Header />
 
       <main id="conteudo" className="flex-1">

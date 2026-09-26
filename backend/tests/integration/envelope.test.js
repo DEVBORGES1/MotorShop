@@ -53,6 +53,7 @@ const PUBLICAS = [
   ['post', '/api/auth/login'],
   ['post', '/api/auth/refresh'],
   ['post', '/api/auth/logout'],
+  ['get', '/api/auth/sessao'],
   ['get', '/api/auth/me'],
   ['get', '/api/rota-que-nao-existe'],
 ];

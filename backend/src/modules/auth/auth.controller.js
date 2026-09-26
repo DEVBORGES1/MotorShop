@@ -28,6 +28,12 @@ export async function refresh(req, res) {
   res.json(ok({ user, accessToken }));
 }
 
+export async function session(req, res) {
+  // Resposta por pessoa: nunca em cache compartilhado.
+  res.set('Cache-Control', 'no-store');
+  res.json(ok(await service.peekSession(req.cookies?.[REFRESH_COOKIE])));
+}
+
 export async function logout(req, res) {
   await service.logout(req.cookies?.[REFRESH_COOKIE]);
 

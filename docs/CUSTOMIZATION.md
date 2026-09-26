@@ -72,6 +72,11 @@ npm run db:check               # confere banco, índices e administrador
 
 ### 2.3 Configurar a loja no painel
 
+O acesso fica no **ícone de pessoa** no canto da navbar do site (leva a
+`/admin/login`, que avisa ser área da equipe). Logada, a pessoa vê no site uma
+faixa "Conectado como … · Painel · Sair" e um botão **Editar** em cada moto,
+que abre o formulário dela no painel.
+
 Entre em `/admin/login` com a conta criada → **Configurações**. Seções, na
 ordem da tela:
 

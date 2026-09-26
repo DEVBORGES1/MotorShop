@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 
 import { buttonClass } from '@/components/ui/Button.jsx';
+import { useAuth } from '@/hooks/useAuth.js';
 import { useStore } from '@/hooks/useStore.js';
 import { formatarTelefone } from '@/utils/format.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
@@ -24,6 +25,7 @@ const LINKS = [
 
 export function Header() {
   const { store } = useStore();
+  const { membroDaEquipe } = useAuth();
   const [aberto, setAberto] = useState(false);
   const links = LINKS.filter((link) => !link.modulo || store.features?.[link.modulo]);
   const { pathname } = useLocation();
@@ -99,6 +101,27 @@ export function Header() {
               WhatsApp
             </a>
           )}
+
+          {/* Entrada da equipe: discreta (só o ícone), sem competir com o menu
+              do cliente. Com a sessão aberta, leva direto ao painel. */}
+          <Link
+            to={membroDaEquipe ? '/admin' : '/admin/login'}
+            aria-label={membroDaEquipe ? 'Painel da loja' : 'Área da equipe da loja'}
+            title={membroDaEquipe ? 'Painel da loja' : 'Área da equipe da loja'}
+            className="flex h-10 w-10 items-center justify-center rounded-md text-ink-400 transition hover:text-brand-500"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+              className="h-5 w-5 fill-none stroke-current"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="12" cy="8" r="4" />
+              <path d="M4 21a8 8 0 0 1 16 0" />
+            </svg>
+          </Link>
 
           <button
             type="button"

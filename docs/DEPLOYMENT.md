@@ -74,7 +74,11 @@ etapas em todas.
 5. **Acesso de rede** (*Network Access*): libere os IPs de saída do Render
    (painel do serviço → *Connect* → *Outbound*). Se preferir não fixar IPs,
    `0.0.0.0/0` funciona, mas então a senha do usuário é a única barreira.
-6. Copie a *connection string* e coloque o nome do banco no caminho:
+6. Use a senha **gerada pelo Atlas** (*Autogenerate*): só letras e números.
+   Um `@`, `:`, `/` ou `#` na senha quebra a connection string
+   (`Invalid connection string` no log); se precisar deles, codifique
+   (`@` → `%40`).
+7. Copie a *connection string* e coloque o nome do banco no caminho:
    `mongodb+srv://USUARIO:SENHA@cluster.xxxxx.mongodb.net/motorshop_prod?retryWrites=true&w=majority`
 
 ---
@@ -114,6 +118,23 @@ temporárias (1 h) para uma pasta específica.
 > do backend valida a configuração de produção já no build. Variável
 > faltando → o build falha, e o erro diz qual.
 
+#### Só a demonstração, no plano Free
+
+Para mostrar a plataforma sem custo, dá para criar **um** serviço à mão
+(*New → Web Service*, sem o Blueprint, que criaria também a produção), com os
+valores do bloco `motorshop-staging` do `render.yaml`:
+
+| Campo | Valor |
+|---|---|
+| Build Command | `npm ci --include=dev && npm run build` — sem o `--include=dev`, o `vite` não é instalado (erro 127) |
+| Start Command | `npm run db:indexes && npm start` — o Free não tem *Pre-Deploy Command*; criar índices a cada partida é seguro (o que existe fica) |
+| Health Check Path | `/api/health` |
+| Variáveis | as do `render.yaml` (staging), mais os segredos; `JWT_SECRET` com 64+ caracteres aleatórios |
+
+O Free **hiberna** após 15 min sem visita (a próxima abertura leva ~1 min) e
+**não tem Shell** — o administrador é criado pelo computador (§5.3). Para
+produção, use o Blueprint e o plano pago.
+
 ### 5.2 O que acontece em cada deploy
 
 1. Push na `main`.
@@ -140,7 +161,22 @@ npm run create:superadmin      # pede nome, e-mail e senha do dono
 npm run db:check               # confere loja, administrador e índices
 ```
 
-Depois, no site: `/admin/login` → **Configurações**: nome, razão social,
+**Sem Shell (plano Free):** rode o mesmo comando do seu computador, apontando
+para o banco do ambiente. Precisa do Node.js 22+ e do projeto baixado
+(GitHub → *Code* → *Download ZIP*). No Windows, no **PowerShell**, dentro da
+pasta do projeto:
+
+```powershell
+npm ci
+$env:MONGODB_URI = 'mongodb+srv://…'   # a string do Atlas, entre aspas simples
+npm run create:superadmin
+```
+
+No Prompt de Comando (cmd) a variável é `set "MONGODB_URI=mongodb+srv://…"`.
+Ela só existe naquela janela — feche ao terminar. Em staging, `npm run seed`
+na mesma janela preenche a loja de demonstração.
+
+Depois, no site — o ícone de pessoa na navbar leva ao login — `/admin/login` → **Configurações**: nome, razão social,
 **logo e imagem de compartilhamento**, contato, endereço, horários,
 diferenciais, cor, módulos, taxa de financiamento e, em *Endereço e busca*,
 o **endereço do site** (`siteUrl`) — é dele que saem os links do Google, do
@@ -323,3 +359,6 @@ Checklist completo de go-live: [SECURITY §9](./SECURITY.md#9-checklist-de-go-li
 | Foto não sobe | credenciais do Cloudinary, ou chave revogada | refaça a seção 4; o erro aparece no painel |
 | Preview do WhatsApp com endereço errado | `siteUrl` não configurado | painel → Configurações → SEO |
 | Mudança no painel não aparece no site | não deveria acontecer (o cache é limpo a cada alteração) | confira se a alteração foi salva; se persistir, *Manual Deploy* reinicia |
+| Dados gravados por script (`seed`) demoram a aparecer | o cache do site (até 5 min) só é limpo por alterações feitas pelo painel | espere alguns minutos ou reinicie o serviço |
+| Build falha com `code 127` no `vite build` | Build Command sem `--include=dev` | use `npm ci --include=dev && npm run build` |
+| `MongoParseError: Invalid connection string` | `@` (ou `:`/`/`/`#`) na senha do banco | gere senha só com letras e números no Atlas (§3) |

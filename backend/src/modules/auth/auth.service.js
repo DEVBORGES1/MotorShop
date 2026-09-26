@@ -80,6 +80,30 @@ export async function refresh({ cookieValue, userAgent, ip }) {
   return { user: serializeUser(user), accessToken, refreshCookie };
 }
 
+/**
+ * Consulta, **sem renovar**, se o cookie de refresh ainda vale — para o site
+ * público mostrar os atalhos da equipe. Não emite token, não rotaciona e não
+ * dispara a detecção de reuso: abrir várias páginas do site em abas ao mesmo
+ * tempo não pode derrubar a sessão, e o acesso de fato continua exigindo o
+ * refresh do painel.
+ *
+ * @returns {Promise<{ name: string, role: string } | null>} `null` sem sessão
+ */
+export async function peekSession(cookieValue) {
+  const parsed = unpackRefreshToken(cookieValue);
+  if (!parsed) return null;
+
+  const stored = await repository.findByJti(parsed.jti);
+  if (!stored || stored.revokedAt || stored.expiresAt <= new Date()) return null;
+  if (stored.tokenHash !== hashRefreshToken(parsed.secret)) return null;
+
+  const user = await userRepository.findById(stored.user);
+  if (!user || !user.active) return null;
+
+  // Só o que a faixa do site mostra: nada de e-mail ou id.
+  return { name: user.name, role: user.role };
+}
+
 export async function logout(cookieValue) {
   const parsed = unpackRefreshToken(cookieValue);
   // Logout é idempotente: sem cookie válido, não há o que revogar e não é erro.

@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 
 import { Alert } from '@/components/ui/Alert.jsx';
@@ -61,6 +61,15 @@ export function Login() {
           </h1>
           <p className="label-caps mt-2 text-[10px] text-ink-500">Painel administrativo</p>
         </div>
+
+        {/* O ícone da navbar traz clientes até aqui por curiosidade: a tela
+            diz logo que é da equipe e devolve o caminho do site. */}
+        <p className="mb-4 rounded-md border border-ink-800 bg-surface-2 px-4 py-3 text-sm text-ink-200">
+          Área restrita à equipe da loja. Procurando uma moto?{' '}
+          <Link to="/" className="text-brand-500 underline underline-offset-2">
+            Voltar ao site
+          </Link>
+        </p>
 
         <form
           onSubmit={handleSubmit(onSubmit)}

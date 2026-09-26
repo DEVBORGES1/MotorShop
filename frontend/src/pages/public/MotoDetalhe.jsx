@@ -23,13 +23,14 @@ import { Button, buttonClass } from '@/components/ui/Button.jsx';
 import { Modal } from '@/components/ui/Modal.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
+import { useAuth } from '@/hooks/useAuth.js';
 import { useBaseDoSite, useMotoInicial } from '@/contexts/DadosIniciaisContext.jsx';
 import { useSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import * as publicService from '@/services/publicService.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
 import { imagensDaGaleria, nomeDaMoto } from '@/utils/imagem.js';
-import { urlDaMoto } from '@/utils/moto.js';
+import { caminhoDeEdicao, urlDaMoto } from '@/utils/moto.js';
 import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
 
 /*
@@ -125,6 +126,7 @@ function seoDaMoto(moto, store, base) {
 
 function Detalhe({ moto }) {
   const { store } = useStore();
+  const { membroDaEquipe } = useAuth();
   const [interesseAberto, setInteresseAberto] = useState(false);
 
   const nome = nomeDaMoto(moto);
@@ -176,9 +178,17 @@ function Detalhe({ moto }) {
         </div>
 
         <aside className="lg:sticky lg:top-24 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start">
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5">
             <StatusBadge status={moto.status} />
             {emOferta && <Badge tone="brand">Oferta</Badge>}
+            {membroDaEquipe && (
+              <Link
+                to={caminhoDeEdicao(moto.id)}
+                className={buttonClass({ variant: 'secondary', size: 'sm', className: 'ml-auto' })}
+              >
+                Editar moto
+              </Link>
+            )}
           </div>
 
           <h1 className="mt-3 text-3xl font-extrabold tracking-tight">{nome}</h1>

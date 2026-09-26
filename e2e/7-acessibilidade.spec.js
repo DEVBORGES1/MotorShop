@@ -75,6 +75,13 @@ for (const { nome, largura } of [
         await page.waitForLoadState('networkidle');
         achados.push(...(await violacoes(page, caminho)));
       }
+
+      // O site com a sessão aberta: faixa da equipe e botões "Editar".
+      for (const caminho of ['/estoque', '/motos/yamaha-fazer-250-2019']) {
+        await abrir(page, caminho);
+        await page.getByRole('navigation', { name: 'Acesso da equipe' }).waitFor();
+        achados.push(...(await violacoes(page, `${caminho} (equipe logada)`)));
+      }
       expect(achados).toEqual([]);
     });
   });

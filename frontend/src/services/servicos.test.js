@@ -163,6 +163,7 @@ describe('contrato dos serviços com as rotas da API', () => {
     [() => publicService.marcas.list(), 'GET /marcas'],
     [() => publicService.store.get(), 'GET /store'],
     [() => publicService.filtros.get(), 'GET /filtros'],
+    [() => authService.consultarSessao(), 'GET /auth/sessao'],
     [() => publicService.leads.create({}), 'POST /leads'],
     [() => admin.motosAdmin.list(), 'GET /admin/motos'],
     [() => admin.motosAdmin.get('m1'), 'GET /admin/motos/m1'],

@@ -187,6 +187,7 @@ e o consentimento LGPD:
 | `POST` | `/api/auth/refresh` | cookie | novo `{ accessToken, user }` e novo cookie |
 | `POST` | `/api/auth/logout` | cookie | encerra a sessão e apaga o cookie |
 | `GET` | `/api/auth/me` | Bearer | usuário atual |
+| `GET` | `/api/auth/sessao` | cookie (opcional) | Consulta **sem renovar**: `{ name, role }` de quem está logado, ou `data: null`. Não emite token nem troca o cookie — é o que o site público usa para mostrar a faixa da equipe e o botão "Editar". `Cache-Control: no-store`; limite da API pública |
 
 ---
 

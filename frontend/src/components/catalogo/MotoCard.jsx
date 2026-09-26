@@ -4,10 +4,11 @@ import { Link } from 'react-router-dom';
 import { Badge } from '@/components/ui/Badge.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
+import { useAuth } from '@/hooks/useAuth.js';
 import { useStore } from '@/hooks/useStore.js';
 import { formatarCilindrada, formatarKm, formatarPreco } from '@/utils/format.js';
 import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
-import { caminhoDaMoto, urlDaMoto } from '@/utils/moto.js';
+import { caminhoDaMoto, caminhoDeEdicao, urlDaMoto } from '@/utils/moto.js';
 import { carregarMotoDetalhe } from '@/routes/carregadores.js';
 import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
 
@@ -21,6 +22,7 @@ import { linkWhatsApp, mensagemInteresse } from '@/utils/whatsapp.js';
  */
 export function MotoCard({ moto }) {
   const { store } = useStore();
+  const { membroDaEquipe } = useAuth();
   const foto = imagemPrincipal(moto);
   const nome = nomeDaMoto(moto);
   const reservada = moto.status === MOTO_STATUS.RESERVED;
@@ -52,6 +54,17 @@ export function MotoCard({ moto }) {
             {emOferta && <Badge tone="brand">Oferta</Badge>}
             {!emOferta && moto.featured && <Badge tone="neutral">Destaque</Badge>}
           </div>
+        )}
+
+        {/* Atalho da equipe logada; acima do link que cobre o card (z-10). */}
+        {membroDaEquipe && (
+          <Link
+            to={caminhoDeEdicao(moto.id)}
+            aria-label={`Editar ${nome}`}
+            className="label-caps absolute top-2.5 right-2.5 z-10 rounded-sm bg-ink-900/90 px-2.5 py-1.5 text-[10px] text-ink-50 hover:text-brand-500"
+          >
+            Editar
+          </Link>
         )}
       </div>
 
