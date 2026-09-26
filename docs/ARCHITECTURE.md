@@ -1587,12 +1587,22 @@ produção.
 
 ### 13.5 Rotina de deploy
 
-1. Push na branch → CI: `lint` → `test` → `build`.
-2. Build do frontend gera `frontend/dist`, servido pelo backend.
-3. Migração de índices por script explícito (`npm run db:indexes`), nunca
-   `autoIndex` em produção.
-4. Health check em `/api/health`; o provedor só troca o tráfego após passar.
-5. Rollback = redeploy do build anterior.
+Implementada na FASE 12 ([`render.yaml`](../render.yaml); operação em
+[`DEPLOYMENT.md`](./DEPLOYMENT.md)):
+
+1. Push na `main` → CI no GitHub: lint, formato, testes com cobertura, build
+   e E2E. O Render só constrói depois dos checks verdes
+   (`autoDeployTrigger: checksPass`).
+2. Build gera `frontend/dist` (site) e `frontend/dist-ssr` (renderização no
+   servidor), servidos pelo backend.
+3. Pré-deploy: `npm run db:indexes` cria os índices de **todas** as coleções
+   (`config/indexes.js`). `autoIndex` desligado em produção.
+4. O servidor recusa subir em produção sem o build do site; o provedor só
+   troca o tráfego quando `/api/health` responde 200 (exige o banco
+   conectado). Falha em qualquer passo mantém a versão anterior.
+5. Depois do deploy, `npm run smoke` confere o ambiente publicado.
+6. Rollback = botão *Rollback* do Render para o deploy anterior (sem build),
+   seguido de `git revert` na `main`.
 
 ### 13.6 Backup
 

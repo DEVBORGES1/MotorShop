@@ -1,0 +1,105 @@
+# Blueprint do Render (ARCHITECTURE §13.2, decisão C): o serviço inteiro
+# descrito aqui. No painel do Render: New → Blueprint → este repositório.
+# Os segredos (sync: false) são pedidos na criação e ficam só no painel —
+# nunca neste arquivo. Passo a passo em docs/DEPLOYMENT.md.
+#
+# Deploy: push na main → CI verde no GitHub → Render constrói → cria os
+# índices → sobe → só troca o tráfego quando /api/health responde 200.
+
+services:
+  - type: web
+    name: motorshop
+    runtime: node
+    plan: starter # instância paga: não hiberna e permite o preDeployCommand
+    region: virginia # mesma região do cluster do Atlas (AWS us-east-1)
+    branch: main
+    # Só depois que os checks do GitHub (CI) passarem.
+    autoDeployTrigger: checksPass
+    # --include=dev: o build do site usa o Vite, que é dependência de
+    # desenvolvimento; NODE_ENV=production faria o npm pulá-lo.
+    buildCommand: npm ci --include=dev && npm run build
+    # Índices por script, não pelo Mongoose a cada início (autoIndex desligado).
+    preDeployCommand: npm run db:indexes
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      # Gerado pelo Render, diferente por serviço: token de staging não vale
+      # em produção. "Gerar de novo" no painel = rotação (derruba as sessões).
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false # https://seudominio.com.br
+      # 1 = Render direto. Com o Cloudflare na frente (proxy laranja), 2.
+      - key: TRUST_PROXY_HOPS
+        value: '1'
+      - key: STORAGE_PROVIDER
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: STORAGE_FOLDER
+        value: prod
+      - key: ROBOTS_POLICY
+        value: allow
+      - key: LOG_LEVEL
+        value: info
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_ENVIRONMENT
+        value: production
+      # O build não precisa do MongoDB em memória (só os testes usam).
+      - key: MONGOMS_DISABLE_POSTINSTALL
+        value: '1'
+
+  # Staging: a mesma aplicação, fora do Google (robots Disallow: /), com
+  # banco, pasta de imagens e JWT_SECRET próprios. Para testar antes e para
+  # demonstração sem expor a loja de verdade.
+  - type: web
+    name: motorshop-staging
+    runtime: node
+    plan: starter
+    region: virginia
+    branch: main
+    autoDeployTrigger: checksPass
+    buildCommand: npm ci --include=dev && npm run build
+    preDeployCommand: npm run db:indexes
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: TRUST_PROXY_HOPS
+        value: '1'
+      - key: STORAGE_PROVIDER
+        value: cloudinary
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: STORAGE_FOLDER
+        value: staging
+      - key: ROBOTS_POLICY
+        value: disallow
+      - key: LOG_LEVEL
+        value: info
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_ENVIRONMENT
+        value: staging
+      - key: MONGOMS_DISABLE_POSTINSTALL
+        value: '1'

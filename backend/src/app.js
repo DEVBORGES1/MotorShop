@@ -106,6 +106,11 @@ export function createApp({
 function mountFrontend(app, frontendDir) {
   if (!frontendDir) return;
   if (!existsSync(join(frontendDir, 'index.html'))) {
+    // Em produção, subir sem o site é deploy quebrado: falhar aqui faz o
+    // provedor manter a versão anterior no ar (o health check nunca passa).
+    if (env.isProduction) {
+      throw new Error(`Build do site não encontrado em ${frontendDir} — rode "npm run build"`);
+    }
     logger.info({ frontendDir }, 'Build do site não encontrado — servindo só a API');
     return;
   }

@@ -1,5 +1,6 @@
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
+import { captureError } from '../config/monitoring.js';
 import { ApiError } from '../utils/ApiError.js';
 import { fail } from '../utils/apiResponse.js';
 
@@ -35,6 +36,7 @@ export function errorHandler(error, req, res, next) {
   const log = { err: error, requestId: req.id };
   if (statusCode >= 500) {
     logger.error(log, 'Erro não tratado');
+    captureError(error, { requestId: req.id, path: req.path });
   } else {
     logger.warn({ requestId: req.id, statusCode, message }, 'Requisição rejeitada');
   }

@@ -1,6 +1,7 @@
 import { connectDatabase, disconnectDatabase } from './config/database.js';
 import { env } from './config/env.js';
 import { logger } from './config/logger.js';
+import { flushMonitoring, initMonitoring } from './config/monitoring.js';
 import { createApp } from './app.js';
 
 /**
@@ -8,6 +9,7 @@ import { createApp } from './app.js';
  * encerra de forma ordenada.
  */
 async function start() {
+  if (initMonitoring()) logger.info('Monitoramento de erros ligado');
   if (!env.hasPersistentJwtSecret) {
     logger.warn(
       'JWT_SECRET não definida — um segredo temporário foi gerado. ' +
@@ -26,6 +28,7 @@ async function start() {
   const shutdown = (signal) => {
     logger.info(`${signal} recebido — encerrando`);
     server.close(async () => {
+      await flushMonitoring();
       await disconnectDatabase();
       process.exit(0);
     });

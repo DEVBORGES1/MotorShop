@@ -1,7 +1,7 @@
 # MotorShop — Roadmap de Implementação
 
 > Complemento de [`docs/ARCHITECTURE.md`](./ARCHITECTURE.md).
-> **Status atual: FASES 0 a 11 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live; FASE 11 com o bloqueio de merge a ativar no GitHub). FASE 12 aguardando autorização.**
+> **Status atual: FASES 0 a 11 concluídas (FASES 8 e 9 com verificações manuais pendentes; FASE 10 com rotação de segredos no go-live; FASE 11 com o bloqueio de merge a ativar no GitHub). FASE 12 preparada no repositório — a publicação depende das contas do dono.**
 
 ---
 
@@ -1068,7 +1068,7 @@ cobertura atingida e o tempo de execução dentro do limite.
 
 ---
 
-# FASE 12 — Deploy
+# FASE 12 — Deploy 🟡 preparada (a publicação depende das contas do dono)
 
 ### Objetivo
 Colocar em produção, com CI/CD, backup e monitoramento — pronto para
@@ -1092,32 +1092,82 @@ demonstração comercial.
 
 ### Arquivos envolvidos
 ```
-.github/workflows/{ci,deploy}.yml
-backend/package.json                   scripts de start e migração
-backend/src/app.js                     servir estáticos em produção
-docs/DEPLOYMENT.md                     runbook (novo)
-.env.example                           conjunto final de variáveis
+render.yaml                               serviços de produção e staging (Blueprint)
+.node-version                             Node 22 no provedor
+.github/workflows/fumaca.yml              teste de fumaça depois do deploy
+scripts/fumaca.mjs                        o teste de fumaça (npm run smoke)
+backend/src/config/indexes.js             todos os modelos com índice (novo)
+backend/src/config/database.js            autoIndex desligado em produção
+backend/src/config/monitoring.js          Sentry, sem dado pessoal (novo)
+backend/src/config/env.js                 SENTRY_DSN, SENTRY_ENVIRONMENT
+backend/src/app.js                        recusa subir em produção sem o build
+backend/src/scripts/{createIndexes,checkDatabase,seed}.js
+docs/DEPLOYMENT.md                        runbook (novo)
+.env.example · docs/SETUP.md · docs/SECURITY.md
 ```
 
 ### Dependências
-`@sentry/node` (ou equivalente) — justificativa: sem captura de erro em
-produção, falha de cliente só se descobre por reclamação.
+`@sentry/node` 11 — justificativa: sem captura de erro em produção, falha de
+cliente só se descobre por reclamação. Ligado só com `SENTRY_DSN`; `npm
+audit` segue em zero.
 
 ### Critérios de conclusão
+O que está pronto no repositório foi verificado localmente, simulando o
+pipeline do Render (build com `NODE_ENV=production`, pré-deploy, partida e
+fumaça). Os itens abertos exigem as contas e o domínio (seção
+"Pendências").
+
 - [ ] Site público acessível por HTTPS no domínio definitivo
 - [ ] Painel admin acessível e funcional em produção
-- [ ] Push na branch principal → deploy automático após CI verde
-- [ ] Health check bloqueia deploy defeituoso
+- [x] Push na branch principal → deploy automático após CI verde
+      *(configurado: `autoDeployTrigger: checksPass`; efetivo quando o
+      Blueprint for criado)*
+- [x] Health check bloqueia deploy defeituoso *(503 com banco fora;
+      servidor recusa subir sem o build; índices no pré-deploy — conferido
+      na simulação)*
 - [ ] Atlas M10 com backup contínuo ativo
-- [ ] **Restauração de backup testada com sucesso** (backup não testado não é
-      backup)
-- [ ] Índices criados em produção e verificados
-- [ ] Nenhuma variável sensível no repositório
-- [ ] Monitoramento de erro recebendo eventos; alerta configurado
-- [ ] Rollback executado com sucesso em teste
-- [ ] Loja de demonstração populada e apresentável
-- [ ] Staging com `Disallow: /` confirmado
-- [ ] `docs/DEPLOYMENT.md` permite a outra pessoa operar o sistema
+- [ ] **Restauração de backup testada com sucesso** *(procedimento e
+      `npm run db:check` prontos; falta executar no Atlas)*
+- [x] Índices criados em produção e verificados *(script cobre as 6
+      coleções; teste garante; roda a cada deploy)*
+- [x] Nenhuma variável sensível no repositório *(segredos `sync: false`;
+      `JWT_SECRET` gerado pelo Render)*
+- [ ] Monitoramento de erro recebendo eventos; alerta configurado *(código
+      pronto e testado; falta o DSN do projeto Sentry)*
+- [ ] Rollback executado com sucesso em teste *(procedimento documentado;
+      executar no staging)*
+- [x] Loja de demonstração populada e apresentável *(seed de produção com
+      confirmação explícita; falta rodar no staging e subir as fotos)*
+- [x] Staging com `Disallow: /` confirmado *(configurado no `render.yaml`;
+      a fumaça confere com `--robots=disallow`)*
+- [x] `docs/DEPLOYMENT.md` permite a outra pessoa operar o sistema
+
+### Problemas encontrados e corrigidos
+- **Índices faltando em produção:** o script de índices só cobria marcas e
+  motos. Usuários (e-mail único), sessões (`jti` único e **expiração
+  automática** das sessões vencidas) e leads ficariam sem índice se o
+  `autoIndex` fosse desligado — e o documento dizia que já era, mas o código
+  nunca o desligava. Agora o `autoIndex` está desligado em produção e o
+  script cobre todos os modelos, com teste.
+- **Deploy sem o site subia "saudável":** sem `frontend/dist`, o servidor
+  subia servindo só a API e o health check respondia 200. Em produção,
+  agora ele recusa subir, e o Render mantém a versão anterior.
+- **Seed impossível para a loja de demonstração:** recusava produção sem
+  saída. Agora aceita com `--confirmar-apagar-estoque` e cria a loja de
+  demonstração se não houver uma.
+
+### Pendências (dependem de você)
+Na ordem do [DEPLOYMENT.md](./DEPLOYMENT.md):
+1. Criar as contas (Render, Atlas, Cloudinary; recomendadas: Cloudflare,
+   Sentry, monitor de disponibilidade) e definir o domínio (decisão **D**).
+2. Atlas: cluster M10 de produção com backup contínuo, M0 de staging,
+   usuários por ambiente.
+3. Render: *New → Blueprint* com este repositório; preencher os segredos.
+4. `npm run create:superadmin` pelo Shell; configurar a loja no painel.
+5. Staging: seed de demonstração e fotos; **teste de rollback**.
+6. **Teste de restauração** do backup (DEPLOYMENT §10).
+7. Rotação dos segredos, `npm run smoke`, Lighthouse no domínio, preview de
+   link e Rich Results.
 
 ### Testes necessários
 | Tipo | O que |
@@ -1261,6 +1311,11 @@ aparecem como **pulados** — nunca aprovados — e na CI falham. Como rodar:
 O design de referência das telas está em
 [`docs/design/README.md`](./design/README.md).
 
-**Próximo passo:** sua autorização para a **FASE 12** (deploy). Antes dela,
-vale ativar no GitHub o bloqueio de merge com os checks da CI (Settings →
-Branches).
+A FASE 12 deixou o deploy pronto para executar: serviços descritos no
+`render.yaml` (produção e staging), índices e health check que bloqueiam
+deploy defeituoso, monitoramento de erros sem dado pessoal, teste de fumaça
+e o runbook [`DEPLOYMENT.md`](./DEPLOYMENT.md).
+
+**Próximo passo:** criar as contas e seguir o [`DEPLOYMENT.md`](./DEPLOYMENT.md)
+— com os acessos em mãos, a publicação e as verificações de produção fecham a
+FASE 12. Depois, a **FASE 13** (auditoria final).

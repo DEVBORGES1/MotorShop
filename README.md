@@ -25,7 +25,7 @@ a outras lojas **por configuração, sem alteração de código**.
 | **FASE 9** — SEO + performance | ✅ concluída — falta validar o preview com endereço público |
 | **FASE 10** — Segurança | ✅ concluída — segredos são rotacionados no deploy |
 | **FASE 11** — Testes | ✅ concluída |
-| **FASE 12** — Deploy | ⏳ aguardando autorização |
+| **FASE 12** — Deploy | 🟡 preparada — falta publicar com as contas da loja ([`DEPLOYMENT.md`](./docs/DEPLOYMENT.md)) |
 | **FASE 13** — Auditoria final | — |
 
 O que existe hoje: site público renderizado no servidor (home, estoque com
@@ -36,7 +36,8 @@ configurações da loja), autenticação com sessões revogáveis, segurança
 auditada ([`docs/SECURITY.md`](./docs/SECURITY.md)) e ~950 testes — unitários,
 integração, componentes, segurança e E2E — rodando na CI.
 
-O que falta: publicar (FASE 12) e a auditoria final para revenda (FASE 13)
+O que falta: publicar seguindo o [`DEPLOYMENT.md`](./docs/DEPLOYMENT.md) (FASE 12)
+e a auditoria final para revenda (FASE 13)
 ([`docs/ROADMAP.md`](./docs/ROADMAP.md)).
 
 ---|---|
@@ -216,6 +217,8 @@ MotorShop/
 │     └─ styles/               tokens de design (variáveis CSS)
 │
 ├─ e2e/                       fluxos de ponta a ponta (Playwright)
+├─ scripts/fumaca.mjs         teste de fumaça de um site publicado
+├─ render.yaml                serviços de produção e staging no Render
 ├─ .github/workflows/ci.yml   CI: lint, formato, testes com cobertura, build e E2E
 │
 ├─ docs/
@@ -224,6 +227,7 @@ MotorShop/
 │  ├─ ROADMAP.md               fases 0 a 13
 │  ├─ SETUP.md                 configuração do ambiente local
 │  ├─ SECURITY.md              segurança verificada, OWASP e LGPD
+│  ├─ DEPLOYMENT.md            deploy, backup, rollback e operação
 │  ├─ PHASE-1-REPORT.md        relatório da FASE 1
 │  ├─ PHASE-2-REPORT.md        relatório da FASE 2
 │  └─ PHASE-3-REPORT.md        relatório da FASE 3

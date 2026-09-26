@@ -54,6 +54,12 @@ const envSchema = z
 
     LOG_LEVEL: z.enum(LOG_LEVELS).default('info'),
     BODY_LIMIT: z.string().trim().default('100kb'),
+
+    // Monitoramento de erros (Sentry). Sem DSN, desligado. O DSN não é
+    // segredo (só permite ENVIAR eventos), mas é por ambiente.
+    SENTRY_DSN: z.url({ protocol: /^https$/ }).optional(),
+    // Nome do ambiente nos eventos (`production`, `staging`). Padrão: NODE_ENV.
+    SENTRY_ENVIRONMENT: z.string().trim().min(1).max(40).optional(),
   })
   .superRefine((value, ctx) => {
     // CORS: só origens explícitas. "*" com credenciais liberaria qualquer site

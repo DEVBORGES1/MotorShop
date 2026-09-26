@@ -1,14 +1,16 @@
 import mongoose from 'mongoose';
 
 import { connectDatabase, disconnectDatabase } from '../config/database.js';
-import { Brand } from '../modules/brands/brand.model.js';
-import { Moto } from '../modules/motos/moto.model.js';
+import { createAllIndexes } from '../config/indexes.js';
 
 /**
- * Cria os índices declarados nos schemas.
+ * Cria os índices declarados nos schemas de TODOS os modelos
+ * (config/indexes.js).
  *
- * `autoIndex` fica desligado em produção (construir índice a cada deploy é
- * custo desnecessário), então a criação é um passo explícito do deploy.
+ * `autoIndex` fica desligado em produção (construir índice a cada início é
+ * custo desnecessário e pode travar o banco com dados grandes), então a
+ * criação é um passo explícito do deploy. Rodar de novo não faz mal: índice
+ * que já existe fica como está.
  */
 async function run() {
   const connected = await connectDatabase();
@@ -18,11 +20,15 @@ async function run() {
     return;
   }
 
-  for (const model of [Brand, Moto]) {
-    console.log(`\n${model.collection.collectionName}:`);
-    await model.createIndexes();
-    for (const index of await model.collection.indexes()) {
-      console.log(`  ✓ ${index.name}  ${JSON.stringify(index.key)}`);
+  for (const { collection, indexes } of await createAllIndexes()) {
+    console.log(`\n${collection}:`);
+    for (const index of indexes) {
+      const extras = [index.unique && 'único', index.ttl != null && `expira em ${index.ttl}s`]
+        .filter(Boolean)
+        .join(', ');
+      console.log(
+        `  ✓ ${index.name}  ${JSON.stringify(index.key)}${extras ? `  (${extras})` : ''}`,
+      );
     }
   }
 

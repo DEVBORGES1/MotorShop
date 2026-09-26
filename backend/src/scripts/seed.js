@@ -3,19 +3,35 @@ import mongoose from 'mongoose';
 
 import { connectDatabase, disconnectDatabase } from '../config/database.js';
 import { env } from '../config/env.js';
+import { createAllIndexes } from '../config/indexes.js';
 import { Brand } from '../modules/brands/brand.model.js';
 import { Moto } from '../modules/motos/moto.model.js';
+import { StoreSettings } from '../modules/store/store.model.js';
 import { toCents } from '../utils/money.js';
 import { buildSlug } from '../utils/slug.js';
 
 /**
  * Popula a loja fictícia de demonstração.
  *
- * Sem imagens: o upload chega na FASE 8. Preços em reais aqui, convertidos
- * para centavos na gravação.
+ * Sem fotos: elas entram pelo painel (o arquivo vai direto ao provedor de
+ * imagens). Preços em reais aqui, convertidos para centavos na gravação.
  *
- * Idempotente: limpa motos e marcas antes de inserir. NÃO roda em produção.
+ * Idempotente: limpa motos e marcas antes de inserir. Em produção, só com a
+ * confirmação explícita `--confirmar-apagar-estoque` — é o caso da loja de
+ * demonstração (FASE 12), nunca o de uma loja com estoque real.
  */
+
+const CONFIRMACAO = '--confirmar-apagar-estoque';
+
+/** Configuração da loja de demonstração, criada só se ainda não houver loja. */
+const LOJA_DEMO = {
+  name: 'MotorShop Demonstração',
+  slogan: 'Motos revisadas, prontas para rodar',
+  contact: { whatsapp: '11999990000', email: 'contato@demonstracao.invalid' },
+  address: { city: 'São Paulo', state: 'SP' },
+  features: { financingEnabled: true, sellMotoEnabled: true },
+  financing: { monthlyRate: 1.79, installmentOptions: [12, 24, 36, 48], minDownPaymentPercent: 20 },
+};
 
 const BRANDS = ['Honda', 'Yamaha', 'Kawasaki', 'Suzuki', 'BMW', 'Royal Enfield'];
 
@@ -95,8 +111,11 @@ function transmissionFor(engineCapacity) {
 
 async function run() {
   // Verificado ANTES de conectar: o seed apaga motos e marcas.
-  if (env.isProduction) {
-    console.error('Recusando rodar o seed em produção: ele apaga motos e marcas.');
+  if (env.isProduction && !process.argv.includes(CONFIRMACAO)) {
+    console.error(
+      'Recusando rodar o seed em produção: ele APAGA todas as motos e marcas.\n' +
+        `Para a loja de demonstração, confirme com: npm run seed -- ${CONFIRMACAO}`,
+    );
     process.exitCode = 1;
     return;
   }
@@ -149,8 +168,14 @@ async function run() {
   console.log(`${docs.length} motos criadas:`);
   for (const { _id, count } of byStatus) console.log(`  ${_id}: ${count}`);
 
+  // A loja configurada pelo dono nunca é sobrescrita.
+  if (!(await StoreSettings.exists({}))) {
+    await StoreSettings.create(LOJA_DEMO);
+    console.log(`Loja "${LOJA_DEMO.name}" criada (ajuste em Configurações no painel).`);
+  }
+
   console.log('\nCriando índices…');
-  await Promise.all([Brand.createIndexes(), Moto.createIndexes()]);
+  await createAllIndexes();
 
   console.log('Seed concluído.');
 }

@@ -82,7 +82,13 @@ export default [
     },
   },
 
-  // O servidor do E2E informa no terminal o que está fazendo.
+  // Scripts de operação (fumaça) e o servidor do E2E rodam em Node e
+  // informam no terminal o que estão fazendo.
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { ...globals.node } },
+    rules: { 'no-console': 'off' },
+  },
   {
     files: ['e2e/servidor.mjs'],
     rules: { 'no-console': 'off' },

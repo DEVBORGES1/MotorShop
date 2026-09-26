@@ -1,0 +1,40 @@
+# Teste de fumaça de um ambiente publicado (scripts/fumaca.mjs): só leitura,
+# ~1 s. Roda sozinho quando o Render informa um deploy concluído ao GitHub, ou
+# à mão em Actions → Fumaça → Run workflow, com o endereço do site.
+name: Fumaça
+
+on:
+  workflow_dispatch:
+    inputs:
+      url:
+        description: Endereço do site (https://...)
+        required: true
+      robots:
+        description: allow (produção) ou disallow (staging)
+        type: choice
+        options: [allow, disallow]
+        default: allow
+  deployment_status:
+
+permissions:
+  contents: read
+
+jobs:
+  fumaca:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.deployment_status.state == 'success' &&
+      github.event.deployment_status.environment_url != '')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # Valores passados por variável de ambiente, nunca colados no comando:
+      # texto vindo de fora não vira shell.
+      - run: node scripts/fumaca.mjs "$URL" --robots="$ROBOTS"
+        env:
+          URL: ${{ inputs.url || github.event.deployment_status.environment_url }}
+          ROBOTS: ${{ inputs.robots || (contains(github.event.deployment_status.environment, 'staging') && 'disallow' || 'allow') }}

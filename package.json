@@ -29,7 +29,9 @@
     "verify": "npm run lint && npm run format:check && npm test && npm run build",
     "create:superadmin": "npm run create:superadmin --workspace @motorshop/backend",
     "seed": "npm run seed --workspace @motorshop/backend",
-    "db:indexes": "npm run db:indexes --workspace @motorshop/backend"
+    "db:indexes": "npm run db:indexes --workspace @motorshop/backend",
+    "db:check": "npm run db:check --workspace @motorshop/backend",
+    "smoke": "node scripts/fumaca.mjs"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

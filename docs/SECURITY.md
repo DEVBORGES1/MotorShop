@@ -217,10 +217,14 @@ todos aparecem com o IP do proxy e se bloqueiam entre si. Coberto por
 
 ## 9. Checklist de go-live
 
+Passo a passo de cada item em [`DEPLOYMENT.md`](./DEPLOYMENT.md) (§12 para a
+rotação).
+
 - [ ] **Rotacionar todos os segredos** — os usados em desenvolvimento e
       testes não vão para produção:
-  - [ ] `JWT_SECRET`: novo, aleatório (`openssl rand -base64 48`), exclusivo
-        de produção. Trocar derruba todas as sessões — é o esperado.
+  - [ ] `JWT_SECRET`: gerado pelo Render (`generateValue` no
+        `render.yaml`), diferente em produção e staging. Trocar derruba todas
+        as sessões — é o esperado.
   - [ ] Usuário e senha do MongoDB Atlas: usuário próprio de produção,
         permissão só no banco da loja, acesso de rede restrito.
   - [ ] `CLOUDINARY_API_SECRET`: gerar novo par de chaves e revogar o antigo.
@@ -228,6 +232,10 @@ todos aparecem com o IP do proxy e se bloqueiam entre si. Coberto por
 - [ ] `NODE_ENV=production` (liga HSTS, cookie `Secure`, erros genéricos).
 - [ ] `FRONTEND_URL` com o domínio real.
 - [ ] `TRUST_PROXY_HOPS` conforme a hospedagem (§7).
+- [ ] `SENTRY_DSN` preenchido e alerta de problema novo configurado.
+- [ ] Monitor de disponibilidade em `/api/health`.
+- [ ] Teste de restauração de backup registrado (DEPLOYMENT §10).
+- [ ] `npm run smoke -- https://<domínio>` sem falhas.
 - [ ] Após 2–4 semanas: revisar rate limits com o tráfego real.
 
 ## 10. LGPD
@@ -306,7 +314,7 @@ dados dela nas Configurações. Quem hospeda e mantém a plataforma atua como
 | A06 | Componentes vulneráveis | ✅ `npm audit` zerado; dependências novas só com justificativa (ARCHITECTURE §2.2). Rever a cada entrega | §8 |
 | A07 | Falhas de identificação e autenticação | ✅ Limites por conta e por IP; mensagem e tempo iguais; rotação e reuso de refresh; sessão cai com a desativação | §3, §7 |
 | A08 | Integridade de software e dados | ✅ Resposta do provedor de imagens verificada por assinatura; URL da foto montada no servidor; lockfile versionado | §6 |
-| A09 | Falhas de log e monitoramento | ✅ Log estruturado com `requestId` em toda requisição (inclusive 401 e 429), reuso de refresh token registrado como alerta, PII removida. ⚠️ Alertas dependem da hospedagem (FASE 12) | §8 |
+| A09 | Falhas de log e monitoramento | ✅ Log estruturado com `requestId` em toda requisição (inclusive 401 e 429), reuso de refresh token registrado como alerta, PII removida. Erros 500 vão ao Sentry sem dado pessoal (sem cabeçalhos, corpo, IP); `/api/health` responde 503 com o banco fora, para o monitor de disponibilidade | §8, DEPLOYMENT §8 |
 | A10 | SSRF | ✅ O servidor não busca URL informada pelo usuário: a foto é enviada pelo navegador e o servidor só monta a URL a partir do `publicId` | §6 |
 
 ## 12. Riscos aceitos

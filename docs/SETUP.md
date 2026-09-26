@@ -79,6 +79,8 @@ site em `http://localhost:5173`, sem nenhum ajuste.
 | `CLOUDINARY_API_SECRET` | se `cloudinary` | — | **Segredo.** Só no `.env` do backend |
 | `STORAGE_FOLDER` | não | `motorshop` | Pasta-raiz no provedor, uma por loja e ambiente (ex.: `loja-x/prod`) |
 | `LOG_LEVEL` | não | `info` | Nível do log |
+| `SENTRY_DSN` | não | — | Monitoramento de erros (só em produção; ver [DEPLOYMENT §8](./DEPLOYMENT.md#8-monitoramento)) |
+| `SENTRY_ENVIRONMENT` | não | `NODE_ENV` | Nome do ambiente nos eventos do Sentry |
 | `BODY_LIMIT` | não | `100kb` | Limite do corpo JSON |
 | `TRUST_PROXY_HOPS` | não | `1` | Quantos proxies à frente do servidor: `0` direto, `1` Render, `2` Cloudflare → Render. Errado, os limites por IP falham ([SECURITY §7](./SECURITY.md#7-limites-de-requisição)) |
 | `ROBOTS_POLICY` | não | `allow` | `disallow` em staging/demonstração: `robots.txt` bloqueia tudo |
@@ -206,6 +208,9 @@ Todos rodam a partir da **raiz**:
 | `npm test` | Testes dos três workspaces (shared, backend, frontend) |
 | `npm run test:coverage` | Os mesmos testes com cobertura e limites (70% global, 90% em serviços e no financiamento) |
 | `npm run test:e2e` | Os 5 fluxos de ponta a ponta no navegador (exige `npm run build` antes) |
+| `npm run db:indexes` | Cria os índices de todas as coleções (passo do deploy) |
+| `npm run db:check` | Confere o banco: loja, administrador e índices (só lê) |
+| `npm run smoke -- <url>` | Teste de fumaça de um site publicado ([DEPLOYMENT §9](./DEPLOYMENT.md#9-conferir-um-deploy)) |
 | `npm run lint` / `lint:fix` | ESLint |
 | `npm run format` / `format:check` | Prettier |
 | `npm run verify` | **lint + format + testes + build** — rode antes de commitar |

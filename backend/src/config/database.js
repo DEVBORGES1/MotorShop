@@ -56,6 +56,9 @@ export async function connectDatabase() {
   await mongoose.connect(env.MONGODB_URI, {
     maxPoolSize: 10,
     serverSelectionTimeoutMS: 10_000,
+    // Em produção os índices são criados no deploy (`npm run db:indexes`),
+    // não a cada início do servidor (ARCHITECTURE §13.5).
+    autoIndex: !env.isProduction,
   });
 
   return true;

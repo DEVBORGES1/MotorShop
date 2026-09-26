@@ -13,10 +13,12 @@
     "test:watch": "vitest",
     "seed": "node --env-file-if-exists=../.env src/scripts/seed.js",
     "db:indexes": "node --env-file-if-exists=../.env src/scripts/createIndexes.js",
+    "db:check": "node --env-file-if-exists=../.env src/scripts/checkDatabase.js",
     "create:superadmin": "node --env-file-if-exists=../.env src/scripts/createSuperAdmin.js"
   },
   "dependencies": {
     "@motorshop/shared": "*",
+    "@sentry/node": "^11.0.0",
     "argon2": "^0.45.1",
     "cloudinary": "^2.11.0",
     "compression": "^1.8.2",
