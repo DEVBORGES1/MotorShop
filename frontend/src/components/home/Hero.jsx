@@ -50,7 +50,7 @@ export function Hero({ store, total, whatsapp, moto }) {
                 : undefined
             }
             height={ALTURA_LOGO}
-            className="mb-8 w-auto"
+            className="mb-8 w-auto self-start"
             style={{ height: ALTURA_LOGO }}
           />
         )}
