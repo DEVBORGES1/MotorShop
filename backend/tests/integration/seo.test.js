@@ -110,6 +110,53 @@ describe.skipIf(skipWithoutDb)('SEO: HTML inicial por rota', () => {
     );
   });
 
+  it('home: listas do hero no HTML e a foto do primeiro slide pré-anunciada', async () => {
+    await Moto.updateOne({ _id: moto._id }, { featured: true });
+
+    const res = await pagina('/');
+    const dados = JSON.parse(
+      res.text.match(/<script type="application\/json" id="dados-iniciais">(.*?)<\/script>/s)[1],
+    );
+
+    // No formato da resposta da API, para o site usar sem pedir de novo.
+    expect(dados.home.destaques).toMatchObject({ success: true, meta: { total: 1 } });
+    expect(dados.home.destaques.data[0].slug).toBe('honda-cb-500f-2024');
+    expect(dados.home.recentes.data).toHaveLength(1);
+    expect(dados.home.ofertas.data).toEqual([]);
+    // Mesmo srcset e sizes do Hero (contexto "zoom", 100vw).
+    expect(res.text).toMatch(
+      /<link rel="preload" as="image" href="[^"]+w_2560\/v1\/loja\/motos\/x\/f1\.jpg" imagesrcset="[^"]+w_960\/v1\/loja\/motos\/x\/f1\.jpg 960w, [^"]+" imagesizes="100vw" fetchpriority="high">/,
+    );
+  });
+
+  it('estoque sem filtro: primeira página no HTML e a foto do primeiro card pré-anunciada', async () => {
+    const res = await pagina('/estoque');
+    const dados = JSON.parse(
+      res.text.match(/<script type="application\/json" id="dados-iniciais">(.*?)<\/script>/s)[1],
+    );
+
+    expect(dados.catalogo.data.map((m) => m.slug)).toEqual(['honda-cb-500f-2024']);
+    expect(dados.catalogo.meta).toMatchObject({ page: 1, total: 1 });
+    // Mesmo srcset e sizes do card.
+    expect(res.text).toMatch(
+      /<link rel="preload" as="image" href="[^"]+w_960\/v1\/loja\/motos\/x\/f1\.jpg" imagesrcset="[^"]+w_320\/v1\/loja\/motos\/x\/f1\.jpg 320w, [^"]+" imagesizes="\(min-width: 1024px\) 33vw, \(min-width: 640px\) 50vw, 100vw" fetchpriority="high">/,
+    );
+  });
+
+  it('estoque filtrado: o site busca sozinho, nada de lista nem pré-anúncio no HTML', async () => {
+    const res = await pagina('/estoque?marca=honda');
+
+    expect(res.text).not.toContain('"catalogo"');
+    expect(res.text).not.toContain('rel="preload" as="image"');
+  });
+
+  it('home sem moto com foto: sem pré-anúncio de imagem', async () => {
+    await Moto.updateOne({ _id: moto._id }, { images: [], mainImageId: null });
+
+    const res = await pagina('/');
+    expect(res.text).not.toContain('rel="preload" as="image"');
+  });
+
   it('texto do banco no JSON-LD não vira script executável', async () => {
     const res = await pagina('/motos/honda-cb-500f-2024');
     expect(res.text).not.toContain('<script>alert(1)</script>');

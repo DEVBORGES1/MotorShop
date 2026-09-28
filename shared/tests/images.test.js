@@ -12,9 +12,8 @@ describe('URLs de entrega', () => {
     );
   });
 
-  it('logo: margem vazia cortada antes de fixar a altura, proporção mantida', () => {
-    expect(logoUrl(PROVEDOR)).toContain('/image/upload/e_trim/c_limit,f_auto,q_auto,h_88/v1/');
-    expect(logoUrl(PROVEDOR, 120)).toContain(',h_120/');
+  it('logo: margem vazia cortada e um tamanho só (128 px) para toda tela', () => {
+    expect(logoUrl(PROVEDOR)).toContain('/image/upload/e_trim/c_limit,f_auto,q_auto,h_128/v1/');
   });
 
   it('ícone da aba: quadrado de 64 px em PNG, com margem em vez de corte', () => {

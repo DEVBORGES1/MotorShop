@@ -40,6 +40,26 @@ describe('Estoque (filtros, ordenação e paginação)', () => {
     expect(screen.getByText('1 moto encontrada')).toBeTruthy();
   });
 
+  it('sem filtro, usa a primeira página que veio no HTML, sem pedir à API', () => {
+    renderizar(<Estoque />, {
+      rota: '/estoque',
+      dados: { catalogo: pagina([motoDeTeste({ model: 'Do Servidor' })]) },
+    });
+
+    expect(screen.getByRole('link', { name: 'Honda Do Servidor' })).toBeTruthy();
+    expect(publicService.motos.list).not.toHaveBeenCalled();
+  });
+
+  it('com filtro na URL, ignora a lista do HTML e busca a filtrada', async () => {
+    renderizar(<Estoque />, {
+      rota: '/estoque?marca=yamaha',
+      dados: { catalogo: pagina([motoDeTeste({ model: 'Do Servidor' })]) },
+    });
+
+    await waitFor(() => expect(ultimaBusca()).toMatchObject({ marca: 'yamaha' }));
+    expect(screen.queryByRole('link', { name: 'Honda Do Servidor' })).toBeNull();
+  });
+
   it('marcar uma marca filtra a busca e vai para a URL (dá para compartilhar)', async () => {
     const { user, router } = renderizar(<Estoque />, { rota: '/estoque' });
 

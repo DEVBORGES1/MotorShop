@@ -45,7 +45,7 @@ function Abertura({ store, whatsapp }) {
         {store.logo?.url && (
           // Sem `width`: a imagem entregue vem sem a margem do arquivo (ver `logoUrl`).
           <img
-            src={logoUrl(store.logo.url, ALTURA_LOGO * 2)}
+            src={logoUrl(store.logo.url)}
             alt=""
             height={ALTURA_LOGO}
             className="mb-8 w-auto max-w-full object-contain object-left"

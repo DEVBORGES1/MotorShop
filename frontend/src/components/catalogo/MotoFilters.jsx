@@ -1,7 +1,7 @@
 import { FUEL_LABEL, TRANSMISSION_LABEL } from '@motorshop/shared';
-import { useEffect, useState } from 'react';
 
 import { inputClass } from '@/components/ui/Field.jsx';
+import { useRascunhoAdiado } from '@/hooks/useRascunhoAdiado.js';
 
 /**
  * Painel de filtros do estoque.
@@ -37,18 +37,7 @@ function Opcao({ marcada, onChange, children, contagem }) {
 
 /** Campo numérico que só avisa o pai quando o visitante para de digitar. */
 function CampoNumero({ id, rotulo, valor, onChange, placeholder }) {
-  const [rascunho, setRascunho] = useState(valor);
-
-  // A URL muda por fora (chip removido, "limpar filtros", botão voltar): o
-  // campo precisa acompanhar em vez de manter o que estava digitado.
-  useEffect(() => setRascunho(valor), [valor]);
-
-  useEffect(() => {
-    if (rascunho === valor) return undefined;
-
-    const id = setTimeout(() => onChange(rascunho), 400);
-    return () => clearTimeout(id);
-  }, [rascunho, valor, onChange]);
+  const [rascunho, setRascunho] = useRascunhoAdiado(valor, onChange);
 
   return (
     <div className="flex-1">

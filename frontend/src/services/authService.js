@@ -74,8 +74,3 @@ export async function consultarSessao() {
   if (!envelope.data) marcarEntrada(false);
   return envelope.data;
 }
-
-export async function fetchMe() {
-  const envelope = await api.get('/auth/me');
-  return envelope.data;
-}

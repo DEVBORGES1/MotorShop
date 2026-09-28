@@ -36,16 +36,23 @@ export function optimizedImageUrl(url, width) {
 }
 
 /**
+ * Altura do logo entregue: cobre o maior uso (64 px no cabeçalho) em tela de
+ * alta densidade. Um tamanho só para cabeçalho, hero e página Sobre: o arquivo
+ * desce uma vez e as outras telas o pegam do cache.
+ */
+const LOGO_HEIGHT = 128;
+
+/**
  * Logo em altura fixa, mantendo a proporção. Antes de redimensionar, corta a
  * margem vazia em volta do desenho (`e_trim`): logo exportado com sobra
  * transparente ocuparia a caixa com a sobra, e o desenho sairia minúsculo.
  * Por isso a proporção do arquivo guardado não vale para a imagem entregue.
  * Fora do provedor, a URL original.
  */
-export function logoUrl(url, height = 88) {
+export function logoUrl(url) {
   if (!url || !url.includes(DELIVERY_MARK)) return url;
   const [before, after] = url.split(DELIVERY_MARK);
-  return `${before}${DELIVERY_MARK}e_trim/c_limit,f_auto,q_auto,h_${height}/${after}`;
+  return `${before}${DELIVERY_MARK}e_trim/c_limit,f_auto,q_auto,h_${LOGO_HEIGHT}/${after}`;
 }
 
 /** Ícone da aba (favicon) a partir do logo: quadrado de 64 px, em PNG. */

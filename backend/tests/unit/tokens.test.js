@@ -1,5 +1,7 @@
+import jwt from 'jsonwebtoken';
 import { describe, expect, it } from 'vitest';
 
+import { env } from '../../src/config/env.js';
 import {
   generateRefreshToken,
   hashRefreshToken,
@@ -43,6 +45,21 @@ describe('access token', () => {
   it('rejeita lixo e valor vazio', () => {
     expect(verifyAccessToken('nao-e-jwt')).toBeNull();
     expect(verifyAccessToken('')).toBeNull();
+  });
+
+  it('só aceita o algoritmo da aplicação: "none" e outro HMAC com o mesmo segredo são recusados', () => {
+    const claims = { subject: usuario.id, issuer: env.JWT_ISSUER, audience: env.JWT_AUDIENCE };
+    const outroAlgoritmo = jwt.sign({ role: 'SUPER_ADMIN' }, env.JWT_SECRET, {
+      ...claims,
+      algorithm: 'HS512',
+    });
+    const semAssinatura = jwt.sign({ role: 'SUPER_ADMIN' }, null, {
+      ...claims,
+      algorithm: 'none',
+    });
+
+    expect(verifyAccessToken(outroAlgoritmo)).toBeNull();
+    expect(verifyAccessToken(semAssinatura)).toBeNull();
   });
 });
 

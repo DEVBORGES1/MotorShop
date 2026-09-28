@@ -13,7 +13,7 @@ import { Localizacao } from '@/components/home/Localizacao.jsx';
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { Revelar } from '@/components/ui/Revelar.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
-import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
+import { useBaseDoSite, useDadoInicial } from '@/contexts/DadosIniciaisContext.jsx';
 import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import * as publicService from '@/services/publicService.js';
@@ -59,15 +59,27 @@ export function Home() {
     jsonLd: [dealerJsonLd(store, `${base}/`)],
   });
 
+  // Os parâmetros destas três listas se repetem no servidor (`HOME_LISTS`, em
+  // seo.service.js), que as manda prontas no HTML para a foto do hero não
+  // esperar o JS e a API.
+  const inicial = useDadoInicial('home') ?? {};
   const destaques = useAsyncData(
     () => publicService.motos.list({ destaque: true, limit: 4, sort: 'recentes' }),
     [],
+    { inicial: inicial.destaques },
   );
   const ofertas = useAsyncData(
     () => publicService.motos.list({ oferta: true, limit: 3, sort: 'recentes' }),
     [],
+    { inicial: inicial.ofertas },
   );
-  const recentes = useAsyncData(() => publicService.motos.list({ limit: 6, sort: 'recentes' }), []);
+  const recentes = useAsyncData(
+    () => publicService.motos.list({ limit: 6, sort: 'recentes' }),
+    [],
+    {
+      inicial: inicial.recentes,
+    },
+  );
 
   // Faixas reais do estoque: alimentam a busca, os números e as marcas.
   const faixas = useAsyncData(() => publicService.filtros.get().catch(() => null), []).data;

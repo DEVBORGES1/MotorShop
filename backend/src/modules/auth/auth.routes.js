@@ -29,7 +29,8 @@ authRoutes.post(
   controller.login,
 );
 authRoutes.post('/refresh', requireDatabase, refreshLimiter, controller.refresh);
-authRoutes.post('/logout', requireDatabase, controller.logout);
+// Toda rota que consulta o banco tem limite, inclusive as de uso raro.
+authRoutes.post('/logout', requireDatabase, publicApiLimiter, controller.logout);
 // Consulta sem renovação, para o site público (limite do site, não o do refresh).
 authRoutes.get('/sessao', requireDatabase, publicApiLimiter, controller.session);
-authRoutes.get('/me', requireDatabase, authenticate, controller.me);
+authRoutes.get('/me', requireDatabase, publicApiLimiter, authenticate, controller.me);

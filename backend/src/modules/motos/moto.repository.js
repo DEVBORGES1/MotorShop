@@ -218,7 +218,7 @@ export function create(data) {
 }
 
 export function updateById(id, data) {
-  return Moto.findByIdAndUpdate(id, data, { new: true, runValidators: true })
+  return Moto.findByIdAndUpdate(id, data, { returnDocument: 'after', runValidators: true })
     .select('+licensePlate')
     .populate('brand', 'name slug')
     .lean();
@@ -237,7 +237,7 @@ export function pushImageIfRoom(id, image, maxImages) {
   return Moto.findOneAndUpdate(
     { _id: id, [`images.${maxImages - 1}`]: { $exists: false } },
     { $push: { images: image } },
-    { new: true },
+    { returnDocument: 'after' },
   ).lean();
 }
 
@@ -255,7 +255,7 @@ export function replaceImagesIfUnchanged(id, expectedIds, images, mainImageId) {
   return Moto.findOneAndUpdate(
     { _id: id, images: { $size: expectedIds.length }, 'images.id': { $all: expectedIds } },
     { $set: { images, mainImageId } },
-    { new: true },
+    { returnDocument: 'after' },
   )
     .select('+licensePlate')
     .populate('brand', 'name slug')
@@ -266,7 +266,7 @@ export function updateImageAlt(id, imageId, alt) {
   return Moto.findOneAndUpdate(
     { _id: id, 'images.id': imageId },
     { $set: { 'images.$.alt': alt } },
-    { new: true },
+    { returnDocument: 'after' },
   )
     .select('+licensePlate')
     .populate('brand', 'name slug')
@@ -278,7 +278,7 @@ export function pullImage(id, imageId) {
   return Moto.findOneAndUpdate(
     { _id: id, 'images.id': imageId },
     { $pull: { images: { id: imageId } } },
-    { new: false },
+    { returnDocument: 'before' },
   ).lean();
 }
 

@@ -1,5 +1,5 @@
 import { logoUrl } from '@motorshop/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { buttonClass } from '@/components/ui/Button.jsx';
@@ -38,9 +38,10 @@ export function Hero({ store, total, whatsapp, motos = [] }) {
   const [atual, setAtual] = useState(0);
   // Fotos montadas: as que já apareceram, a atual e a seguinte. As demais só
   // baixam perto da vez delas, para não disputar banda com a primeira (o LCP).
-  const [montadas, setMontadas] = useState(() => new Set([0, 1]));
+  const [montadas, setMontadas] = useState(() => new Set([0]));
   const [pausadoPeloBotao, setPausadoPeloBotao] = useState(false);
   const [emUso, setEmUso] = useState(false);
+  const primeiraFoto = useRef(null);
 
   // A lista cresce enquanto destaques, ofertas e recentes chegam; o índice
   // nunca aponta para fora dela.
@@ -48,13 +49,41 @@ export function Hero({ store, total, whatsapp, motos = [] }) {
   const moto = motos[indice] ?? null;
   const rodando = varias && !pausadoPeloBotao && !emUso;
 
+  const montar = useCallback(
+    (...indices) =>
+      setMontadas((antes) =>
+        indices.every((i) => antes.has(i)) ? antes : new Set([...antes, ...indices]),
+      ),
+    [],
+  );
+
   const irPara = useCallback(
     (novo) => {
       setAtual(novo);
-      setMontadas((antes) => new Set(antes).add(novo).add(indiceVizinho(novo, quantidade, 1)));
+      montar(novo, indiceVizinho(novo, quantidade, 1));
     },
-    [quantidade],
+    [quantidade, montar],
   );
+
+  // A segunda foto só começa a baixar quando a primeira chegou: antes disso,
+  // mesmo com prioridade baixa, ela dividiria a conexão com a foto do LCP.
+  // Pode já ter chegado antes da hidratação (veio pré-anunciada no HTML), e aí
+  // o evento `load` não dispara mais — por isso o `complete`.
+  useEffect(() => {
+    const foto = primeiraFoto.current;
+    if (!varias || !foto) return undefined;
+    if (foto.complete) {
+      montar(1);
+      return undefined;
+    }
+    const aoTerminar = () => montar(1);
+    foto.addEventListener('load', aoTerminar, { once: true });
+    foto.addEventListener('error', aoTerminar, { once: true });
+    return () => {
+      foto.removeEventListener('load', aoTerminar);
+      foto.removeEventListener('error', aoTerminar);
+    };
+  }, [varias, montar]);
 
   useEffect(() => {
     if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
@@ -86,6 +115,7 @@ export function Hero({ store, total, whatsapp, motos = [] }) {
               montadas.has(i) && (
                 <FotoDeFundo
                   key={item.id ?? item.slug}
+                  ref={i === 0 ? primeiraFoto : undefined}
                   foto={imagemPrincipal(item)}
                   visivel={i === indice}
                   principal={i === 0}
@@ -109,7 +139,7 @@ export function Hero({ store, total, whatsapp, motos = [] }) {
         {store.logo?.url && (
           // Sem `width`: a imagem entregue vem sem a margem do arquivo (ver `logoUrl`).
           <img
-            src={logoUrl(store.logo.url, ALTURA_LOGO * 2)}
+            src={logoUrl(store.logo.url)}
             alt={store.name}
             height={ALTURA_LOGO}
             className="mb-8 w-auto max-w-full self-start object-contain object-left"
@@ -198,11 +228,12 @@ export function Hero({ store, total, whatsapp, motos = [] }) {
  * Uma foto de fundo. As montadas ficam empilhadas e só a da vez aparece; a
  * troca de opacidade faz a passagem de uma para a outra.
  */
-function FotoDeFundo({ foto, visivel, principal }) {
+function FotoDeFundo({ foto, visivel, principal, ref }) {
   const atributos = atributosDeImagem(foto, 'ampliada');
 
   return (
     <img
+      ref={ref}
       {...atributos}
       // Ocupa a tela toda, em qualquer largura.
       sizes={atributos.srcSet ? '100vw' : undefined}

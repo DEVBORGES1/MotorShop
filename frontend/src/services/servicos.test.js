@@ -143,11 +143,9 @@ describe('sessão (authService)', () => {
 
   it('restaurar a sessão usa o cookie (refresh) e guarda o token novo', async () => {
     rotas['POST /auth/refresh'] = ok({ accessToken: 't2', user: { name: 'Ana' } });
-    rotas['GET /auth/me'] = ok({ name: 'Ana' });
 
     expect(await authService.restoreSession()).toEqual({ name: 'Ana' });
     expect(getAccessToken()).toBe('t2');
-    expect(await authService.fetchMe()).toEqual({ name: 'Ana' });
   });
 });
 

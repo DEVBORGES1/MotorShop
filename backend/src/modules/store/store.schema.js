@@ -164,7 +164,8 @@ export const updateStoreSchema = z
       .object({
         defaultTitle: optionalText(70),
         defaultDescription: optionalText(180),
-        siteUrl: z.string().trim().url().nullish(),
+        // Base de canonical, Open Graph e links do WhatsApp: só http(s), como os outros links.
+        siteUrl: httpUrl(200),
       })
       .strict()
       .optional(),

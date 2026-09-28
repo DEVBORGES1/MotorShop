@@ -1,5 +1,5 @@
 import { breadcrumbJsonLd, FUEL_LABEL, TRANSMISSION_LABEL } from '@motorshop/shared';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 
 import { MotoFilters } from '@/components/catalogo/MotoFilters.jsx';
@@ -9,10 +9,11 @@ import { Button } from '@/components/ui/Button.jsx';
 import { inputClass } from '@/components/ui/Field.jsx';
 import { Pagination } from '@/components/ui/Pagination.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
-import { useBaseDoSite } from '@/contexts/DadosIniciaisContext.jsx';
+import { useBaseDoSite, useDadoInicial } from '@/contexts/DadosIniciaisContext.jsx';
 import { usePaginaSeo } from '@/hooks/useSeo.js';
 import { useStore } from '@/hooks/useStore.js';
 import { useFiltrosCatalogo } from '@/hooks/useFiltrosCatalogo.js';
+import { useRascunhoAdiado } from '@/hooks/useRascunhoAdiado.js';
 import * as publicService from '@/services/publicService.js';
 import { contarFiltrosAtivos, descreverFiltros, paramsDaApi } from '@/utils/catalogo.js';
 import { formatarKm, formatarPreco } from '@/utils/format.js';
@@ -45,10 +46,14 @@ export function Estoque() {
 
   const params = paramsDaApi(filtros);
   const chaveDaBusca = new URLSearchParams(params).toString();
+  // Sem filtro na URL, a primeira página já veio no HTML (`catalogo`, em
+  // seo.service.js): a foto do primeiro card não espera o JS e a API.
+  const catalogoInicial = useDadoInicial('catalogo');
 
   const { data, error, isLoading } = useAsyncData(
     () => publicService.motos.list(params),
     [chaveDaBusca],
+    { inicial: search ? undefined : catalogoInicial },
   );
 
   // As faixas descrevem o estoque inteiro, não o resultado filtrado: se
@@ -165,16 +170,7 @@ export function Estoque() {
 
 /** Busca por texto, com espera para não disparar uma requisição por tecla. */
 function BuscaTextual({ valor, onChange }) {
-  const [rascunho, setRascunho] = useState(valor);
-
-  useEffect(() => setRascunho(valor), [valor]);
-
-  useEffect(() => {
-    if (rascunho === valor) return undefined;
-
-    const id = setTimeout(() => onChange(rascunho), 400);
-    return () => clearTimeout(id);
-  }, [rascunho, valor, onChange]);
+  const [rascunho, setRascunho] = useRascunhoAdiado(valor, onChange);
 
   return (
     <div>

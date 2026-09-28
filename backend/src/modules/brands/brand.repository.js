@@ -36,7 +36,7 @@ export function create(data) {
 }
 
 export function updateById(id, data) {
-  return Brand.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
+  return Brand.findByIdAndUpdate(id, data, { returnDocument: 'after', runValidators: true }).lean();
 }
 
 export function deleteById(id) {

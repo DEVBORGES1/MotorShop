@@ -1,4 +1,4 @@
-import { imageAttributes, optimizedImageUrl } from '@motorshop/shared';
+import { imageAttributes } from '@motorshop/shared';
 
 /**
  * Escolha da foto de capa da moto.
@@ -61,9 +61,6 @@ export function imagensDaGaleria(moto) {
 // com o mesmo `srcset` que a galeria vai pedir. Aqui, só os nomes da tela.
 
 const CONTEXTO = { miniatura: 'thumbnail', card: 'card', galeria: 'gallery', ampliada: 'zoom' };
-
-/** URL redimensionada, com `f_auto` e `q_auto` (ver `optimizedImageUrl`). */
-export const urlOtimizada = optimizedImageUrl;
 
 /** Atributos de `<img>` (`src`, `srcSet`, `sizes`, dimensões) para um contexto da tela. */
 export const atributosDeImagem = (imagem, contexto) => imageAttributes(imagem, CONTEXTO[contexto]);

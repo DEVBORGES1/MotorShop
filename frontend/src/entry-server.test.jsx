@@ -41,6 +41,42 @@ describe('render (renderização no servidor)', () => {
     expect(html).not.toContain('<script');
   });
 
+  it('home com as listas do servidor já sai com a foto do hero e o cartão da moto', async () => {
+    const comFoto = {
+      ...moto,
+      images: [{ id: 'f1', url: 'https://res.cloudinary.com/l/image/upload/v1/f1.jpg' }],
+      mainImageId: 'f1',
+    };
+    const lista = { success: true, data: [comFoto], meta: { page: 1, total: 1 } };
+    const html = await renderizar('/', {
+      home: { destaques: lista, ofertas: { ...lista, data: [] }, recentes: lista },
+    });
+
+    expect(html).toMatch(/<img[^>]+w_960\/v1\/f1\.jpg 960w/);
+    expect(html).toContain('Na foto');
+  });
+
+  it('renderizar não escreve nada nos dados que vão para o HTML', async () => {
+    // O servidor converte `dados` em JSON DEPOIS de renderizar: o que um
+    // componente guardasse ali iria para o navegador (um Set vira `{}`).
+    const lista = { success: true, data: [moto], meta: { page: 1, total: 1 } };
+    const dados = {
+      store,
+      origem: ORIGEM,
+      home: { destaques: lista, ofertas: lista, recentes: lista },
+      catalogo: lista,
+      moto,
+      motoSlug: moto.slug,
+    };
+    const antes = JSON.stringify(dados);
+
+    for (const caminho of ['/', '/estoque', `/motos/${moto.slug}`]) {
+      await render({ url: `${ORIGEM}${caminho}`, dados });
+    }
+
+    expect(JSON.stringify(dados)).toBe(antes);
+  });
+
   it('HTML do servidor é o de visitante: ícone leva ao login, nada da equipe (vai para o cache)', async () => {
     const html = await renderizar(`/motos/${moto.slug}`, { moto, motoSlug: moto.slug });
 

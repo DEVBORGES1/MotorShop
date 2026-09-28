@@ -147,16 +147,28 @@ describe('Hero em carrossel', () => {
     expect(cartao().textContent).toContain('Alfa');
   });
 
-  it('monta só a foto atual e a seguinte; as outras, quando chega a vez', () => {
+  it('a seguinte só baixa depois que a primeira chegou; as outras, quando chega a vez', () => {
     const { container } = renderizarHero();
     const fotos = () =>
       [...container.querySelectorAll('img')].map((img) => img.getAttribute('src'));
 
+    // Enquanto a primeira (o LCP) baixa, ela está sozinha na conexão.
+    expect(fotos()).toHaveLength(1);
+
+    fireEvent.load(container.querySelector('img'));
     expect(fotos()).toHaveLength(2);
     expect(fotos().some((src) => src.includes('/c.jpg'))).toBe(false);
 
     passar(INTERVALO_DO_HERO_MS);
     expect(fotos().some((src) => src.includes('/c.jpg'))).toBe(true);
+  });
+
+  it('se a primeira falhar, a seguinte baixa assim mesmo', () => {
+    const { container } = renderizarHero();
+
+    fireEvent.error(container.querySelector('img'));
+
+    expect(container.querySelectorAll('img')).toHaveLength(2);
   });
 
   it('desmontar o hero não deixa troca pendente', () => {

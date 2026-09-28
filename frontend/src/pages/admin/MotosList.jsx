@@ -1,5 +1,5 @@
 import { MOTO_STATUS_LABEL } from '@motorshop/shared';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { celulaClass, DataTable } from '@/components/admin/DataTable.jsx';
@@ -10,6 +10,7 @@ import { inputClass, selectClass } from '@/components/ui/Field.jsx';
 import { Pagination } from '@/components/ui/Pagination.jsx';
 import { Skeleton } from '@/components/ui/Skeleton.jsx';
 import { useAsyncData } from '@/hooks/useAsyncData.js';
+import { useRascunhoAdiado } from '@/hooks/useRascunhoAdiado.js';
 import { motosAdmin } from '@/services/adminService.js';
 import { formatarKm, formatarPreco } from '@/utils/format.js';
 
@@ -175,16 +176,7 @@ export function MotosList() {
 
 /** Busca do painel, com espera para não disparar uma consulta por tecla. */
 function BuscaAdmin({ valor, onChange }) {
-  const [rascunho, setRascunho] = useState(valor);
-
-  useEffect(() => setRascunho(valor), [valor]);
-
-  useEffect(() => {
-    if (rascunho === valor) return undefined;
-
-    const id = setTimeout(() => onChange(rascunho), 400);
-    return () => clearTimeout(id);
-  }, [rascunho, valor, onChange]);
+  const [rascunho, setRascunho] = useRascunhoAdiado(valor, onChange);
 
   return (
     <input

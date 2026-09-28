@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  atributosDeImagem,
-  imagemPrincipal,
-  imagensDaGaleria,
-  nomeDaMoto,
-  urlOtimizada,
-} from './imagem.js';
+import { atributosDeImagem, imagemPrincipal, imagensDaGaleria, nomeDaMoto } from './imagem.js';
 
 const moto = (images, mainImageId) => ({
   brand: { name: 'Honda' },
@@ -99,16 +93,6 @@ describe('imagensDaGaleria', () => {
 
 describe('entrega otimizada', () => {
   const cloudinary = 'https://res.cloudinary.com/loja/image/upload/v17/loja/motos/a/foto.jpg';
-
-  it('insere redimensionamento, f_auto e q_auto na URL do provedor', () => {
-    expect(urlOtimizada(cloudinary, 480)).toBe(
-      'https://res.cloudinary.com/loja/image/upload/c_limit,f_auto,q_auto,w_480/v17/loja/motos/a/foto.jpg',
-    );
-  });
-
-  it('URL de fora do provedor volta intacta', () => {
-    expect(urlOtimizada('https://exemplo.com/foto.jpg', 480)).toBe('https://exemplo.com/foto.jpg');
-  });
 
   it('monta srcset e sizes por contexto', () => {
     const attrs = atributosDeImagem({ url: cloudinary, width: 1600, height: 1200 }, 'card');

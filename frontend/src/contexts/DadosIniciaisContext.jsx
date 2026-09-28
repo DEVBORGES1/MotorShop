@@ -57,6 +57,34 @@ export function useMotoInicial(slug) {
 }
 
 /**
+ * Listas que o servidor já buscou, no formato da resposta da API: `home`
+ * (`destaques`, `ofertas`, `recentes`) e `catalogo` (primeira página do
+ * estoque sem filtro). Também só no primeiro uso, como a moto acima: voltar à
+ * página depois busca o estoque atual.
+ *
+ * @param {'home' | 'catalogo'} chave
+ * @returns {object | undefined}
+ */
+export function useDadoInicial(chave) {
+  const dados = useContext(DadosIniciaisContext);
+  const valor = usadosPorPagina.get(dados)?.has(chave) ? undefined : dados[chave];
+
+  useEffect(() => {
+    if (!usadosPorPagina.has(dados)) usadosPorPagina.set(dados, new Set());
+    usadosPorPagina.get(dados).add(chave);
+  }, [dados, chave]);
+
+  return valor;
+}
+
+/**
+ * Marcas de "já usado", fora do objeto de dados: no servidor ele é convertido
+ * em JSON depois de renderizar, e qualquer coisa guardada nele iria parar no
+ * HTML — um `Set` viraria `{}` e quebraria o site no navegador.
+ */
+const usadosPorPagina = new WeakMap();
+
+/**
  * Base das URLs absolutas: o `siteUrl` configurado pela loja ou, sem ele, a
  * origem em que o site está aberto (no servidor, a da requisição).
  */

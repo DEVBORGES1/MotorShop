@@ -57,7 +57,7 @@ export function update(id, { status, note }) {
   if (status) change.$set = { status };
   if (note) change.$push = { notes: note };
 
-  return Lead.findByIdAndUpdate(id, change, { new: true, runValidators: true })
+  return Lead.findByIdAndUpdate(id, change, { returnDocument: 'after', runValidators: true })
     .populate(MOTO_POPULATE)
     .lean();
 }

@@ -5,8 +5,10 @@ import {
   dealerJsonLd,
   iconUrl,
   imageAttributes,
+  MOTO_SORT,
   motoJsonLd,
   motoSeo,
+  PAGINATION,
   pageSeo,
   PUBLIC_DETAIL_STATUSES,
   shareImageUrl,
@@ -28,6 +30,66 @@ async function loadStore() {
 async function loadMoto(slug) {
   if (getDatabaseStatus().status !== 'connected') return null;
   return cached(`moto:${slug}`, () => motoService.getBySlug(slug).catch(() => null));
+}
+
+/**
+ * As três listas que a home pede ao abrir, com os mesmos parâmetros do site
+ * (`Home.jsx`). Vão no HTML no formato da resposta da API: o site as usa como
+ * se tivessem vindo de lá e não repete as consultas.
+ */
+const HOME_LISTS = {
+  destaques: { destaque: true, limit: 4, sort: MOTO_SORT.RECENTES },
+  ofertas: { oferta: true, limit: 3, sort: MOTO_SORT.RECENTES },
+  recentes: { limit: 6, sort: MOTO_SORT.RECENTES },
+};
+
+async function loadHome() {
+  if (getDatabaseStatus().status !== 'connected') return null;
+  return cached('home', async () => {
+    const lists = await Promise.all(
+      Object.entries(HOME_LISTS).map(async ([name, query]) => {
+        const { items, meta } = await motoService.listPublic({ page: 1, ...query });
+        return [name, { success: true, data: items, meta }];
+      }),
+    );
+    return Object.fromEntries(lists);
+  });
+}
+
+/**
+ * Primeira página do estoque sem filtro — a indexada e a mais visitada. Os
+ * parâmetros são os que o site pede sem filtro (`paramsDaApi`): ordem
+ * `recentes`, página 1, limite padrão. Com filtro, o site busca sozinho.
+ */
+async function loadCatalog() {
+  if (getDatabaseStatus().status !== 'connected') return null;
+  return cached('catalogo', async () => {
+    const { items, meta } = await motoService.listPublic({
+      page: PAGINATION.DEFAULT_PAGE,
+      limit: PAGINATION.DEFAULT_LIMIT,
+      sort: MOTO_SORT.RECENTES,
+    });
+    return { success: true, data: items, meta };
+  });
+}
+
+/** Primeira foto de uma lista de motos, na ordem em que o site as mostra. */
+function firstImage(motos) {
+  for (const moto of motos) {
+    const image = coverImage(moto);
+    if (image?.url) return image;
+  }
+  return null;
+}
+
+/**
+ * A foto do primeiro slide do hero — a mesma escolha do site: a primeira moto
+ * com foto entre destaques, ofertas e recentes, nessa ordem.
+ */
+function heroImage(home) {
+  return firstImage(
+    [home?.destaques, home?.ofertas, home?.recentes].flatMap((list) => list?.data ?? []),
+  );
 }
 
 /** Base das URLs absolutas: a configurada pela loja ou a da própria requisição. */
@@ -110,9 +172,24 @@ export async function buildPageSeo(route, { path, origin }) {
     );
   }
 
+  // Home: sem as listas no HTML, a foto do hero (o LCP) só começava a baixar
+  // depois do JS e de três idas à API.
+  const homeLists = route.page === 'home' ? await loadHome() : null;
+  const catalog = route.page === 'estoque' && !route.filtered ? await loadCatalog() : null;
+  // Mesmo contexto de imagem que a tela pede: `zoom` no Hero, `card` no estoque.
+  const hero = heroImage(homeLists);
+  const firstCard = firstImage(catalog?.data ?? []);
+  const imagePreload =
+    (hero && imageAttributes(hero, 'zoom')) || (firstCard && imageAttributes(firstCard, 'card'));
+
   return {
     status: 200,
-    initialData,
+    initialData: {
+      ...initialData,
+      ...(homeLists && { home: homeLists }),
+      ...(catalog && { catalogo: catalog }),
+    },
+    ...(imagePreload && { imagePreload }),
     seo: {
       ...meta,
       robots: route.filtered ? 'noindex, follow' : meta.robots,

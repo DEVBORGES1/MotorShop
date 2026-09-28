@@ -24,7 +24,7 @@ export function create(data) {
 }
 
 export function updateById(id, data) {
-  return User.findByIdAndUpdate(id, data, { new: true, runValidators: true }).lean();
+  return User.findByIdAndUpdate(id, data, { returnDocument: 'after', runValidators: true }).lean();
 }
 
 export function touchLastLogin(id) {

@@ -27,6 +27,6 @@ export function upsert(data) {
   return StoreSettings.findOneAndUpdate(
     { key: SINGLETON_KEY },
     { ...data, key: SINGLETON_KEY },
-    { new: true, upsert: true, runValidators: true, setDefaultsOnInsert: true },
+    { returnDocument: 'after', upsert: true, runValidators: true, setDefaultsOnInsert: true },
   ).lean();
 }

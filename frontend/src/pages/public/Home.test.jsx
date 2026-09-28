@@ -164,6 +164,23 @@ describe('Home', () => {
       expect(within(hero).getByRole('link', { name: /Na foto.*Beta/ })).toBeTruthy();
     });
 
+    it('com as listas vindas do servidor, o hero já sai com a foto, sem pedir à API', () => {
+      const destaque = comFoto({ id: 'd', slug: 'moto-destaque', model: 'Destaque' });
+      renderizar(<Home />, {
+        dados: {
+          home: {
+            destaques: pagina([destaque]),
+            ofertas: pagina([]),
+            recentes: pagina([destaque]),
+          },
+        },
+      });
+
+      // Síncrono: nada foi esperado.
+      expect(screen.getByRole('link', { name: /Na foto.*Destaque/ })).toBeTruthy();
+      expect(publicService.motos.list).not.toHaveBeenCalled();
+    });
+
     it('com uma moto só, não há setas nem pontos', async () => {
       renderizar(<Home />);
 

@@ -16,6 +16,12 @@ import { env } from '../../config/env.js';
  */
 
 const ACCESS_TTL = '15m';
+/**
+ * Algoritmo fixo nos dois lados: a verificação aceita só este, então um token
+ * com `alg` trocado no cabeçalho (`none`, RS256 com a chave pública) é
+ * recusado, em vez de depender do padrão da biblioteca.
+ */
+const ALGORITHM = 'HS256';
 export const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 
 /**
@@ -26,6 +32,7 @@ export const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
  */
 export function signAccessToken({ id, role }) {
   return jwt.sign({ role }, env.JWT_SECRET, {
+    algorithm: ALGORITHM,
     subject: String(id),
     expiresIn: ACCESS_TTL,
     issuer: env.JWT_ISSUER,
@@ -39,6 +46,7 @@ export function signAccessToken({ id, role }) {
 export function verifyAccessToken(token) {
   try {
     return jwt.verify(token, env.JWT_SECRET, {
+      algorithms: [ALGORITHM],
       issuer: env.JWT_ISSUER,
       audience: env.JWT_AUDIENCE,
     });

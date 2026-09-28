@@ -68,6 +68,8 @@ describe('updateStoreSchema — links', () => {
   it('recusa javascript: — o link vira href no site público', () => {
     expect(valido({ address: { mapsUrl: 'javascript:alert(1)' } })).toBe(false);
     expect(valido({ social: { youtube: 'javascript:alert(1)' } })).toBe(false);
+    expect(valido({ seo: { siteUrl: 'javascript:alert(1)' } })).toBe(false);
+    expect(valido({ seo: { siteUrl: 'https://loja.com.br' } })).toBe(true);
   });
 
   it('aceita o link de incorporação do Google Maps', () => {

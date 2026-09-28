@@ -2,6 +2,7 @@ import request from 'supertest';
 import { describe, expect, it } from 'vitest';
 
 import { createApp } from '../../src/app.js';
+import { apiRoutes } from '../../src/routes/index.js';
 
 const app = createApp();
 
@@ -56,6 +57,29 @@ describe('tratamento de erros', () => {
 
     expect(response.status).toBe(200);
     expect(response.headers['access-control-allow-origin']).toBe('http://localhost:5173');
+  });
+
+  it('o preflight libera todo método que alguma rota da API usa', async () => {
+    const metodos = new Set();
+    const percorrer = (stack) => {
+      for (const camada of stack) {
+        if (camada.route) {
+          for (const metodo of Object.keys(camada.route.methods)) metodos.add(metodo.toUpperCase());
+        } else if (camada.handle?.stack) {
+          percorrer(camada.handle.stack);
+        }
+      }
+    };
+    percorrer(apiRoutes.stack);
+
+    const response = await request(app)
+      .options('/api/health')
+      .set('Origin', 'http://localhost:5173')
+      .set('Access-Control-Request-Method', 'PUT');
+    const liberados = response.headers['access-control-allow-methods'].split(',');
+
+    expect(metodos).toContain('PUT'); // a rota de logo da loja
+    for (const metodo of metodos) expect(liberados, metodo).toContain(metodo);
   });
 });
 

@@ -53,7 +53,7 @@ export function Header() {
             // modo que a largura chegar depois não empurra nada.
             // `max-w`: logo muito largo encolhe em vez de espremer o menu.
             <img
-              src={logoUrl(store.logo.url, 128)}
+              src={logoUrl(store.logo.url)}
               alt={store.name}
               height={56}
               className="h-14 w-auto max-w-[50vw] object-contain object-left lg:h-16 lg:max-w-40 xl:max-w-60"
