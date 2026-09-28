@@ -12,8 +12,8 @@ describe('URLs de entrega', () => {
     );
   });
 
-  it('logo: altura fixa (88 px cobre a tela de alta densidade), proporção mantida', () => {
-    expect(logoUrl(PROVEDOR)).toContain('/image/upload/c_limit,f_auto,q_auto,h_88/v1/');
+  it('logo: margem vazia cortada antes de fixar a altura, proporção mantida', () => {
+    expect(logoUrl(PROVEDOR)).toContain('/image/upload/e_trim/c_limit,f_auto,q_auto,h_88/v1/');
     expect(logoUrl(PROVEDOR, 120)).toContain(',h_120/');
   });
 

@@ -43,16 +43,12 @@ function Abertura({ store, whatsapp }) {
 
       <div className="relative mx-auto max-w-7xl px-4 pt-16 pb-16 sm:px-6 sm:pt-20 sm:pb-20">
         {store.logo?.url && (
+          // Sem `width`: a imagem entregue vem sem a margem do arquivo (ver `logoUrl`).
           <img
             src={logoUrl(store.logo.url, ALTURA_LOGO * 2)}
             alt=""
-            width={
-              store.logo.height
-                ? Math.round((ALTURA_LOGO * store.logo.width) / store.logo.height)
-                : undefined
-            }
             height={ALTURA_LOGO}
-            className="mb-8 w-auto"
+            className="mb-8 w-auto max-w-full object-contain object-left"
             style={{ height: ALTURA_LOGO }}
           />
         )}

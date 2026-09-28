@@ -37,7 +37,7 @@ export function Header() {
 
   const whatsapp = linkWhatsApp(store.contact?.whatsapp, `Olá! Vim pelo site da ${store.name}.`);
   const classeLink = ({ isActive }) =>
-    `label-caps text-[13px] transition ${isActive ? 'text-brand-500' : 'text-ink-100 hover:text-brand-500'}`;
+    `label-caps text-[13px] whitespace-nowrap transition ${isActive ? 'text-brand-500' : 'text-ink-100 hover:text-brand-500'}`;
 
   return (
     <header className="sticky top-0 z-50 border-b border-ink-800 bg-ink-900/95 backdrop-blur">
@@ -47,18 +47,16 @@ export function Header() {
       <div className="mx-auto flex min-h-16 max-w-7xl items-center gap-6 px-4 py-3 sm:px-6">
         <Link to="/" className="flex items-center gap-3">
           {store.logo?.url ? (
+            // Sem `width`: a imagem entregue vem sem a margem do arquivo, então
+            // a proporção guardada no cadastro não é a dela. O logo fica na
+            // ponta esquerda e o resto do cabeçalho se alinha pela direita, de
+            // modo que a largura chegar depois não empurra nada.
+            // `max-w`: logo muito largo encolhe em vez de espremer o menu.
             <img
-              src={logoUrl(store.logo.url)}
+              src={logoUrl(store.logo.url, 128)}
               alt={store.name}
-              // Largura pela proporção do arquivo: o espaço fica reservado
-              // antes de a imagem chegar (sem salto de layout).
-              width={
-                store.logo.height
-                  ? Math.round((56 * store.logo.width) / store.logo.height)
-                  : undefined
-              }
               height={56}
-              className="h-14 w-auto"
+              className="h-14 w-auto max-w-[50vw] object-contain object-left lg:h-16 lg:max-w-40 xl:max-w-60"
             />
           ) : (
             <span className="font-display text-xl font-extrabold tracking-tight whitespace-nowrap text-ink-50">
@@ -76,8 +74,10 @@ export function Header() {
         </nav>
 
         <div className="ml-auto flex items-center gap-4 lg:ml-0">
+          {/* Telefone só a partir de 1280 px: entre 1024 e 1280 ele não cabe
+              ao lado do menu sem quebrar os itens em várias linhas. */}
           {store.contact?.phone && (
-            <div className="hidden text-right lg:block">
+            <div className="hidden text-right xl:block">
               {store.address?.city && (
                 <div className="label-caps text-[10px] font-medium text-ink-500">
                   {[store.address.city, store.address.state].filter(Boolean).join(' · ')}
