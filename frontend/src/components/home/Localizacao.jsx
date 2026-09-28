@@ -121,7 +121,7 @@ function MapaSobDemanda({ src, endereco }) {
         title={`Mapa da loja${endereco ? `: ${endereco}` : ''}`}
         src={src}
         loading="lazy"
-        referrerPolicy="no-referrer"
+        referrerPolicy="strict-origin"
         sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"
         className="h-80 w-full rounded-lg border border-ink-700 bg-surface-2 lg:h-full lg:min-h-96"
       />

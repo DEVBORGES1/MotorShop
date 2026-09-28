@@ -54,9 +54,11 @@ frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
 - `frame-src` libera só o caminho `/maps` do Google, para o mapa da home. O
   quadro **não carrega na abertura**: aparece um botão "Ver mapa" e o
   `<iframe>` só é criado depois do clique, com `sandbox` e
-  `referrerpolicy="no-referrer"`. Assim o Google não recebe o acesso de quem
-  não pediu o mapa (LGPD) e a home não paga o peso dele. O aviso ao lado do
-  botão diz que o Google recebe o acesso.
+  `referrerpolicy="strict-origin"` (só o domínio vai ao Google, sem caminho
+  nem query — `no-referrer` quebra o embed do Google Maps, que exige referrer
+  pra verificar o domínio). Assim o Google não recebe o acesso de quem não
+  pediu o mapa (LGPD) e a home não paga o peso dele. O aviso ao lado do botão
+  diz que o Google recebe o acesso.
 
 Verificado no navegador: o site público e o painel funcionam sem nenhuma
 violação de CSP no console.
