@@ -65,7 +65,7 @@ test('segunda loja configurada só pelo painel: o site inteiro muda', async ({ p
   await expect(visitante.getByRole('heading', { level: 1 })).toHaveText(NOVA.slogan);
   await expect(visitante.getByRole('link', { name: NOVA.nome }).getByRole('img')).toHaveAttribute(
     'src',
-    /h_88/,
+    /\/e_trim\/c_limit,f_auto,q_auto,h_128\//,
   );
   await expect(visitante.locator('link[rel="icon"]')).toHaveAttribute('href', /c_pad,w_64,h_64/);
   await expect(visitante.getByRole('contentinfo')).toContainText(NOVA.cidade);
