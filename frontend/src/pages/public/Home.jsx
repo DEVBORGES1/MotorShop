@@ -20,6 +20,9 @@ import * as publicService from '@/services/publicService.js';
 import { motosComFoto } from '@/utils/imagem.js';
 import { linkWhatsApp } from '@/utils/whatsapp.js';
 
+/** Quantas motos o hero alterna: o bastante para variar, sem virar uma vitrine. */
+const MOTOS_NO_HERO = 5;
+
 /** Seção com título e link opcional para o estoque filtrado. */
 function Secao({ numero, titulo, descricao, verMais, children }) {
   return (
@@ -69,19 +72,19 @@ export function Home() {
   // Faixas reais do estoque: alimentam a busca, os números e as marcas.
   const faixas = useAsyncData(() => publicService.filtros.get().catch(() => null), []).data;
   const total = faixas?.total || recentes.data?.meta?.total;
-  // A moto da foto do hero: destaque primeiro, depois oferta, depois a mais recente.
-  const [motoDoHero] = motosComFoto([
-    destaques.data?.data,
-    ofertas.data?.data,
-    recentes.data?.data,
-  ]);
-  // Fotos para o fundo dos blocos de serviço: outras motos, para não repetir a do hero.
+  // As motos das fotos do hero: destaques primeiro, depois ofertas, depois as mais recentes.
+  const motosDoHero = motosComFoto(
+    [destaques.data?.data, ofertas.data?.data, recentes.data?.data],
+    MOTOS_NO_HERO,
+  );
+  const noHero = new Set(motosDoHero.map((moto) => moto.id));
+  // Fotos para o fundo dos blocos de serviço: outras motos, para não repetir as do hero.
   const fotosDeApoio = motosComFoto([
     recentes.data?.data,
     ofertas.data?.data,
     destaques.data?.data,
-  ]).filter((moto) => moto.id !== motoDoHero?.id);
-  const motoDeFundo = (indice) => fotosDeApoio[indice] ?? fotosDeApoio[0] ?? motoDoHero ?? null;
+  ]).filter((moto) => !noHero.has(moto.id));
+  const motoDeFundo = (indice) => fotosDeApoio[indice] ?? fotosDeApoio[0] ?? motosDoHero[0] ?? null;
   const whatsapp = (mensagem) => linkWhatsApp(store.contact?.whatsapp, mensagem);
 
   const mostraDestaques = destaques.isLoading || destaques.data?.data?.length > 0;
@@ -94,7 +97,7 @@ export function Home() {
 
   return (
     <>
-      <Hero store={store} total={total} whatsapp={whatsapp} moto={motoDoHero} />
+      <Hero store={store} total={total} whatsapp={whatsapp} motos={motosDoHero} />
       <BuscaRapida faixas={faixas} />
       <FaixaNumeros faixas={faixas} />
       <FaixaMarcas marcas={faixas?.brands} />

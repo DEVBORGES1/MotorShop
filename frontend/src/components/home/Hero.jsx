@@ -1,33 +1,99 @@
 import { logoUrl } from '@motorshop/shared';
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { buttonClass } from '@/components/ui/Button.jsx';
 import { formatarPreco } from '@/utils/format.js';
+import { acaoDaTecla, indiceAposAcao, indiceVizinho } from '@/utils/galeria.js';
 import { atributosDeImagem, imagemPrincipal, nomeDaMoto } from '@/utils/imagem.js';
 import { caminhoDaMoto } from '@/utils/moto.js';
 
 const ALTURA_LOGO = 56;
 
+/** Tempo de cada moto na tela: dá para ler o cartão sem a troca parecer lenta. */
+export const INTERVALO_DO_HERO_MS = 7000;
+
 /**
- * Abertura da home: a foto de uma moto ocupa a largura toda, com logo, slogan
- * e chamadas por cima e a moto identificada num cartão no canto. É uma foto
- * só — não desliza nem troca sozinha, então o texto nunca some da frente de
- * quem está lendo.
+ * Abertura da home: fotos de motos do estoque ocupam a largura toda e trocam
+ * sozinhas, com logo, slogan e chamadas fixos por cima e a moto da foto
+ * identificada num cartão no canto. Só a foto e o cartão trocam — o texto
+ * nunca some da frente de quem está lendo.
+ *
+ * A troca automática para com o mouse ou o foco do teclado nos controles (a
+ * moto não muda sob o clique), pelo botão de pausa e, com "reduzir movimento"
+ * ligado, já começa pausada. Setas, pontos e as setas do teclado trocam à mão, e cada
+ * troca reinicia a contagem.
  *
  * Sem foto (loja nova), o fundo fica por conta da grade, do brilho e da listra
  * no acento.
  *
- * @param {{ moto?: object | null }} props `moto`: a que aparece na foto
+ * @param {{ motos?: object[] }} props `motos`: as das fotos, todas com foto
  */
-export function Hero({ store, total, whatsapp, moto }) {
+export function Hero({ store, total, whatsapp, motos = [] }) {
   const contato = whatsapp(`Olá! Vim pelo site da ${store.name}.`);
   const local = [store.address?.city, store.address?.state].filter(Boolean).join(' · ');
-  const foto = moto ? imagemPrincipal(moto) : null;
+
+  const quantidade = motos.length;
+  const varias = quantidade > 1;
+  const [atual, setAtual] = useState(0);
+  // Fotos montadas: as que já apareceram, a atual e a seguinte. As demais só
+  // baixam perto da vez delas, para não disputar banda com a primeira (o LCP).
+  const [montadas, setMontadas] = useState(() => new Set([0, 1]));
+  const [pausadoPeloBotao, setPausadoPeloBotao] = useState(false);
+  const [emUso, setEmUso] = useState(false);
+
+  // A lista cresce enquanto destaques, ofertas e recentes chegam; o índice
+  // nunca aponta para fora dela.
+  const indice = Math.min(atual, Math.max(quantidade - 1, 0));
+  const moto = motos[indice] ?? null;
+  const rodando = varias && !pausadoPeloBotao && !emUso;
+
+  const irPara = useCallback(
+    (novo) => {
+      setAtual(novo);
+      setMontadas((antes) => new Set(antes).add(novo).add(indiceVizinho(novo, quantidade, 1)));
+    },
+    [quantidade],
+  );
+
+  useEffect(() => {
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+      setPausadoPeloBotao(true);
+    }
+  }, []);
+
+  // Um timeout por moto, refeito a cada troca: a troca à mão reinicia a
+  // contagem, e desmontar o hero limpa o que estiver pendente.
+  useEffect(() => {
+    if (!rodando) return undefined;
+    const espera = setTimeout(
+      () => irPara(indiceVizinho(indice, quantidade, 1)),
+      INTERVALO_DO_HERO_MS,
+    );
+    return () => clearTimeout(espera);
+  }, [rodando, indice, quantidade, irPara]);
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-ink-800 bg-surface">
-      {foto ? (
-        <FotoDeFundo foto={foto} />
+    <section
+      aria-label={varias ? 'Motos em destaque' : undefined}
+      aria-roledescription={varias ? 'carrossel' : undefined}
+      className="relative isolate overflow-hidden border-b border-ink-800 bg-surface"
+    >
+      {moto ? (
+        <>
+          {motos.map(
+            (item, i) =>
+              montadas.has(i) && (
+                <FotoDeFundo
+                  key={item.id ?? item.slug}
+                  foto={imagemPrincipal(item)}
+                  visivel={i === indice}
+                  principal={i === 0}
+                />
+              ),
+          )}
+          <VeuSobreAFoto />
+        </>
       ) : (
         <>
           <div aria-hidden="true" className="fundo-brilho pointer-events-none absolute inset-0" />
@@ -37,20 +103,16 @@ export function Hero({ store, total, whatsapp, moto }) {
 
       <div
         className={`relative mx-auto flex max-w-7xl flex-col justify-center px-4 pt-16 pb-28 sm:px-6 sm:pt-20 sm:pb-32 ${
-          foto ? 'min-h-[34rem] lg:min-h-[40rem]' : ''
+          moto ? 'min-h-[34rem] lg:min-h-[40rem]' : ''
         }`}
       >
         {store.logo?.url && (
+          // Sem `width`: a imagem entregue vem sem a margem do arquivo (ver `logoUrl`).
           <img
             src={logoUrl(store.logo.url, ALTURA_LOGO * 2)}
             alt={store.name}
-            width={
-              store.logo.height
-                ? Math.round((ALTURA_LOGO * store.logo.width) / store.logo.height)
-                : undefined
-            }
             height={ALTURA_LOGO}
-            className="mb-8 w-auto self-start"
+            className="mb-8 w-auto max-w-full self-start object-contain object-left"
             style={{ height: ALTURA_LOGO }}
           />
         )}
@@ -85,7 +147,46 @@ export function Hero({ store, total, whatsapp, moto }) {
           )}
         </div>
 
-        {foto && <MotoDaFoto moto={moto} />}
+        {moto && (
+          <div
+            className="mt-10 flex flex-col items-start gap-3 lg:absolute lg:right-6 lg:bottom-20 lg:mt-0 lg:items-end"
+            onMouseEnter={() => setEmUso(true)}
+            onMouseLeave={() => setEmUso(false)}
+            // Só o foco do teclado: o clique do mouse também deixa o foco no
+            // botão, e aí um clique numa seta pararia a troca de vez.
+            onFocus={(evento) => {
+              if (evento.target.matches(':focus-visible')) setEmUso(true);
+            }}
+            onBlur={(evento) => {
+              if (!evento.currentTarget.contains(evento.relatedTarget)) setEmUso(false);
+            }}
+            onKeyDown={(evento) => {
+              const acao = acaoDaTecla(evento.key);
+              if (!acao || !varias) return;
+              evento.preventDefault();
+              irPara(indiceAposAcao(acao, indice, quantidade));
+            }}
+          >
+            {varias && (
+              <Controles
+                motos={motos}
+                indice={indice}
+                irPara={irPara}
+                pausado={pausadoPeloBotao}
+                alternarPausa={() => {
+                  setPausadoPeloBotao((pausado) => !pausado);
+                  // "Retomar" vale na hora, mesmo com o mouse ou o foco ali.
+                  setEmUso(false);
+                }}
+              />
+            )}
+            {/* Anuncia a moto nova só quando a troca foi pedida — anunciar a
+                cada troca automática atropelaria o leitor de tela. */}
+            <div aria-live={rodando ? 'off' : 'polite'} className="max-w-full">
+              <MotoDaFoto moto={moto} />
+            </div>
+          </div>
+        )}
       </div>
 
       <div aria-hidden="true" className="faixa-listra absolute inset-x-0 top-0 h-1.5" />
@@ -94,25 +195,38 @@ export function Hero({ store, total, whatsapp, moto }) {
 }
 
 /**
- * Foto de fundo com um véu escuro para o texto ler bem por cima dela: o véu é
- * forte onde está o texto (à esquerda no computador, embaixo no celular) e
- * abre para deixar a moto aparecer.
+ * Uma foto de fundo. As montadas ficam empilhadas e só a da vez aparece; a
+ * troca de opacidade faz a passagem de uma para a outra.
  */
-function FotoDeFundo({ foto }) {
+function FotoDeFundo({ foto, visivel, principal }) {
   const atributos = atributosDeImagem(foto, 'ampliada');
 
   return (
+    <img
+      {...atributos}
+      // Ocupa a tela toda, em qualquer largura.
+      sizes={atributos.srcSet ? '100vw' : undefined}
+      alt=""
+      // Nada de `lazy`: a foto seguinte está montada justamente para já estar
+      // baixada quando chegar a vez dela, e o navegador adia a `lazy` que está
+      // escondida atrás da atual — a troca mostraria o fundo vazio.
+      loading="eager"
+      fetchPriority={principal ? 'high' : 'low'}
+      decoding="async"
+      className={`absolute inset-0 -z-10 h-full w-full object-cover object-[65%_center] transition-opacity duration-1000 ease-in-out motion-reduce:transition-none ${
+        visivel ? 'opacity-100' : 'opacity-0'
+      }`}
+    />
+  );
+}
+
+/**
+ * Véu escuro para o texto ler bem por cima da foto: forte onde está o texto (à
+ * esquerda no computador, embaixo no celular) e aberto para a moto aparecer.
+ */
+function VeuSobreAFoto() {
+  return (
     <>
-      <img
-        {...atributos}
-        // Ocupa a tela toda, em qualquer largura.
-        sizes={atributos.srcSet ? '100vw' : undefined}
-        alt=""
-        loading="eager"
-        fetchPriority="high"
-        decoding="async"
-        className="absolute inset-0 -z-10 h-full w-full object-cover object-[65%_center]"
-      />
       <div
         aria-hidden="true"
         className="absolute inset-0 -z-10 bg-linear-to-t from-ink-900/95 via-ink-900/75 to-ink-900/60 lg:bg-linear-to-r lg:from-ink-900/95 lg:via-ink-900/70 lg:to-ink-900/10"
@@ -126,12 +240,85 @@ function FotoDeFundo({ foto }) {
   );
 }
 
+/** Setas, um ponto por moto e o botão de pausa. */
+function Controles({ motos, indice, irPara, pausado, alternarPausa }) {
+  const quantidade = motos.length;
+  const botao =
+    'flex h-9 w-9 items-center justify-center rounded-full text-ink-50 transition hover:bg-ink-800 hover:text-brand-500';
+
+  return (
+    <div className="flex items-center gap-1 rounded-full border border-ink-700 bg-ink-900/85 p-1 backdrop-blur">
+      <button
+        type="button"
+        onClick={() => irPara(indiceVizinho(indice, quantidade, -1))}
+        aria-label="Moto anterior"
+        className={botao}
+      >
+        <Seta anterior />
+      </button>
+
+      <ul className="flex items-center">
+        {motos.map((item, i) => (
+          <li key={item.id ?? item.slug}>
+            <button
+              type="button"
+              onClick={() => irPara(i)}
+              aria-label={`Ver moto ${i + 1} de ${quantidade}: ${nomeDaMoto(item)}`}
+              aria-current={i === indice ? 'true' : undefined}
+              className="group flex h-9 w-6 items-center justify-center"
+            >
+              <span
+                aria-hidden="true"
+                className={`block h-1.5 rounded-full transition-all motion-reduce:transition-none ${
+                  i === indice ? 'w-4 bg-brand-500' : 'w-1.5 bg-ink-400 group-hover:bg-ink-100'
+                }`}
+              />
+            </button>
+          </li>
+        ))}
+      </ul>
+
+      <button
+        type="button"
+        onClick={() => irPara(indiceVizinho(indice, quantidade, 1))}
+        aria-label="Próxima moto"
+        className={botao}
+      >
+        <Seta />
+      </button>
+
+      <button
+        type="button"
+        onClick={alternarPausa}
+        aria-label={pausado ? 'Retomar troca automática' : 'Pausar troca automática'}
+        className={botao}
+      >
+        <svg viewBox="0 0 16 16" aria-hidden="true" className="h-3.5 w-3.5 fill-current">
+          {pausado ? <path d="M4 2.5v11L13 8z" /> : <path d="M4 2.5h3v11H4zM9 2.5h3v11H9z" />}
+        </svg>
+      </button>
+    </div>
+  );
+}
+
+function Seta({ anterior = false }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      className="h-4 w-4 fill-none stroke-current stroke-2"
+    >
+      <path d={anterior ? 'M10 3 5 8l5 5' : 'm6 3 5 5-5 5'} />
+    </svg>
+  );
+}
+
 /** Identifica a moto da foto e leva à página dela. */
 function MotoDaFoto({ moto }) {
   return (
     <Link
       to={caminhoDaMoto(moto.slug)}
-      className="group mt-10 flex w-fit max-w-full items-center gap-4 rounded-lg border border-ink-700 bg-ink-900/85 px-4 py-3 backdrop-blur transition hover:border-brand-500 lg:absolute lg:right-6 lg:bottom-20 lg:mt-0"
+      className="group flex w-fit max-w-full items-center gap-4 rounded-lg border border-ink-700 bg-ink-900/85 px-4 py-3 backdrop-blur transition hover:border-brand-500"
     >
       <span>
         <span className="label-caps block text-[10px] text-ink-400">Na foto</span>

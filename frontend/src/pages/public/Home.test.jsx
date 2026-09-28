@@ -148,10 +148,23 @@ describe('Home', () => {
       expect(screen.queryByRole('link', { name: /Na foto/ })).toBeNull();
     });
 
-    it('não é um carrossel: não há setas nem pontos para trocar de moto', async () => {
+    it('com várias motos com foto, vira carrossel e as setas trocam a moto', async () => {
       publicService.motos.list.mockResolvedValue(
-        pagina([comFoto({ id: 'a', slug: 'a' }), comFoto({ id: 'b', slug: 'b' })]),
+        pagina([
+          comFoto({ id: 'a', slug: 'moto-a', model: 'Alfa' }),
+          comFoto({ id: 'b', slug: 'moto-b', model: 'Beta' }),
+        ]),
       );
+      const { user } = renderizar(<Home />);
+
+      const hero = await screen.findByRole('region', { name: 'Motos em destaque' });
+      expect(within(hero).getByRole('link', { name: /Na foto.*Alfa/ })).toBeTruthy();
+
+      await user.click(within(hero).getByRole('button', { name: 'Próxima moto' }));
+      expect(within(hero).getByRole('link', { name: /Na foto.*Beta/ })).toBeTruthy();
+    });
+
+    it('com uma moto só, não há setas nem pontos', async () => {
       renderizar(<Home />);
 
       await screen.findByRole('link', { name: /Na foto/ });
