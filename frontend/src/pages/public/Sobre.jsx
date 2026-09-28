@@ -116,9 +116,14 @@ function Diferenciais({ itens, nome }) {
         {itens.map(({ title, text }, indice) => (
           <li key={title} className="bg-surface p-6 sm:p-7">
             <Revelar atraso={indice * 120}>
+              {/*
+                Numeração decorativa. `ink-600` é o único token feito para isto —
+                opacidade sobre a cor da loja (`brand-500`) ficaria ilegível para
+                quem tem baixa visão, e a cor da loja pode ser qualquer uma.
+              */}
               <span
                 aria-hidden="true"
-                className="font-display text-3xl font-extrabold text-brand-500/40"
+                className="font-display text-3xl font-extrabold text-ink-600"
               >
                 {String(indice + 1).padStart(2, '0')}
               </span>
