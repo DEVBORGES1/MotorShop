@@ -52,7 +52,10 @@ diretamente no código.
 | `docs/DEPLOYMENT.md` | Deploy, backup, rollback, monitoramento e operação |
 | `docs/API.md` | Referência de endpoints, como construídos |
 | `docs/CUSTOMIZATION.md` | Como configurar a plataforma para uma loja nova |
-| `docs/FINAL-AUDIT.md` | Auditoria final: matriz de requisitos, revenda, acessibilidade |
+| `docs/FINAL-AUDIT.md` | Auditoria completa pós-fases: resumo, achados, testes, status |
+| `docs/SECURITY-AUDIT.md` / `docs/PERFORMANCE-AUDIT.md` | Achados de segurança e medições reais de performance |
+| `docs/CLEANUP.md` / `docs/AUDIT-INVENTORY.md` | Limpeza feita (com evidências) e inventário do projeto |
+| `docs/FINAL-AUDIT-FASE-13.md` | Auditoria da FASE 13: matriz de requisitos, revenda, acessibilidade |
 | `docs/TECHNICAL-DEBT.md` | Débito técnico conhecido e backlog pós-lançamento |
 | `docs/design/README.md` | Protótipo visual de referência e tokens de design |
 

@@ -1226,10 +1226,10 @@ cor ou de layout regride sem ninguém ver. Não vai para o bundle nem para o
 servidor. `npm audit` segue em zero.
 
 ### Critérios de conclusão
-Detalhe e evidências em [`FINAL-AUDIT.md`](./FINAL-AUDIT.md).
+Detalhe e evidências em [`FINAL-AUDIT-FASE-13.md`](./FINAL-AUDIT-FASE-13.md).
 
 - [x] Todo requisito do briefing classificado como entregue / adiado /
-      descartado, com justificativa *(FINAL-AUDIT §2)*
+      descartado, com justificativa *(FINAL-AUDIT-FASE-13 §2)*
 - [x] **Segunda loja fictícia configurada sem tocar em código** — critério
       central do produto base *(`e2e/6-revenda.spec.js`, a cada push)*
 - [x] Varredura confirma zero dado de loja hardcoded
@@ -1339,7 +1339,7 @@ o de acessibilidade; deploy descrito no `render.yaml` com runbook em
 [`DEPLOYMENT.md`](./DEPLOYMENT.md).
 
 A FASE 13 confirmou o produto base: uma segunda loja configurada só pelo
-painel muda o site inteiro. Relatório em [`FINAL-AUDIT.md`](./FINAL-AUDIT.md);
+painel muda o site inteiro. Relatório em [`FINAL-AUDIT-FASE-13.md`](./FINAL-AUDIT-FASE-13.md);
 personalização em [`CUSTOMIZATION.md`](./CUSTOMIZATION.md); endpoints em
 [`API.md`](./API.md); o que ficou para depois em
 [`TECHNICAL-DEBT.md`](./TECHNICAL-DEBT.md).

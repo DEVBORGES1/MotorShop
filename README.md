@@ -26,7 +26,8 @@ a outras lojas **por configuração, sem alteração de código**.
 | **FASE 10** — Segurança | ✅ concluída — segredos são rotacionados no deploy |
 | **FASE 11** — Testes | ✅ concluída |
 | **FASE 12** — Deploy | 🟡 preparada — falta publicar com as contas da loja ([`DEPLOYMENT.md`](./docs/DEPLOYMENT.md)) |
-| **FASE 13** — Auditoria final | ✅ concluída — faltam aparelhos reais, leitor de tela e Lighthouse no domínio ([`FINAL-AUDIT.md`](./docs/FINAL-AUDIT.md)) |
+| **FASE 13** — Auditoria final | ✅ concluída — faltam aparelhos reais, leitor de tela e Lighthouse no domínio ([`FINAL-AUDIT-FASE-13.md`](./docs/FINAL-AUDIT-FASE-13.md)) |
+| Auditoria completa pós-fases | ✅ concluída — segurança, performance medida e limpeza ([`FINAL-AUDIT.md`](./docs/FINAL-AUDIT.md)) |
 
 O que existe hoje: site público renderizado no servidor (home, estoque com
 filtros, página da moto com galeria e simulador, financiamento, venda sua
@@ -221,7 +222,12 @@ MotorShop/
 │  ├─ SETUP.md                 configuração do ambiente local
 │  ├─ SECURITY.md              segurança verificada, OWASP e LGPD
 │  ├─ DEPLOYMENT.md            deploy, backup, rollback e operação
-│  ├─ FINAL-AUDIT.md           auditoria final: requisitos, revenda, a11y
+│  ├─ FINAL-AUDIT.md           auditoria completa pós-fases (relatório final)
+│  ├─ SECURITY-AUDIT.md        auditoria de segurança: achados e correções
+│  ├─ PERFORMANCE-AUDIT.md     medições reais (LCP, bundle, explain do banco)
+│  ├─ CLEANUP.md               limpeza: o que saiu e com qual evidência
+│  ├─ AUDIT-INVENTORY.md       inventário do projeto usado na auditoria
+│  ├─ FINAL-AUDIT-FASE-13.md   auditoria da FASE 13: requisitos, revenda, a11y
 │  ├─ TECHNICAL-DEBT.md        débito técnico e backlog pós-lançamento
 │  └─ PHASE-{1,2,3}-REPORT.md  relatórios das primeiras fases
 │

@@ -1402,10 +1402,15 @@ Como ficou implementado (FASE 9, `backend/src/seo/`):
   passam por `serializeJsonLd`, que troca `<` por `\u003c`. Testado com
   descrição contendo `</script><script>`.
 - O HTML também leva **dados de partida** (`<script type="application/json"
-  id="dados-iniciais">`: a loja e, na página da moto, a moto) e pré-anuncia o
-  código da página (`modulepreload`, a partir do manifesto do Vite) e a foto
-  principal (`preload` com o mesmo `srcset` da galeria). O SPA desenha a
-  primeira tela sem esperar a API.
+  id="dados-iniciais">`: a loja; na página da moto, a moto; na home, as
+  listas de destaques, ofertas e recentes; no estoque **sem filtro**, a
+  primeira página do catálogo) e pré-anuncia o código da página
+  (`modulepreload`, a partir do manifesto do Vite) e a foto que vira o LCP
+  (`preload` com o mesmo `srcset` que a tela pede: galeria na moto, o 1º slide
+  do hero na home, o 1º card no estoque). O SPA desenha a primeira tela sem
+  esperar a API; cada dado de partida vale só no primeiro uso
+  (`useMotoInicial`, `useDadoInicial`). Renderizar no servidor não escreve
+  nada nesses dados: eles viram JSON depois (teste em `entry-server.test`).
 - Moto vendida: 200, `SoldOut`, sem preço (decisão A). Moto inativa ou
   inexistente e página de módulo desligado: **404** com `noindex`.
 - CSP própria (`config/security.js`): `script-src 'self'` (sem inline, sem
@@ -1887,4 +1892,5 @@ critérios de conclusão e testes de cada fase — em **[`docs/ROADMAP.md`](./RO
 FASES 0 a 11 e 13 concluídas; FASE 12 (deploy) preparada no repositório,
 aguardando as contas. O andamento de cada fase, com critérios e o que mudou
 em relação a este documento, está no [`ROADMAP.md`](./ROADMAP.md); a
-auditoria final, em [`FINAL-AUDIT.md`](./FINAL-AUDIT.md).
+auditoria da FASE 13, em [`FINAL-AUDIT-FASE-13.md`](./FINAL-AUDIT-FASE-13.md);
+a auditoria completa posterior, em [`FINAL-AUDIT.md`](./FINAL-AUDIT.md).

@@ -20,7 +20,7 @@ só fecham com contas, domínio ou aparelhos que este ambiente não tem.
 | V-01 | Publicação: contas, domínio, HTTPS | 12 | [`DEPLOYMENT.md`](./DEPLOYMENT.md) §2–§6 |
 | V-02 | Envio de fotos com conta **Cloudinary real** (10 fotos, pasta, exclusão, formato AVIF/WebP entregue) | 8 | SETUP §4.1. O fluxo foi verificado com o provedor simulado, que confere as assinaturas |
 | V-03 | Preview de link no WhatsApp/Facebook e JSON-LD no Rich Results Test | 9 | Precisa de endereço público |
-| V-04 | **Lighthouse ≥ 90 no domínio de produção** | 9, 13 | Local: 95–98 (modo simulado), LCP 1,5–1,6 s com 4G real. Repetir no domínio, com fotos pelo Cloudinary |
+| V-04 | **Lighthouse ≥ 90 no domínio de produção** | 9, 13 | FASE 13, local: 95–98 (modo simulado), LCP 1,5–1,6 s — antes do hero com foto. Auditoria de 2026-09-28, com fotos reais do Cloudinary e 4G lento: LCP 3,1 s (home), 2,7 s (estoque), 2,1 s (moto) — ver [`PERFORMANCE-AUDIT.md`](./PERFORMANCE-AUDIT.md) e DT-13. Repetir no domínio |
 | V-05 | Teste de **restauração de backup** e de **rollback** | 12 | DEPLOYMENT §10 e §11, no staging |
 | V-06 | Rotação dos segredos e checklist de go-live | 10 | [`SECURITY.md`](./SECURITY.md) §9 |
 | V-07 | **Responsividade em dispositivos reais** (Android, iOS, tablet) | 13 | Verificado em emulação (390, 768 e 1280 px, sem rolagem lateral em nenhuma página). Falta o toque real: teclado virtual sobre os formulários, galeria com gesto, barra fixa da moto no iOS |
@@ -121,6 +121,43 @@ não um token. É cor do **produto** (não da loja) e passa no contraste, mas
 foge do padrão.
 **Custo de resolver:** um token `--color-chrome`. Fazer na próxima mexida no
 layout do painel.
+
+### DT-13 — LCP da home em 3,1 s no 4G lento
+**O quê:** medido na auditoria (Moto G4 emulado, 1,6 Mbps, CPU 4×): a foto do
+hero já vem pré-anunciada no HTML, mas divide a conexão com o JS (~150 KB
+gzip) e com as fotos dos cards, que o Chrome antecipa mesmo com `lazy`
+(raio de 1.250–2.500 px). Estava em 4,0 s antes da auditoria.
+**Por quê ficou:** o próximo passo é reduzir a própria foto (é fundo escuro
+com véu por cima; `sizes` menor que `100vw` em tela de alta densidade) ou
+adiar as fotos dos cards até a do hero chegar — mudanças visuais/de
+comportamento que pedem validação no aparelho real.
+**Gatilho:** Lighthouse no domínio (V-04) abaixo de 90 em "Performance".
+
+### DT-14 — 401 no console do login do painel
+**O quê:** ao abrir `/admin/login` sem sessão, o painel tenta renovar a
+sessão e o servidor responde 401 — correto, mas aparece como erro no
+console.
+**Por quê ficou:** página fora do índice (`noindex`), sem efeito para o
+visitante; evitar a chamada exigiria saber, sem perguntar ao servidor, se há
+cookie `httpOnly` — o que o navegador não permite.
+**Gatilho:** nenhum previsto; só se o Lighthouse do painel virar critério.
+
+### DT-15 — Login sem teto por conta entre IPs diferentes
+**O quê:** os limites são por IP+conta (5/15 min) e por IP (20/15 min). Um
+ataque distribuído em muitos IPs contra **uma** conta não tem teto somado.
+**Por quê ficou:** um teto por conta permitiria a qualquer um trancar o dono
+fora do painel de propósito. Com senha de 12+ caracteres, lista de senhas
+previsíveis bloqueadas e argon2id, adivinhar é inviável na prática.
+**Gatilho:** sinal de ataque nos logs (muitos 401 de login para a mesma conta
+vindos de IPs diferentes) ou exigência de MFA (DT-08).
+
+### DT-16 — Tamanho máximo do upload conferido pelo que o navegador informa
+**O quê:** o limite de 10 MB por foto é conferido no `bytes` que o navegador
+repassa; a assinatura do Cloudinary não impõe tamanho. Só um admin logado
+consegue assinatura, e o plano do Cloudinary tem teto próprio; a foto é
+reduzida a 2560 px ao entrar.
+**Gatilho:** abrir envio de fotos para quem não é da equipe (ex.: "venda sua
+moto" com fotos). Aí: preset de upload com limite no provedor.
 
 ---
 

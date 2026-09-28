@@ -87,7 +87,8 @@ Se o site e a API ficarem no mesmo domínio, basta ele.
   hash fictício). Medido: 29 ms × 28 ms na mediana de 12 tentativas
   alternadas.
 - **Access token** JWT de 15 min, só na memória do navegador (nunca em
-  `localStorage`).
+  `localStorage`). Algoritmo fixo (`HS256`) na emissão **e** na verificação:
+  token com outro `alg` (`none`, outro HMAC com o mesmo segredo) é recusado.
 - **Refresh token** opaco de 7 dias em cookie `httpOnly`, `Secure` em
   produção, `SameSite=Strict`, `Path=/api/auth`. Guardado só como hash.
   **Rotação** a cada uso e **detecção de reuso**: um token já revogado que
