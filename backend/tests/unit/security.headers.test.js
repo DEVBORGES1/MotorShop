@@ -28,7 +28,7 @@ describe('cabeçalhos de segurança', () => {
     const frameSrc = res.headers['content-security-policy']
       .split(';')
       .find((d) => d.startsWith('frame-src '));
-    expect(frameSrc).toBe("frame-src 'self' https://www.google.com/maps");
+    expect(frameSrc).toBe("frame-src 'self' https://www.google.com/maps/");
   });
 
   it('sem HSTS fora de produção (localhost em http)', async () => {

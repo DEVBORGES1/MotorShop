@@ -35,7 +35,7 @@ style-src 'self' 'unsafe-inline';
 font-src 'self';
 img-src 'self' data: blob: https:;
 connect-src 'self' <origem de upload do provedor de imagens>;
-frame-src 'self' https://www.google.com/maps;
+frame-src 'self' https://www.google.com/maps/;
 frame-ancestors 'none'; object-src 'none'; base-uri 'self'; form-action 'self'
 ```
 
