@@ -54,11 +54,11 @@ export function Header() {
               // antes de a imagem chegar (sem salto de layout).
               width={
                 store.logo.height
-                  ? Math.round((44 * store.logo.width) / store.logo.height)
+                  ? Math.round((56 * store.logo.width) / store.logo.height)
                   : undefined
               }
-              height={44}
-              className="h-11 w-auto"
+              height={56}
+              className="h-14 w-auto"
             />
           ) : (
             <span className="font-display text-xl font-extrabold tracking-tight whitespace-nowrap text-ink-50">
