@@ -2,6 +2,7 @@ import {
   checkFinancingRules,
   isFinancingConfigured,
   minimumDownPayment,
+  MOTO_STATUS,
   simulateFinancing,
 } from '@motorshop/shared';
 
@@ -20,6 +21,24 @@ export function entradaInicial(valor, financing) {
 
 /** Prazo inicial: o maior oferecido. */
 export const parcelasIniciais = (financing) => financing?.installmentOptions?.at(-1) ?? null;
+
+const emCentavos = (reais) => Math.round(reais * 100) / 100;
+
+/** Entrada total: dinheiro mais a moto na troca, sem sobra de ponto flutuante. */
+export const entradaTotal = (dinheiro, troca = 0) => emCentavos(dinheiro + troca);
+
+/**
+ * Quanto do mínimo ainda precisa ser em dinheiro quando a moto na troca já
+ * cobre uma parte (ou todo) dele.
+ */
+export const minimoEmDinheiro = (minimoTotal, troca = 0) =>
+  Math.max(0, emCentavos(minimoTotal - troca));
+
+/** Entrada em % do valor da moto, com uma casa (19,6%). Sem valor, `null`. */
+export function percentualDaEntrada(entrada, valor) {
+  if (!(valor > 0)) return null;
+  return Math.round((entrada / valor) * 1000) / 10;
+}
 
 /** Passo do controle deslizante da entrada: R$ 100, ou R$ 10 em valores baixos. */
 export const passoDaEntrada = (valor) => (valor > 2000 ? 100 : 10);
@@ -62,6 +81,24 @@ export function tabelaDePrazos({ valor, entrada }, financing) {
     });
     return { parcelas, valor: simulacao.valid ? simulacao.installmentValue : null };
   });
+}
+
+/**
+ * Motos que dá para escolher no simulador: disponíveis e com preço — a
+ * reservada já tem comprador. Em ordem alfabética, para achar pelo nome; o
+ * padrão é a primeira da lista recebida (a mais recente, na ordem da API).
+ *
+ * @param {Array<object> | null | undefined} lista
+ * @returns {{ opcoes: object[], padrao: object | null }}
+ */
+export function motosParaSimular(lista) {
+  const disponiveis = (lista ?? []).filter(
+    (moto) => moto?.status === MOTO_STATUS.AVAILABLE && moto.price > 0,
+  );
+  const rotulo = (moto) => `${moto.brand?.name ?? ''} ${moto.model} ${moto.year ?? ''}`;
+  const opcoes = [...disponiveis].sort((a, b) => rotulo(a).localeCompare(rotulo(b), 'pt-BR'));
+
+  return { opcoes, padrao: disponiveis[0] ?? null };
 }
 
 /**

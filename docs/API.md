@@ -171,7 +171,10 @@ e o consentimento LGPD:
 - `SELL_MOTO.data`: `brand`, `model`, `year`, `mileage`, `expectedPrice?`
   (reais), `condition?`. Com o módulo `sellMotoEnabled` desligado → `422`
   (`field: "type"`, `code: "disabled"`).
-- `FINANCING.data`: `vehiclePrice`, `downPayment`, `installments` (6–72).
+- `FINANCING.data`: `vehiclePrice`, `downPayment`, `installments` (6–72),
+  `tradeInValue?` (reais). `downPayment` é a entrada total; `tradeInValue` é
+  a parte dela que é a moto do cliente na troca (estimativa dele, não pode
+  passar de `downPayment`). A entrada mínima vale para o total.
   O servidor confere prazo e entrada mínima com a configuração da loja e
   **refaz a conta com a taxa dele** — a parcela enviada pelo navegador é
   ignorada. Com `financingEnabled` desligado → `422`, como acima.

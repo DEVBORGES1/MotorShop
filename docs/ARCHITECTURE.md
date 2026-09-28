@@ -630,7 +630,9 @@ união discriminada em Zod. Justificativa em §15 D-05.
 `data` por tipo:
 
 - `SELL_MOTO` — `{ brand, model, year, mileage, expectedPrice?, condition? }`
-- `FINANCING` — `{ vehiclePrice, downPayment, installments }` (a moto simulada, quando
+- `FINANCING` — `{ vehiclePrice, downPayment, installments, tradeInValue? }`
+  (`downPayment` é a entrada total; `tradeInValue`, a parte dela que é a moto do
+  cliente na troca, em centavos no banco como os demais valores) (a moto simulada, quando
   houver, vai no campo `moto`, como no interesse: uma referência só, populável na listagem)
 - `MOTO_INTEREST` / `CONTACT` — vazio (em `CONTACT`, `message` é obrigatória)
 

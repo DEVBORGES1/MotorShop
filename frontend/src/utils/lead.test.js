@@ -74,4 +74,14 @@ describe('montarLead', () => {
     });
     expect(lead).not.toHaveProperty('moto');
   });
+
+  it('financiamento com moto na troca manda o valor dela; sem troca, não manda o campo', () => {
+    const base = { ...contato, vehiclePrice: 30000, downPayment: 14000, installments: 48 };
+
+    expect(montarLead('FINANCING', { ...base, tradeInValue: 8000 }).data.tradeInValue).toBe(8000);
+    expect(montarLead('FINANCING', { ...base, tradeInValue: 0 }).data).not.toHaveProperty(
+      'tradeInValue',
+    );
+    expect(montarLead('FINANCING', base).data).not.toHaveProperty('tradeInValue');
+  });
 });

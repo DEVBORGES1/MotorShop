@@ -5,8 +5,45 @@ import {
   formatarKm,
   formatarPreco,
   formatarTelefone,
+  formatarValor,
   iniciais,
+  lerValorEmReais,
 } from './format.js';
+
+describe('campo de reais', () => {
+  it('formata com separador de milhar, e centavos só quando há', () => {
+    expect(formatarValor(30000)).toBe('30.000');
+    expect(formatarValor(6666.6)).toBe('6.666,60');
+    expect(formatarValor(0)).toBe('0');
+  });
+
+  it('vazio continua vazio', () => {
+    expect(formatarValor('')).toBe('');
+    expect(formatarValor(null)).toBe('');
+    expect(formatarValor(undefined)).toBe('');
+  });
+
+  it('lê o que a pessoa digita: ponto é milhar, vírgula é centavo', () => {
+    expect(lerValorEmReais('30000')).toBe(30000);
+    expect(lerValorEmReais('30.000')).toBe(30000);
+    expect(lerValorEmReais('R$ 1.234.567')).toBe(1234567);
+    expect(lerValorEmReais('6.666,60')).toBe(6666.6);
+    expect(lerValorEmReais('10,5')).toBe(10.5);
+    expect(lerValorEmReais('10,999')).toBe(10.99);
+  });
+
+  it('sem número, devolve vazio', () => {
+    expect(lerValorEmReais('')).toBe('');
+    expect(lerValorEmReais('abc')).toBe('');
+    expect(lerValorEmReais(',')).toBe('');
+  });
+
+  it('o que formata, lê de volta igual', () => {
+    for (const valor of [0, 15, 30000, 6666.6, 1234567.89]) {
+      expect(lerValorEmReais(formatarValor(valor))).toBe(valor);
+    }
+  });
+});
 
 describe('formatarPreco', () => {
   // O Intl separa "R$" do número com espaço inquebrável (U+00A0), não com

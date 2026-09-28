@@ -40,7 +40,7 @@ describe('FinancingSimulator', () => {
     const html = texto(render({ valorFixo: 30000 }, configurada));
 
     expect(html).toContain('R$ 30.000,00');
-    expect(html).toContain('value="6000"'); // entrada mínima de 20%
+    expect(html).toContain('value="6.000"'); // entrada mínima de 20%
     expect(html).toContain('48 parcelas de');
     expect(html).toContain('R$ 749,39');
     expect(html).toContain('1,79% a.m.');

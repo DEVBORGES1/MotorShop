@@ -2,13 +2,79 @@ import { describe, expect, it } from 'vitest';
 
 import {
   entradaInicial,
+  entradaTotal,
+  minimoEmDinheiro,
+  motosParaSimular,
   parcelasIniciais,
   passoDaEntrada,
+  percentualDaEntrada,
   resultadoDaSimulacao,
   tabelaDePrazos,
 } from './simulador.js';
 
 const loja = { monthlyRate: 1.79, installmentOptions: [12, 24, 36, 48], minDownPaymentPercent: 20 };
+
+describe('moto na troca', () => {
+  it('soma na entrada, sem sobra de ponto flutuante', () => {
+    expect(entradaTotal(6000, 8000)).toBe(14000);
+    expect(entradaTotal(0.1, 0.2)).toBe(0.3);
+    expect(entradaTotal(6000)).toBe(6000);
+  });
+
+  it('abate do mínimo em dinheiro, que nunca fica negativo', () => {
+    expect(minimoEmDinheiro(6000, 2500)).toBe(3500);
+    expect(minimoEmDinheiro(6000, 8000)).toBe(0);
+    expect(minimoEmDinheiro(6666.6, 0.5)).toBe(6666.1);
+    expect(minimoEmDinheiro(6000)).toBe(6000);
+  });
+});
+
+describe('motosParaSimular', () => {
+  const moto = (id, marca, model, extra = {}) => ({
+    id,
+    brand: { name: marca },
+    model,
+    year: 2023,
+    price: 30000,
+    status: 'AVAILABLE',
+    ...extra,
+  });
+
+  it('só disponíveis e com preço, em ordem alfabética; padrão é a primeira recebida', () => {
+    const recebidas = [
+      moto('z', 'Yamaha', 'MT-03'),
+      moto('r', 'Honda', 'CB 500F', { status: 'RESERVED' }),
+      moto('s', 'Honda', 'Biz', { price: null }),
+      moto('a', 'BMW', 'G 310 R'),
+      moto('h', 'Honda', 'CG 160'),
+    ];
+
+    const { opcoes, padrao } = motosParaSimular(recebidas);
+
+    expect(opcoes.map((m) => m.id)).toEqual(['a', 'h', 'z']);
+    expect(padrao.id).toBe('z');
+  });
+
+  it('sem estoque, sem opções nem padrão', () => {
+    expect(motosParaSimular(null)).toEqual({ opcoes: [], padrao: null });
+    expect(motosParaSimular([moto('r', 'Honda', 'CB', { status: 'SOLD' })])).toEqual({
+      opcoes: [],
+      padrao: null,
+    });
+  });
+});
+
+describe('percentualDaEntrada', () => {
+  it('em % do valor, com uma casa', () => {
+    expect(percentualDaEntrada(6000, 30000)).toBe(20);
+    expect(percentualDaEntrada(5890, 30000)).toBe(19.6);
+  });
+
+  it('sem valor, não há percentual', () => {
+    expect(percentualDaEntrada(1000, 0)).toBeNull();
+    expect(percentualDaEntrada(1000, '')).toBeNull();
+  });
+});
 
 describe('valores iniciais', () => {
   it('começa na entrada mínima e no maior prazo', () => {

@@ -143,6 +143,11 @@ export const sellMotoDataSchema = z
   })
   .strict();
 
+/**
+ * `downPayment` é a entrada total. Quando o cliente dá uma moto na troca,
+ * `tradeInValue` diz quanto dessa entrada é a moto (estimativa dele) — o resto
+ * é dinheiro. A regra de entrada mínima vale para o total.
+ */
 export const financingDataSchema = z
   .object({
     vehiclePrice: z.number().positive().max(10_000_000),
@@ -152,11 +157,16 @@ export const financingDataSchema = z
       .int()
       .min(LEAD_LIMITS.MIN_INSTALLMENTS)
       .max(LEAD_LIMITS.MAX_INSTALLMENTS),
+    tradeInValue: z.number().positive().max(10_000_000).optional(),
   })
   .strict()
   .refine((data) => data.downPayment < data.vehiclePrice, {
     path: ['downPayment'],
     message: 'A entrada precisa ser menor que o valor da moto',
+  })
+  .refine((data) => data.tradeInValue == null || data.tradeInValue <= data.downPayment, {
+    path: ['tradeInValue'],
+    message: 'A moto na troca não pode valer mais que a entrada',
   });
 
 export const createLeadSchema = z.discriminatedUnion('type', [

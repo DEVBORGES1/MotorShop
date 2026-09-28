@@ -91,6 +91,25 @@ describe('createLeadSchema', () => {
     expect(campos(resultado)).toContain('data.downPayment');
   });
 
+  it('financiamento aceita moto na troca como parte da entrada', () => {
+    const resultado = parse({
+      ...contato,
+      type: 'FINANCING',
+      data: { vehiclePrice: 30000, downPayment: 10000, installments: 12, tradeInValue: 8000 },
+    });
+    expect(resultado.success).toBe(true);
+    expect(resultado.data.data.tradeInValue).toBe(8000);
+  });
+
+  it('financiamento recusa troca que vale mais que a entrada inteira', () => {
+    const resultado = parse({
+      ...contato,
+      type: 'FINANCING',
+      data: { vehiclePrice: 30000, downPayment: 6000, installments: 12, tradeInValue: 8000 },
+    });
+    expect(campos(resultado)).toContain('data.tradeInValue');
+  });
+
   it('exige consentimento aceito e na versão atual', () => {
     const base = { ...contato, type: 'CONTACT', message: 'Olá, tudo bem?' };
     expect(parse({ ...base, consent: undefined }).success).toBe(false);

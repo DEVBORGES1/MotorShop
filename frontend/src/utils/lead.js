@@ -41,8 +41,10 @@ export function montarLead(type, valores, { source, motoId } = {}) {
   // com a configuração dele — mandar daqui seria pedir para confiar no cliente.
   if (type === LEAD_TYPE.FINANCING) {
     if (motoId) lead.moto = motoId;
-    const { vehiclePrice, downPayment, installments } = valores;
+    const { vehiclePrice, downPayment, installments, tradeInValue } = valores;
     lead.data = { vehiclePrice, downPayment, installments };
+    // Parte da entrada que é a moto do cliente; sem troca, o campo não vai.
+    if (tradeInValue > 0) lead.data.tradeInValue = tradeInValue;
   }
 
   if (type === LEAD_TYPE.SELL_MOTO) {

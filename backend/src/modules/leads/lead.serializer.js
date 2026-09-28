@@ -8,7 +8,7 @@ import { toCents, toReais } from '../../utils/money.js';
  */
 const MONEY_FIELDS = {
   [LEAD_TYPE.SELL_MOTO]: ['expectedPrice'],
-  [LEAD_TYPE.FINANCING]: ['vehiclePrice', 'downPayment', 'installmentValue'],
+  [LEAD_TYPE.FINANCING]: ['vehiclePrice', 'downPayment', 'tradeInValue', 'installmentValue'],
 };
 
 function convertMoney(type, data, convert) {

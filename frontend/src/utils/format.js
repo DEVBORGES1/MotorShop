@@ -4,6 +4,35 @@ const NUMERO = new Intl.NumberFormat('pt-BR');
 /** A API já entrega reais; aqui só se formata para exibição. */
 export const formatarPreco = (reais) => (reais == null ? '—' : BRL.format(reais));
 
+const CENTAVOS = new Intl.NumberFormat('pt-BR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+/**
+ * Valor para dentro de um campo de reais, sem o "R$" (o campo já o mostra):
+ * 30000 → "30.000"; 6666.6 → "6.666,60". Vazio continua vazio.
+ */
+export function formatarValor(reais) {
+  if (reais === '' || reais == null || !Number.isFinite(Number(reais))) return '';
+  return Number.isInteger(Number(reais)) ? NUMERO.format(reais) : CENTAVOS.format(reais);
+}
+
+/**
+ * Lê o que a pessoa digitou num campo de reais. Vírgula é o separador de
+ * centavos; ponto é o de milhar — "30.000" e "30000" são trinta mil.
+ *
+ * @returns {number | ''} `''` quando não há número
+ */
+export function lerValorEmReais(texto) {
+  const limpo = String(texto ?? '').replace(/[^\d,.]/g, '');
+  if (!/\d/.test(limpo)) return '';
+
+  const [inteiro, centavos = ''] = limpo.split(',');
+  const numero = Number(`${inteiro.replace(/\./g, '')}.${centavos.replace(/\D/g, '').slice(0, 2)}`);
+  return Number.isFinite(numero) ? numero : '';
+}
+
 export const formatarKm = (km) => (km == null ? '—' : `${NUMERO.format(km)} km`);
 
 export const formatarCilindrada = (cc) => (cc == null ? '—' : `${NUMERO.format(cc)} cc`);

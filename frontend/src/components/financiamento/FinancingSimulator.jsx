@@ -14,7 +14,9 @@ import { esquemaInteresse } from '@/components/leads/esquemas.js';
 import { LeadEnviado } from '@/components/leads/LeadEnviado.jsx';
 import { Alert } from '@/components/ui/Alert.jsx';
 import { Button } from '@/components/ui/Button.jsx';
-import { Field, inputClass, rangeClass } from '@/components/ui/Field.jsx';
+import { Field, rangeClass } from '@/components/ui/Field.jsx';
+import { InputReais } from '@/components/ui/InputReais.jsx';
+import { Switch } from '@/components/ui/Switch.jsx';
 import { useEnvioLead } from '@/hooks/useEnvioLead.js';
 import { useStore } from '@/hooks/useStore.js';
 import { formatarPercentual, formatarPreco } from '@/utils/format.js';
@@ -22,8 +24,11 @@ import { montarLead } from '@/utils/lead.js';
 import { origemDoLead } from '@/utils/origem.js';
 import {
   entradaInicial,
+  entradaTotal,
+  minimoEmDinheiro,
   parcelasIniciais,
   passoDaEntrada,
+  percentualDaEntrada,
   resultadoDaSimulacao,
   tabelaDePrazos,
 } from '@/utils/simulador.js';
@@ -38,16 +43,22 @@ import { AvisoSimulacao } from './AvisoSimulacao.jsx';
  * entrada mínima vêm da configuração da loja. Só é montado quando a loja
  * configurou o financiamento (`isFinancingConfigured`).
  *
+ * Com o "Venda sua moto" ligado, o visitante pode dar a moto dele na troca: o
+ * valor estimado soma na entrada, e o mínimo da loja vale para o total.
+ *
  * @param {{ valorFixo?: number, moto?: { id: string, nome: string } }} props
- *   `valorFixo` trava o valor (página da moto); sem ele, o visitante digita.
+ *   `valorFixo` trava o valor (moto escolhida); sem ele, o visitante digita.
  */
 export function FinancingSimulator({ valorFixo, moto, idPrefixo = 'sim' }) {
   const { store } = useStore();
   const financing = store.financing;
+  const aceitaTroca = Boolean(store.features?.sellMotoEnabled);
 
-  const [valor, setValor] = useState(valorFixo ?? '');
-  const valorNumero = Number(valor) || 0;
-  const [entrada, setEntrada] = useState(() => entradaInicial(valorFixo ?? 0, financing));
+  const [valorDigitado, setValorDigitado] = useState('');
+  const valorNumero = valorFixo ?? (Number(valorDigitado) || 0);
+  const [dinheiro, setDinheiro] = useState(() => entradaInicial(valorFixo ?? 0, financing));
+  const [temTroca, setTemTroca] = useState(false);
+  const [valorDaTroca, setValorDaTroca] = useState('');
   const [parcelasEscolhidas, setParcelas] = useState(() => parcelasIniciais(financing));
   const [enviarAberto, setEnviarAberto] = useState(false);
 
@@ -56,21 +67,59 @@ export function FinancingSimulator({ valorFixo, moto, idPrefixo = 'sim' }) {
     ? parcelasEscolhidas
     : parcelasIniciais(financing);
 
-  const minimo = minimumDownPayment(valorNumero, financing.minDownPaymentPercent ?? 0);
+  const percentualMinimo = financing.minDownPaymentPercent ?? 0;
+  const minimoDoValor = (v) => minimumDownPayment(v, percentualMinimo);
+  const troca = temTroca ? Number(valorDaTroca) || 0 : 0;
+
+  // Outra moto escolhida: a entrada recomeça no mínimo dela; troca e prazo
+  // ficam como a pessoa deixou. A simulação aberta para envio era da outra moto.
+  const [valorFixoAtual, setValorFixoAtual] = useState(valorFixo);
+  if (valorFixo !== valorFixoAtual) {
+    setValorFixoAtual(valorFixo);
+    setDinheiro(minimoEmDinheiro(minimoDoValor(valorNumero), troca));
+    setEnviarAberto(false);
+  }
+
+  const minimo = minimoDoValor(valorNumero);
+  const minimoDinheiro = minimoEmDinheiro(minimo, troca);
+  const entrada = entradaTotal(dinheiro, troca);
   const passo = passoDaEntrada(valorNumero);
-  const maximo = Math.max(minimo, valorNumero - passo);
+  const maximo = Math.max(minimoDinheiro, valorNumero - troca - passo);
 
   const simulacao = { valor: valorNumero, entrada, parcelas };
   const resultado = resultadoDaSimulacao(simulacao, financing);
   const tabela = tabelaDePrazos(simulacao, financing);
 
-  const mudarValor = (evento) => {
-    const novo = evento.target.value;
-    setValor(novo);
-    // Valor maior pode deixar a entrada abaixo do novo mínimo: acompanha.
-    const novoMinimo = minimumDownPayment(Number(novo) || 0, financing.minDownPaymentPercent ?? 0);
-    setEntrada((atual) => Math.max(atual, novoMinimo));
+  // Mudou o que define o mínimo? O dinheiro sobe junto, se ficou abaixo dele.
+  const acompanharMinimo = (novoValor, novaTroca) =>
+    setDinheiro((atual) => Math.max(atual, minimoEmDinheiro(minimoDoValor(novoValor), novaTroca)));
+
+  const mudarValor = (novo) => {
+    setValorDigitado(novo);
+    acompanharMinimo(Number(novo) || 0, troca);
   };
+
+  const mudarTroca = (nova) => {
+    setValorDaTroca(nova);
+    acompanharMinimo(valorNumero, Number(nova) || 0);
+  };
+
+  const alternarTroca = (ligada) => {
+    setTemTroca(ligada);
+    if (!ligada) acompanharMinimo(valorNumero, 0);
+  };
+
+  const percentual = percentualDaEntrada(entrada, valorNumero);
+  const dicaDaEntrada =
+    valorNumero > 0
+      ? [
+          `${formatarPercentual(percentual)} do valor${troca > 0 ? ', com a troca' : ''}`,
+          percentualMinimo > 0 &&
+            `mínimo ${formatarPreco(minimo)} (${formatarPercentual(percentualMinimo)})`,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      : undefined;
 
   const id = (campo) => `${idPrefixo}-${campo}`;
 
@@ -80,16 +129,11 @@ export function FinancingSimulator({ valorFixo, moto, idPrefixo = 'sim' }) {
         {valorFixo == null ? (
           <Field id={id('valor')} label="Valor da moto (R$)">
             {(props) => (
-              <input
+              <InputReais
                 {...props}
-                type="number"
-                inputMode="decimal"
-                min="0"
-                step="100"
-                value={valor}
+                value={valorDigitado}
                 onChange={mudarValor}
-                placeholder="Ex.: 25000"
-                className={inputClass}
+                placeholder="25.000"
               />
             )}
           </Field>
@@ -104,23 +148,14 @@ export function FinancingSimulator({ valorFixo, moto, idPrefixo = 'sim' }) {
 
         <Field
           id={id('entrada')}
-          label="Entrada (R$)"
-          hint={
-            financing.minDownPaymentPercent > 0 && valorNumero > 0
-              ? `Mínimo ${formatarPreco(minimo)} (${formatarPercentual(financing.minDownPaymentPercent)})`
-              : undefined
-          }
+          label={temTroca ? 'Entrada em dinheiro (R$)' : 'Entrada (R$)'}
+          hint={dicaDaEntrada}
         >
           {(props) => (
-            <input
+            <InputReais
               {...props}
-              type="number"
-              inputMode="decimal"
-              min={minimo}
-              step={passo}
-              value={entrada}
-              onChange={(evento) => setEntrada(Number(evento.target.value) || 0)}
-              className={inputClass}
+              value={dinheiro}
+              onChange={(novo) => setDinheiro(Number(novo) || 0)}
             />
           )}
         </Field>
@@ -130,13 +165,41 @@ export function FinancingSimulator({ valorFixo, moto, idPrefixo = 'sim' }) {
         <input
           type="range"
           aria-label="Ajustar entrada"
-          min={minimo}
+          min={minimoDinheiro}
           max={maximo}
           step={passo}
-          value={Math.min(Math.max(entrada, minimo), maximo)}
-          onChange={(evento) => setEntrada(Number(evento.target.value))}
+          value={Math.min(Math.max(dinheiro, minimoDinheiro), maximo)}
+          onChange={(evento) => setDinheiro(Number(evento.target.value))}
           className={rangeClass}
         />
+      )}
+
+      {aceitaTroca && (
+        <div className="space-y-4 rounded-lg border border-ink-800 p-4">
+          <Switch
+            id={id('tem-troca')}
+            checked={temTroca}
+            onChange={alternarTroca}
+            label="Tenho uma moto para dar na troca"
+            description="O valor dela entra na entrada e diminui as parcelas."
+          />
+          {temTroca && (
+            <Field
+              id={id('troca')}
+              label="Valor estimado da sua moto (R$)"
+              hint="É uma estimativa sua: a loja avalia a moto antes de fechar o negócio."
+            >
+              {(props) => (
+                <InputReais
+                  {...props}
+                  value={valorDaTroca}
+                  onChange={mudarTroca}
+                  placeholder="12.000"
+                />
+              )}
+            </Field>
+          )}
+        </div>
       )}
 
       <fieldset>
@@ -173,6 +236,12 @@ export function FinancingSimulator({ valorFixo, moto, idPrefixo = 'sim' }) {
             <p className="font-display text-3xl font-extrabold text-brand-500">
               {formatarPreco(resultado.installmentValue)}
             </p>
+            {troca > 0 && (
+              <p className="mt-2 text-sm text-ink-200">
+                Entrada de {formatarPreco(entrada)}: {formatarPreco(dinheiro)} em dinheiro +{' '}
+                {formatarPreco(troca)} da sua moto
+              </p>
+            )}
             <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-2 text-sm sm:grid-cols-4">
               <Item rotulo="Valor financiado" valor={formatarPreco(resultado.financed)} />
               <Item rotulo="Total das parcelas" valor={formatarPreco(resultado.total)} />
@@ -188,7 +257,12 @@ export function FinancingSimulator({ valorFixo, moto, idPrefixo = 'sim' }) {
       {!('erro' in resultado) &&
         (enviarAberto ? (
           <EnviarSimulacao
-            simulacao={{ vehiclePrice: valorNumero, downPayment: entrada, installments: parcelas }}
+            simulacao={{
+              vehiclePrice: valorNumero,
+              downPayment: entrada,
+              installments: parcelas,
+              tradeInValue: troca,
+            }}
             moto={moto}
             idPrefixo={idPrefixo}
           />

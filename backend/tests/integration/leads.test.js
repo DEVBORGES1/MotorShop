@@ -6,6 +6,7 @@ import { createApp } from '../../src/app.js';
 import { RefreshToken } from '../../src/modules/auth/refreshToken.model.js';
 import { Brand } from '../../src/modules/brands/brand.model.js';
 import { Lead } from '../../src/modules/leads/lead.model.js';
+import { serializeLead } from '../../src/modules/leads/lead.serializer.js';
 import { Moto } from '../../src/modules/motos/moto.model.js';
 import { StoreSettings } from '../../src/modules/store/store.model.js';
 import { User } from '../../src/modules/users/user.model.js';
@@ -128,6 +129,19 @@ describe.skipIf(skipWithoutDb)('API de leads', () => {
         monthlyRate: 1.79,
         installmentValue: 74_939,
       });
+    });
+
+    it('moto na troca fica gravada em centavos e volta em reais para o painel', async () => {
+      const response = await enviar({
+        ...contato,
+        type: 'FINANCING',
+        data: { vehiclePrice: 30000, downPayment: 10000, installments: 48, tradeInValue: 8000 },
+      });
+
+      expect(response.status).toBe(201);
+      const lead = await Lead.findOne().lean();
+      expect(lead.data).toMatchObject({ downPayment: 1_000_000, tradeInValue: 800_000 });
+      expect(serializeLead(lead).data).toMatchObject({ downPayment: 10000, tradeInValue: 8000 });
     });
 
     it('422 para simulação fora das regras da loja', async () => {

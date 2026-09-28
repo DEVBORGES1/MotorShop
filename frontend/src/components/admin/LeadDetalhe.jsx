@@ -240,6 +240,12 @@ function DadosDoTipo({ lead }) {
             ['Valor da moto', formatarPreco(d.vehiclePrice)],
             ['Entrada', formatarPreco(d.downPayment)],
             [
+              'Moto na troca',
+              d.tradeInValue != null
+                ? `${formatarPreco(d.tradeInValue)} da entrada (estimativa do cliente)`
+                : null,
+            ],
+            [
               'Parcela simulada',
               d.installments && d.installmentValue != null
                 ? `${d.installments}x de ${formatarPreco(d.installmentValue)}`
