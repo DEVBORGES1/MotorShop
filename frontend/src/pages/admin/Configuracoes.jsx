@@ -45,6 +45,7 @@ const VAZIO = {
     state: '',
     zipCode: '',
     mapsUrl: '',
+    mapsEmbedUrl: '',
   },
   social: { instagram: '', facebook: '', youtube: '' },
   theme: { primary: '#4CD62B', secondary: '#0A0B0A', accent: '#38C172' },
@@ -297,6 +298,10 @@ export function Configuracoes() {
           {campo('address', 'mapsUrl', 'Link do mapa', {
             type: 'url',
             hint: 'Google Maps → Compartilhar → Copiar link',
+          })}
+          {campo('address', 'mapsEmbedUrl', 'Link de incorporação do mapa', {
+            type: 'url',
+            hint: 'Google Maps → Compartilhar → Incorporar um mapa → copie só o link do "src"',
           })}
         </FormSection>
 

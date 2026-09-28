@@ -90,4 +90,9 @@ describe('endereço no mapa', () => {
     expect(urlDeRota({ ...endereco, mapsUrl })).toBe(mapsUrl);
     expect(urlDeRota(endereco)).toContain('google.com/maps/search/?api=1&query=');
   });
+
+  it('o mapa incorporado prefere o link de "Incorporar mapa" do lojista', () => {
+    const mapsEmbedUrl = 'https://www.google.com/maps/embed?pb=!1m18!1m12';
+    expect(urlDoMapaIncorporado({ ...endereco, mapsEmbedUrl })).toBe(mapsEmbedUrl);
+  });
 });

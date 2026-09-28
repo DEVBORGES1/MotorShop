@@ -57,6 +57,10 @@ const storeSchema = new mongoose.Schema(
       state: { type: String, trim: true, uppercase: true, maxlength: 2, default: null },
       zipCode: { type: String, trim: true, default: null },
       mapsUrl: { type: String, trim: true, default: null },
+      // URL do iframe do "Incorporar mapa" do Google Maps — mostra o pino exato
+      // da loja, em vez do embed genérico construído a partir do texto do
+      // endereço.
+      mapsEmbedUrl: { type: String, trim: true, default: null },
     },
 
     social: {

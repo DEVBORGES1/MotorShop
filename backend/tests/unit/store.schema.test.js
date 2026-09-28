@@ -70,6 +70,23 @@ describe('updateStoreSchema — links', () => {
     expect(valido({ social: { youtube: 'javascript:alert(1)' } })).toBe(false);
   });
 
+  it('aceita o link de incorporação do Google Maps', () => {
+    expect(
+      valido({
+        address: {
+          mapsEmbedUrl:
+            'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d888.69!2d-51.15!3d-27.00',
+        },
+      }),
+    ).toBe(true);
+  });
+
+  it('recusa link de incorporação de outro domínio — ele vira src de iframe', () => {
+    expect(valido({ address: { mapsEmbedUrl: 'https://evil.example/maps/embed?pb=1' } })).toBe(
+      false,
+    );
+  });
+
   it('recusa @usuario solto no lugar do link', () => {
     expect(valido({ social: { instagram: '@loja' } })).toBe(false);
   });

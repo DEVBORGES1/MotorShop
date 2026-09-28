@@ -121,8 +121,16 @@ export function consultaDoMapa(address = {}) {
   return [rua, address.district, address.city, address.state].filter(Boolean).join(', ');
 }
 
-/** Mapa para incorporar na página. Só é aberto depois de o visitante pedir. */
-export function urlDoMapaIncorporado(address) {
+/**
+ * Mapa para incorporar na página. Só é aberto depois de o visitante pedir.
+ *
+ * Prefere o link do "Incorporar mapa" que o lojista colou nas configurações
+ * (`mapsEmbedUrl`) — mostra o pino exato da loja no Google. Sem ele, cai num
+ * embed genérico montado a partir do texto do endereço.
+ */
+export function urlDoMapaIncorporado(address = {}) {
+  if (address.mapsEmbedUrl) return address.mapsEmbedUrl;
+
   const consulta = consultaDoMapa(address);
   return consulta
     ? `https://www.google.com/maps?q=${encodeURIComponent(consulta)}&hl=pt-BR&output=embed`

@@ -271,7 +271,7 @@ Campos de `PATCH /admin/store`:
 | Identidade | `name`, `legalName`, `slogan` |
 | Tema | `theme.primary` (hex). A cor é clareada no site se ficar ilegível sobre o fundo escuro |
 | Contato | `contact.whatsapp`, `contact.phone`, `contact.email` |
-| Endereço | `address.street`, `number`, `complement`, `district`, `city`, `state` (UF), `zipCode`, `mapsUrl` |
+| Endereço | `address.street`, `number`, `complement`, `district`, `city`, `state` (UF), `zipCode`, `mapsUrl`, `mapsEmbedUrl` (host restrito a `www.google.com/maps/embed`) |
 | Redes | `social.instagram`, `facebook`, `youtube` (URLs) |
 | Horários | `businessHours: [{ weekday 0–6, opensAt "08:00", closesAt "18:00", closed? }]` |
 | Diferenciais | `highlights: [{ title ≤ 40, text? ≤ 140 }]`, até 3 — aparecem na home; vazio, a seção some |

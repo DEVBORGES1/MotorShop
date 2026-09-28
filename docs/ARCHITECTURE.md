@@ -667,7 +667,7 @@ Documento **único** (singleton) que concentra tudo que muda de loja para loja:
   theme: { primary, secondary, accent, neutral, radius, fontHeading, fontBody },
   contact: { whatsapp, phone, email },
   address: { street, number, complement?, district, city, state, zipCode,
-             mapsUrl?, geo?: { lat, lng } },
+             mapsUrl?, mapsEmbedUrl?, geo?: { lat, lng } },
   social:  { instagram?, facebook?, youtube?, tiktok? },
   businessHours: [{ weekday, opensAt, closesAt, closed }],
   seo: { defaultTitle, titleTemplate, defaultDescription, siteUrl },

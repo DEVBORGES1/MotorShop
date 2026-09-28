@@ -25,6 +25,24 @@ const httpUrl = (max) =>
     .refine((value) => /^https?:\/\//i.test(value), 'Use um link http:// ou https://')
     .nullish();
 
+/**
+ * URL do iframe que o Google Maps dá em Compartilhar → Incorporar um mapa.
+ * Vai direto para `src` de um `<iframe>` no site público, então o domínio é
+ * restrito ao Google: aceitar qualquer host deixaria a loja embutir (ou
+ * alguém malicioso embutir, via este mesmo formulário) qualquer outra página.
+ */
+const googleMapsEmbedUrl = (max) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .url('Informe o endereço completo, começando com https://')
+    .refine(
+      (value) => /^https:\/\/www\.google\.com\/maps\/embed/i.test(value),
+      'Cole o link do "Incorporar mapa" do Google Maps (começa com https://www.google.com/maps/embed)',
+    )
+    .nullish();
+
 /** "08:00" — hora de 00 a 23, minuto de 00 a 59. */
 const horaMinuto = z
   .string()
@@ -107,6 +125,7 @@ export const updateStoreSchema = z
         state: z.string().trim().length(2).toUpperCase().nullish(),
         zipCode: optionalText(9), // "89000-000"
         mapsUrl: httpUrl(500), // links completos do Google Maps passam de 300 caracteres
+        mapsEmbedUrl: googleMapsEmbedUrl(2000), // o link "pb=" do embed é bem mais longo
       })
       .strict()
       .optional(),
