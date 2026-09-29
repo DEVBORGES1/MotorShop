@@ -17,7 +17,7 @@ function buildFalso() {
   mkdirSync(join(dir, 'assets'));
   writeFileSync(
     join(dir, 'index.html'),
-    '<!doctype html><html lang="pt-BR"><head><!--seo--><title>MotorShop</title><!--/seo--></head><body><div id="root"></div><script type="module" src="/assets/index-abc.js"></script></body></html>',
+    '<!doctype html><html lang="pt-BR"><head><!--seo--><title>MotorShop</title><!--/seo--></head><body><!--abertura--><div id="root"></div><script type="module" src="/assets/index-abc.js"></script></body></html>',
   );
   writeFileSync(join(dir, 'assets', 'index-abc.js'), 'console.log(1)');
   writeFileSync(join(dir, 'favicon.svg'), '<svg/>');
@@ -148,6 +148,49 @@ describe.skipIf(skipWithoutDb)('SEO: HTML inicial por rota', () => {
 
     expect(res.text).not.toContain('"catalogo"');
     expect(res.text).not.toContain('rel="preload" as="image"');
+  });
+
+  describe('abertura', () => {
+    const abertura = /<div class="abertura" aria-hidden="true">.*?<\/div>/;
+
+    it('quem chega de fora vê a abertura, antes do #root e com o nome da loja', async () => {
+      const res = await pagina('/').set('Sec-Fetch-Site', 'cross-site');
+
+      expect(res.text).toMatch(abertura);
+      expect(res.text).toContain('<span class="abertura-nome">Loja Exemplo</span>');
+      expect(res.text.indexOf('class="abertura"')).toBeLessThan(res.text.indexOf('id="root"'));
+      expect(res.headers.vary).toMatch(/Sec-Fetch-Site/i);
+    });
+
+    it('com logo, usa o mesmo arquivo do cabeçalho (sem download a mais)', async () => {
+      await StoreSettings.updateOne(
+        {},
+        {
+          logo: {
+            id: 'l',
+            publicId: 'loja/logo',
+            url: 'https://res.cloudinary.com/loja/image/upload/v1/loja/logo.png',
+            width: 400,
+            height: 200,
+          },
+        },
+      );
+
+      const res = await pagina('/estoque');
+      expect(res.text).toContain(
+        '<img src="https://res.cloudinary.com/loja/image/upload/e_trim/c_limit,f_auto,q_auto,h_128/v1/loja/logo.png" alt="" class="abertura-logo">',
+      );
+    });
+
+    it('quem já está navegando no site não a vê de novo', async () => {
+      const res = await pagina('/estoque').set('Sec-Fetch-Site', 'same-origin');
+      expect(res.text).not.toMatch(abertura);
+    });
+
+    it('nem no painel, nem em página inexistente', async () => {
+      expect((await pagina('/admin/login')).text).not.toMatch(abertura);
+      expect((await pagina('/pagina-que-nao-existe')).text).not.toMatch(abertura);
+    });
   });
 
   it('home sem moto com foto: sem pré-anúncio de imagem', async () => {

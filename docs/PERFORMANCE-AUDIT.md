@@ -102,7 +102,19 @@ visitante pula para a página N e a contagem total aparece na tela.
 Redis ou CDN de API **não** são necessários com uma instância (ver DT-01:
 o gatilho é subir para duas ou mais).
 
-## 7. Responsividade (sem regressão)
+## 7. Abertura animada (acrescentada depois da auditoria)
+
+Logo com traço no acento que se desfaz em menos de 1 s, só para quem chega
+de fora do site (`Sec-Fetch-Site` diferente de `same-origin`) e nunca com
+"reduzir movimento". A página é desenhada por baixo desde o início.
+
+Custo medido em A/B no mesmo servidor e com os mesmos dados (HTML com e sem
+a abertura, 3 medições cada, 4G lento e CPU 4×): **+0,15 s** em FCP e LCP,
+só na chegada. Testado sem ganho: logo com `fetchpriority="low"` e animação só de
+opacidade — o custo é do quadro inicial com a camada de tela cheia. Aceito
+pelo dono do projeto em troca do efeito de marca.
+
+## 8. Responsividade (sem regressão)
 
 10 páginas × 8 larguras (320, 375, 414, 768, 1024, 1366, 1440 e 1920 px):
 nenhuma rolagem horizontal e nenhum erro de JavaScript. Os únicos erros de

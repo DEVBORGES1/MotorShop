@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
-import { escapeHtml, injectApp, injectHead, renderHead } from '../../src/seo/html.js';
+import {
+  escapeHtml,
+  injectAbertura,
+  injectApp,
+  injectHead,
+  renderAbertura,
+  renderHead,
+} from '../../src/seo/html.js';
 import { resolveRoute } from '../../src/seo/routes.js';
 
 const seo = {
@@ -130,5 +137,29 @@ describe('renderização no servidor no HTML', () => {
     expect(renderHead(seo, null, ['/assets/a.js'])).toContain(
       '<link rel="modulepreload" href="/assets/a.js" fetchpriority="low">',
     );
+  });
+});
+
+describe('abertura', () => {
+  it('nome e logo do banco saem escapados — não viram HTML', () => {
+    const html = renderAbertura({ name: 'Loja <script>x</script>' }, null);
+    expect(html).toContain('Loja &lt;script&gt;x&lt;/script&gt;');
+    expect(html).not.toContain('<script>');
+
+    expect(renderAbertura({}, 'https://img.test/l.png?a="b"')).toContain(
+      'src="https://img.test/l.png?a=&quot;b&quot;"',
+    );
+  });
+
+  it('é decorativa para leitor de tela', () => {
+    expect(renderAbertura({ name: 'Loja' }, null)).toContain('aria-hidden="true"');
+  });
+
+  it('entra no marcador; sem marcador, o template segue igual', () => {
+    expect(injectAbertura('<body><!--abertura--><div id="root">', '<div>A</div>')).toBe(
+      '<body><div>A</div><div id="root">',
+    );
+    expect(injectAbertura('<body><!--abertura-->', '')).toBe('<body>');
+    expect(injectAbertura('<body>', '<div>A</div>')).toBe('<body>');
   });
 });

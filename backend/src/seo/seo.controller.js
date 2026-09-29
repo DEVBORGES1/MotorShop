@@ -1,9 +1,18 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { logoUrl } from '@motorshop/shared';
+
 import { env } from '../config/env.js';
 import { logger } from '../config/logger.js';
-import { escapeHtml, injectApp, injectHead, renderHead } from './html.js';
+import {
+  escapeHtml,
+  injectAbertura,
+  injectApp,
+  injectHead,
+  renderAbertura,
+  renderHead,
+} from './html.js';
 import { createPreloader } from './preload.js';
 import { resolveRoute } from './routes.js';
 import { buildPageSeo, sitemapBase, sitemapEntries } from './seo.service.js';
@@ -49,25 +58,38 @@ export function createHtmlHandler(frontendDir, { renderer = createRenderer(front
         }
       }
 
+      // Abertura só para quem CHEGA ao site (Google, WhatsApp, endereço
+      // digitado): quem já está navegando nele não a vê de novo. O navegador
+      // informa a origem do clique em `Sec-Fetch-Site`, sem cookie nem
+      // armazenamento no aparelho.
+      const abertura =
+        status === 200 && route.page !== 'admin' && req.get('Sec-Fetch-Site') !== 'same-origin'
+          ? renderAbertura(data.store, logoUrl(data.store?.logo?.url) ?? null)
+          : '';
+
       // Sem cache: o HTML carrega a meta do momento e aponta para os assets do
       // deploy atual (§12.4). Os assets, esses sim, são imutáveis.
       res.set('Cache-Control', 'no-cache');
+      res.vary('Sec-Fetch-Site');
       res
         .status(status)
         .type('html')
         .send(
-          injectApp(
-            injectHead(
-              template,
-              renderHead(
-                seo,
-                data,
-                status === 200 ? preloadsFor(route.page) : [],
-                imagePreload,
-                theme,
+          injectAbertura(
+            injectApp(
+              injectHead(
+                template,
+                renderHead(
+                  seo,
+                  data,
+                  status === 200 ? preloadsFor(route.page) : [],
+                  imagePreload,
+                  theme,
+                ),
               ),
+              app,
             ),
-            app,
+            abertura,
           ),
         );
     } catch (error) {

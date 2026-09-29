@@ -1411,6 +1411,12 @@ Como ficou implementado (FASE 9, `backend/src/seo/`):
   esperar a API; cada dado de partida vale só no primeiro uso
   (`useMotoInicial`, `useDadoInicial`). Renderizar no servidor não escreve
   nada nesses dados: eles viram JSON depois (teste em `entry-server.test`).
+- **Abertura:** na chegada ao site (`Sec-Fetch-Site` ≠ `same-origin`), o
+  servidor põe antes do `#root` uma camada com a logo que se desfaz em < 1 s
+  (`renderAbertura` em `seo/html.js`, animação em `styles/index.css`). Só
+  CSS — sem script, fora da hidratação, não trava a tela se o JS falhar,
+  não recebe clique e some com "reduzir movimento". Custo medido: +0,15 s
+  no LCP da primeira página (`PERFORMANCE-AUDIT.md` §7).
 - Moto vendida: 200, `SoldOut`, sem preço (decisão A). Moto inativa ou
   inexistente e página de módulo desligado: **404** com `noindex`.
 - CSP própria (`config/security.js`): `script-src 'self'` (sem inline, sem

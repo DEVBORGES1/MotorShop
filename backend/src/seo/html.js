@@ -96,6 +96,35 @@ export function injectHead(template, head) {
   return `${template.slice(0, start + START.length)}\n    ${head}\n    ${template.slice(end)}`;
 }
 
+/**
+ * Abertura: a logo (ou o nome da loja) no centro, um traço no acento, e a
+ * camada se desfaz em menos de 1 s revelando a página — que já está desenhada
+ * por baixo, então a métrica de carregamento continua sendo a da página real.
+ *
+ * É só marcação: a animação e o sumiço são CSS (`.abertura`, em
+ * `frontend/src/styles/index.css`). Sem script, ela não depende do React nem
+ * da CSP, e não tem como ficar presa na tela se o JS falhar. Fica fora do
+ * `#root`, então a hidratação não a vê.
+ *
+ * @param {{ name?: string }} store
+ * @param {string | null} logo URL do logo já no tamanho do cabeçalho (mesmo arquivo, sem download a mais)
+ */
+export function renderAbertura(store, logo) {
+  const marca = logo
+    ? `<img src="${escapeHtml(logo)}" alt="" class="abertura-logo">`
+    : `<span class="abertura-nome">${escapeHtml(store?.name)}</span>`;
+  return `<div class="abertura" aria-hidden="true">${marca}<span class="abertura-traco"></span></div>`;
+}
+
+const ABERTURA = '<!--abertura-->';
+
+/** Põe a abertura no lugar do marcador `<!--abertura-->`, antes de `#root`. */
+export function injectAbertura(template, html) {
+  const at = template.indexOf(ABERTURA);
+  if (at === -1) return template;
+  return `${template.slice(0, at)}${html}${template.slice(at + ABERTURA.length)}`;
+}
+
 const APP = '<!--app-->';
 
 /**

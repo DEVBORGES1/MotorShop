@@ -141,6 +141,78 @@ h4 {
   );
 }
 
+/*
+ * Abertura (backend/src/seo/html.js): logo e traço no acento sobre o fundo do
+ * site; depois de ~0,55 s a camada se desfaz. Total abaixo de 1 s. A página
+ * já está desenhada por baixo. `pointer-events: none` desde o início: um
+ * clique durante a animação chega ao site. Com "reduzir movimento", nem
+ * aparece.
+ */
+.abertura {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  background: var(--color-ink-900);
+  pointer-events: none;
+  animation: abertura-sai 0.35s ease-in 0.55s forwards;
+}
+
+.abertura-logo {
+  height: 4.5rem;
+  width: auto;
+  max-width: 70vw;
+  object-fit: contain;
+  animation: abertura-entra 0.45s ease-out both;
+}
+
+.abertura-nome {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-ink-50);
+  animation: abertura-entra 0.45s ease-out both;
+}
+
+.abertura-traco {
+  height: 3px;
+  width: 7rem;
+  background: var(--color-brand-500);
+  transform-origin: left;
+  animation: abertura-traco 0.5s ease-out 0.05s both;
+}
+
+@keyframes abertura-entra {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+}
+
+@keyframes abertura-traco {
+  from {
+    transform: scaleX(0);
+  }
+}
+
+@keyframes abertura-sai {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .abertura {
+    display: none;
+  }
+}
+
 /* Listra diagonal de sinalização, no acento. */
 @utility faixa-listra {
   background-image: repeating-linear-gradient(
