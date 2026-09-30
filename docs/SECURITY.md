@@ -371,6 +371,7 @@ comum não faz nenhuma chamada de sessão. O HTML do servidor, que vai para o
 cache, é sempre o de visitante: os atalhos surgem só no navegador, e todo
 acesso ao painel continua exigindo a sessão verificada no servidor.
 
+
 Pendências inalteradas: rotação dos segredos e revisão dos limites com
 tráfego real (§9, §12).
 
