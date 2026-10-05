@@ -1,0 +1,42 @@
+# Mantém o serviço do plano Free do Render acordado (docs/DEPLOYMENT.md §5.1):
+# o Free hiberna após 15 min sem visita e a próxima abertura leva ~1 min. Uma
+# chamada a /api/health a cada 10 min conta como visita e o impede de dormir.
+#
+# A cada 10 min, e não 15: o GitHub atrasa execuções agendadas em alguns
+# minutos quando está carregado, e 15 em 15 encostaria no limite do Render.
+#
+# O endereço vem da variável de repositório KEEPALIVE_URL (Settings → Secrets
+# and variables → Actions → Variables), nunca deste arquivo: o produto é
+# revendável e não leva endereço de loja. Vários endereços: separe por espaço.
+# Sem a variável, o job é pulado — nada roda.
+name: Manter acordado
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: manter-acordado
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    if: vars.KEEPALIVE_URL != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      # Até 3 tentativas com 2 min cada: se o serviço já tiver dormido, a
+      # primeira chamada é a que o acorda e pode demorar ~1 min.
+      - run: |
+          for url in $URLS; do
+            health="${url%/}/api/health"
+            curl --fail --silent --show-error --output /dev/null \
+              --max-time 120 --retry 2 --retry-all-errors --retry-delay 5 \
+              --write-out "$health → %{http_code} em %{time_total}s\n" \
+              "$health"
+          done
+        env:
+          URLS: ${{ vars.KEEPALIVE_URL }}

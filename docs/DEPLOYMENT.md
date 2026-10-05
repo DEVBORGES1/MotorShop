@@ -135,6 +135,22 @@ O Free **hiberna** após 15 min sem visita (a próxima abertura leva ~1 min) e
 **não tem Shell** — o administrador é criado pelo computador (§5.3). Para
 produção, use o Blueprint e o plano pago.
 
+**Evitar a hibernação na demonstração:** o workflow *Manter acordado*
+(`.github/workflows/manter-acordado.yml`) chama `/api/health` a cada 10 min,
+o que conta como visita. Para ligá-lo, no GitHub: *Settings → Secrets and
+variables → Actions → Variables → New repository variable*, nome
+`KEEPALIVE_URL`, valor o endereço do serviço (`https://motorshop-xxxx.onrender.com`,
+sem `/api/health`; vários, separados por espaço). Sem a variável, ele não
+faz nada. Para testar na hora: *Actions → Manter acordado → Run workflow*.
+
+- Um serviço acordado o mês inteiro gasta ~744 h das **750 h/mês** do Free —
+  cabe **um**; dois serviços Free acordados esgotam a cota antes do fim do mês.
+- O GitHub pode atrasar execuções agendadas em alguns minutos e **desliga
+  agendamentos após 60 dias sem commits** no repositório (reative em
+  *Actions*). Para garantia maior, some um monitor externo (§8.2) a cada
+  5 min, que também acorda o serviço.
+- No plano pago o serviço não hiberna: deixe a variável vazia.
+
 ### 5.2 O que acontece em cada deploy
 
 1. Push na `main`.
