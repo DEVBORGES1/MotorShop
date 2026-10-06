@@ -58,19 +58,19 @@ export function createHtmlHandler(frontendDir, { renderer = createRenderer(front
         }
       }
 
-      // Abertura só para quem CHEGA ao site (Google, WhatsApp, endereço
-      // digitado): quem já está navegando nele não a vê de novo. O navegador
-      // informa a origem do clique em `Sec-Fetch-Site`, sem cookie nem
-      // armazenamento no aparelho.
+      // Abertura em toda página pública carregada do zero: chegada ao site
+      // (Google, WhatsApp, endereço digitado), F5/Ctrl+R e link aberto em
+      // nova aba. Navegar dentro do site não a repete porque é o React que
+      // troca a página — não há novo pedido de HTML. Não dá para filtrar por
+      // `Sec-Fetch-Site`: ao recarregar, o navegador manda `same-origin`.
       const abertura =
-        status === 200 && route.page !== 'admin' && req.get('Sec-Fetch-Site') !== 'same-origin'
+        status === 200 && route.page !== 'admin'
           ? renderAbertura(data.store, logoUrl(data.store?.logo?.url) ?? null)
           : '';
 
       // Sem cache: o HTML carrega a meta do momento e aponta para os assets do
       // deploy atual (§12.4). Os assets, esses sim, são imutáveis.
       res.set('Cache-Control', 'no-cache');
-      res.vary('Sec-Fetch-Site');
       res
         .status(status)
         .type('html')

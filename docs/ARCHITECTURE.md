@@ -1411,8 +1411,10 @@ Como ficou implementado (FASE 9, `backend/src/seo/`):
   esperar a API; cada dado de partida vale só no primeiro uso
   (`useMotoInicial`, `useDadoInicial`). Renderizar no servidor não escreve
   nada nesses dados: eles viram JSON depois (teste em `entry-server.test`).
-- **Abertura:** na chegada ao site (`Sec-Fetch-Site` ≠ `same-origin`), o
-  servidor põe antes do `#root` uma camada com a logo que se desfaz em < 1 s
+- **Abertura:** em toda página pública carregada do zero (chegada ao site,
+  F5/Ctrl+R, link em nova aba — navegar dentro do SPA não pede HTML e não a
+  repete; `Sec-Fetch-Site` não serve de filtro porque o recarregar manda
+  `same-origin`), o servidor põe antes do `#root` uma camada com a logo que se desfaz em < 1 s
   (`renderAbertura` em `seo/html.js`, animação em `styles/index.css`). Só
   CSS — sem script, fora da hidratação, não trava a tela se o JS falhar,
   não recebe clique e some com "reduzir movimento". Custo medido: +0,15 s

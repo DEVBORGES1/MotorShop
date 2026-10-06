@@ -159,7 +159,6 @@ describe.skipIf(skipWithoutDb)('SEO: HTML inicial por rota', () => {
       expect(res.text).toMatch(abertura);
       expect(res.text).toContain('<span class="abertura-nome">Loja Exemplo</span>');
       expect(res.text.indexOf('class="abertura"')).toBeLessThan(res.text.indexOf('id="root"'));
-      expect(res.headers.vary).toMatch(/Sec-Fetch-Site/i);
     });
 
     it('com logo, usa o mesmo arquivo do cabeçalho (sem download a mais)', async () => {
@@ -182,9 +181,9 @@ describe.skipIf(skipWithoutDb)('SEO: HTML inicial por rota', () => {
       );
     });
 
-    it('quem já está navegando no site não a vê de novo', async () => {
+    it('aparece também ao recarregar a página (F5/Ctrl+R manda same-origin)', async () => {
       const res = await pagina('/estoque').set('Sec-Fetch-Site', 'same-origin');
-      expect(res.text).not.toMatch(abertura);
+      expect(res.text).toMatch(abertura);
     });
 
     it('nem no painel, nem em página inexistente', async () => {

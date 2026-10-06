@@ -104,13 +104,14 @@ o gatilho é subir para duas ou mais).
 
 ## 7. Abertura animada (acrescentada depois da auditoria)
 
-Logo com traço no acento que se desfaz em menos de 1 s, só para quem chega
-de fora do site (`Sec-Fetch-Site` diferente de `same-origin`) e nunca com
-"reduzir movimento". A página é desenhada por baixo desde o início.
+Logo com traço no acento que se desfaz em menos de 1 s, em toda página
+pública carregada do zero (chegada, F5/Ctrl+R, nova aba — a navegação
+interna do SPA não pede HTML e não a repete) e nunca com "reduzir
+movimento". A página é desenhada por baixo desde o início.
 
 Custo medido em A/B no mesmo servidor e com os mesmos dados (HTML com e sem
 a abertura, 3 medições cada, 4G lento e CPU 4×): **+0,15 s** em FCP e LCP,
-só na chegada. Testado sem ganho: logo com `fetchpriority="low"` e animação só de
+só no carregamento do zero. Testado sem ganho: logo com `fetchpriority="low"` e animação só de
 opacidade — o custo é do quadro inicial com a camada de tela cheia. Aceito
 pelo dono do projeto em troca do efeito de marca.
 
